@@ -14,15 +14,13 @@ const points = [
 
 export function LocalFocus() {
   return (
-    <section id="laban" className="relative scroll-mt-24 overflow-hidden py-24 md:py-32">
+    <section id="laban" className="relative scroll-mt-24 overflow-hidden bg-clay-100/60 py-20 md:py-28">
       <Container>
         <div className="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr]">
-          {/* Zone graphic */}
           <Reveal className="order-2 lg:order-1">
             <ZoneGraphic />
           </Reveal>
 
-          {/* Copy */}
           <motion.div
             variants={staggerContainer(0.1)}
             initial="hidden"
@@ -31,20 +29,14 @@ export function LocalFocus() {
             className="order-1 lg:order-2"
           >
             <motion.span variants={fadeUp} className="eyebrow">
-              <span className="h-1.5 w-1.5 rounded-full bg-copper" />
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
               تركيز محلي
             </motion.span>
-            <motion.h2
-              variants={fadeUp}
-              className="mt-5 text-balance text-3xl font-bold leading-[1.15] tracking-tightest text-sand md:text-[42px]"
-            >
+            <motion.h2 variants={fadeUp} className="mt-4 text-balance text-3xl font-bold leading-[1.12] tracking-tightest text-ink md:text-[42px]">
               نحن متخصصون في
-              <span className="text-copper-gradient"> حي لبن</span>
+              <span className="text-orange-gradient"> حي لبن</span>
             </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              className="mt-5 max-w-xl text-[17px] leading-relaxed text-sand-300"
-            >
+            <motion.p variants={fadeUp} className="pretty mt-5 max-w-xl text-[17px] leading-relaxed text-ink-600">
               عدة لم تنطلق لتغطّي كل الرياض دفعة واحدة. اخترنا أن نبدأ من حي لبن
               ونتقن خدمته أولًا — لأن التركيز على منطقة واحدة يصنع سرعة حقيقية
               وجودة لا تتشتّت.
@@ -52,15 +44,10 @@ export function LocalFocus() {
 
             <motion.div variants={fadeUp} className="mt-9 grid gap-3 sm:grid-cols-3">
               {points.map((p) => (
-                <div
-                  key={p.title}
-                  className="surface rounded-2xl p-5 transition-colors duration-500 hover:border-copper/40"
-                >
-                  <p.icon className="h-6 w-6 text-copper-light" />
-                  <h3 className="mt-3 text-[16px] font-bold text-sand">{p.title}</h3>
-                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-sand-500">
-                    {p.body}
-                  </p>
+                <div key={p.title} className="card p-5 transition-shadow duration-500 hover:shadow-card">
+                  <p.icon className="h-6 w-6 text-orange-500" />
+                  <h3 className="mt-3 text-[16px] font-bold text-ink">{p.title}</h3>
+                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-500">{p.body}</p>
                 </div>
               ))}
             </motion.div>
@@ -71,11 +58,10 @@ export function LocalFocus() {
   );
 }
 
-/** Concentric service-zone rings with a pinned center — pure motion, no map yet. */
 function ZoneGraphic() {
   return (
     <div className="relative mx-auto aspect-square w-full max-w-md">
-      <div className="copper-radial absolute inset-0 rounded-full" />
+      <div className="orange-wash absolute inset-0 rounded-full" />
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
@@ -83,28 +69,23 @@ function ZoneGraphic() {
           whileInView={{ scale: 1, opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: i * 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute rounded-full border border-copper/20"
+          className="absolute rounded-full border border-orange-200"
           style={{ inset: `${i * 14}%` }}
         />
       ))}
-      {/* sweeping radar line */}
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
         className="absolute inset-[14%] rounded-full"
-        style={{
-          background:
-            "conic-gradient(from 0deg, transparent 0deg, rgba(200,119,61,0.18) 40deg, transparent 80deg)",
-        }}
+        style={{ background: "conic-gradient(from 0deg, transparent 0deg, rgba(240,133,26,0.16) 40deg, transparent 80deg)" }}
       />
-      {/* center pin */}
       <div className="absolute inset-0 grid place-items-center">
         <div className="relative">
-          <span className="absolute inset-0 -z-10 animate-pulse-ring rounded-full bg-copper/30" />
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-copper/30 bg-ink-700/80 px-5 py-4 backdrop-blur">
-            <PinIcon className="h-7 w-7 text-copper" />
-            <span className="text-[15px] font-bold text-sand">حي لبن</span>
-            <span className="text-[11px] text-sand-500">الرياض</span>
+          <span className="absolute inset-0 -z-10 animate-pulse-ring rounded-full bg-orange-300/40" />
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-clay-200 bg-white/90 px-5 py-4 shadow-card backdrop-blur">
+            <PinIcon className="h-7 w-7 text-orange-500" />
+            <span className="text-[15px] font-bold text-ink">حي لبن</span>
+            <span className="text-[11px] text-ink-400">الرياض</span>
           </div>
         </div>
       </div>

@@ -30,19 +30,19 @@ export function SectionHeading({
       )}
     >
       <motion.span variants={fadeUpSmall} className="eyebrow">
-        <span className="h-1.5 w-1.5 rounded-full bg-copper" />
+        <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
         {eyebrow}
       </motion.span>
       <motion.h2
         variants={fadeUp}
-        className="text-balance text-3xl font-bold leading-[1.15] tracking-tightest text-sand md:text-[42px]"
+        className="text-balance text-3xl font-bold leading-[1.12] tracking-tightest text-ink md:text-[44px]"
       >
         {title}
       </motion.h2>
       {description && (
         <motion.p
           variants={fadeUp}
-          className="text-pretty text-[17px] leading-relaxed text-sand-500"
+          className="text-pretty text-[17px] leading-relaxed text-ink-500"
         >
           {description}
         </motion.p>

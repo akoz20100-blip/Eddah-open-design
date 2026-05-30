@@ -24,12 +24,10 @@ const guarantees = [
 
 export function Trust() {
   return (
-    <section className="relative py-24 md:py-32">
-      <div className="hairline" />
-      <div className="py-12">
+    <section className="relative py-20 md:py-28">
+      <div className="border-y border-clay-200 bg-clay-100/50 py-10">
         <Marquee items={keywords} />
       </div>
-      <div className="hairline" />
 
       <Container className="mt-20">
         <SectionHeading
@@ -39,15 +37,15 @@ export function Trust() {
           description="الثقة لا تُقال، تُمارَس. هذه المبادئ هي ما يجعل تجربتك مع عدة مختلفة."
         />
 
-        <Reveal.Group className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" stagger={0.09}>
+        <Reveal.Group className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" stagger={0.09}>
           {guarantees.map((g) => (
             <Reveal.Item key={g.title}>
-              <div className="group surface h-full rounded-3xl p-6 transition-all duration-500 hover:-translate-y-1.5 hover:border-copper/40">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-copper/10 text-copper-light transition-colors duration-500 group-hover:bg-copper group-hover:text-ink">
+              <div className="group card h-full p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-card">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-500 ring-1 ring-orange-100 transition-colors duration-500 group-hover:bg-orange-500 group-hover:text-white">
                   <g.icon className="h-6 w-6" />
                 </span>
-                <h3 className="mt-5 text-[17px] font-bold text-sand">{g.title}</h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-sand-500">{g.body}</p>
+                <h3 className="mt-5 text-[17px] font-bold text-ink">{g.title}</h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-ink-500">{g.body}</p>
               </div>
             </Reveal.Item>
           ))}

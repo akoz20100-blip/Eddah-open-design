@@ -37,7 +37,7 @@ export function Nav() {
       <div
         className={`transition-all duration-500 ${
           scrolled
-            ? "border-b border-white/[0.07] bg-ink/70 backdrop-blur-xl"
+            ? "border-b border-clay-200/80 bg-clay-50/80 backdrop-blur-xl"
             : "border-b border-transparent bg-transparent"
         }`}
       >
@@ -51,7 +51,7 @@ export function Nav() {
               <a
                 key={l.href}
                 href={l.href}
-                className="rounded-full px-4 py-2 text-[15px] text-sand-300 transition-colors hover:text-sand"
+                className="rounded-full px-4 py-2 text-[15px] text-ink-600 transition-colors hover:text-ink"
               >
                 {l.label}
               </a>
@@ -73,25 +73,13 @@ export function Nav() {
 
           <button
             onClick={() => setOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-sand md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full border border-clay-200 bg-white text-ink md:hidden"
             aria-label="القائمة"
           >
             <div className="space-y-1.5">
-              <span
-                className={`block h-0.5 w-5 bg-current transition-transform ${
-                  open ? "translate-y-2 rotate-45" : ""
-                }`}
-              />
-              <span
-                className={`block h-0.5 w-5 bg-current transition-opacity ${
-                  open ? "opacity-0" : ""
-                }`}
-              />
-              <span
-                className={`block h-0.5 w-5 bg-current transition-transform ${
-                  open ? "-translate-y-2 -rotate-45" : ""
-                }`}
-              />
+              <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
+              <span className={`block h-0.5 w-5 bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
+              <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`} />
             </div>
           </button>
         </Container>
@@ -104,7 +92,7 @@ export function Nav() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35, ease: EASE_OUT }}
-            className="overflow-hidden border-b border-white/[0.07] bg-ink/95 backdrop-blur-xl md:hidden"
+            className="overflow-hidden border-b border-clay-200 bg-clay-50/95 backdrop-blur-xl md:hidden"
           >
             <Container className="flex flex-col gap-1 py-4">
               {links.map((l) => (
@@ -112,7 +100,7 @@ export function Nav() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3 text-[17px] text-sand-300 transition-colors hover:bg-white/5 hover:text-sand"
+                  className="rounded-xl px-4 py-3 text-[17px] text-ink-600 transition-colors hover:bg-clay-100 hover:text-ink"
                 >
                   {l.label}
                 </a>
@@ -121,7 +109,7 @@ export function Nav() {
                 href={whatsappLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center justify-center gap-2 rounded-full bg-copper py-3.5 font-semibold text-ink"
+                className="mt-2 flex items-center justify-center gap-2 rounded-full bg-orange-500 py-3.5 font-semibold text-white"
               >
                 <WhatsappIcon className="h-5 w-5" />
                 اطلب الآن عبر واتساب

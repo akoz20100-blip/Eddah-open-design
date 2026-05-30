@@ -23,8 +23,8 @@ export function Marquee({
       >
         {row.map((item, i) => (
           <span key={i} className="flex items-center gap-10 whitespace-nowrap">
-            <span className="text-[18px] font-semibold text-sand-300">{item}</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-copper/60" />
+            <span className="text-[18px] font-semibold text-ink-400">{item}</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
           </span>
         ))}
       </motion.div>

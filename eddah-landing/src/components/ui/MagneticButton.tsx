@@ -8,11 +8,11 @@ type Variant = "primary" | "ghost" | "whatsapp";
 
 const styles: Record<Variant, string> = {
   primary:
-    "bg-copper text-ink hover:bg-copper-light shadow-copper-glow",
+    "bg-orange-500 text-white hover:bg-orange-600 shadow-orange-glow",
   ghost:
-    "bg-white/5 text-sand border border-white/12 hover:border-copper/60 hover:text-white",
+    "bg-white text-ink border border-clay-200 hover:border-orange-300 hover:text-orange-600 shadow-soft",
   whatsapp:
-    "bg-[#1f8a4c] text-white hover:bg-[#23a058] shadow-[0_20px_50px_-20px_rgba(31,138,76,0.7)]",
+    "bg-[#1f8a4c] text-white hover:bg-[#23a058] shadow-[0_18px_44px_-18px_rgba(31,138,76,0.6)]",
 };
 
 /**

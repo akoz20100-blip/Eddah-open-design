@@ -3,10 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0b0b0f;
-  --copper: #c8773d;
-  --copper-light: #e2a86c;
-  --sand: #ede7dc;
+  --bg: #fbfaf7;
+  --orange: #f0851a;
+  --ink: #1a1714;
 }
 
 @layer base {
@@ -21,100 +20,83 @@
 
   body {
     background-color: var(--bg);
-    color: var(--sand);
+    color: var(--ink);
     font-feature-settings: "ss01", "liga", "kern";
     overflow-x: hidden;
   }
 
   ::selection {
-    background: rgba(200, 119, 61, 0.85);
-    color: #0b0b0f;
+    background: rgba(240, 133, 26, 0.9);
+    color: #fff;
   }
 
-  /* Refined copper scrollbar — small premium detail */
   ::-webkit-scrollbar {
-    width: 10px;
+    width: 11px;
   }
   ::-webkit-scrollbar-track {
-    background: #0b0b0f;
+    background: #f4eee6;
   }
   ::-webkit-scrollbar-thumb {
-    background: #272b36;
+    background: #d9cdbb;
     border-radius: 999px;
-    border: 3px solid #0b0b0f;
+    border: 3px solid #f4eee6;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3a3f4d;
+    background: #c3b6a1;
   }
 }
 
 @layer components {
-  /* Section eyebrow label */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-sm font-medium text-copper-light;
+    @apply inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-orange-600;
   }
 
-  /* Subtle hairline used to divide sections */
-  .hairline {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(200, 119, 61, 0.35),
-      transparent
-    );
-    height: 1px;
-  }
-
-  /* Copper text gradient for accent words */
-  .text-copper-gradient {
-    background: linear-gradient(180deg, #f2b978 0%, #c8773d 100%);
+  .text-orange-gradient {
+    background: linear-gradient(135deg, #f6b877 0%, #f0851a 45%, #dc6e0b 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  /* Glass surface used by cards */
-  .surface {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.035) 0%,
-      rgba(255, 255, 255, 0.012) 100%
-    );
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(8px);
+  /* Premium light card */
+  .card {
+    @apply rounded-3xl border border-clay-200 bg-white shadow-soft;
+  }
+
+  /* Pill chip */
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-clay-200 bg-white/80 px-4 py-2 text-[13px] font-medium text-ink-600;
   }
 }
 
 @layer utilities {
-  /* Film grain overlay — kills the flat "AI gradient" look */
+  /* Subtle paper grain — adds tactility, kills the flat digital look */
   .grain::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: 60;
     pointer-events: none;
-    opacity: 0.05;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* Radial copper glow used behind hero + CTA */
-  .copper-radial {
-    background: radial-gradient(
-      60% 60% at 50% 30%,
-      rgba(200, 119, 61, 0.22) 0%,
-      rgba(200, 119, 61, 0.06) 38%,
-      transparent 70%
-    );
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   .balance {
     text-wrap: balance;
   }
+  .pretty {
+    text-wrap: pretty;
+  }
 
-  /* Hide content from layout while keeping it accessible */
-  .reduced-motion-safe {
-    will-change: transform, opacity;
+  /* Warm radial wash used behind hero / CTA */
+  .orange-wash {
+    background: radial-gradient(
+      55% 55% at 75% 25%,
+      rgba(240, 133, 26, 0.16) 0%,
+      rgba(240, 133, 26, 0.04) 40%,
+      transparent 72%
+    );
   }
 }
 

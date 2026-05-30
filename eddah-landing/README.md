@@ -5,7 +5,9 @@ A premium, Arabic-first (RTL) landing page for a Saudi home-maintenance brand:
 plumbing, electrical, and AC/cooling — focused exclusively on حي لبن, Riyadh.
 
 > Built with Next.js 14 (App Router), TypeScript, Tailwind CSS, and Framer Motion.
-> Dark "Midnight & Copper" identity, cinematic motion, and a hand-drawn service-zone map.
+> Bright "warm clay + brand-orange" identity, photo-led editorial layout, refined
+> motion, and a hand-drawn service-zone map. Real brand creatives drop into
+> `public/brand/` (see that folder's README); elegant placeholders show until then.
 
 ---
 
@@ -66,14 +68,20 @@ eddah-landing/
 
 ## قبل الإطلاق / Before you launch
 
-Edit **`src/lib/brand.ts`**:
+**1. WhatsApp number** — edit `src/lib/brand.ts`:
 
 ```ts
-export const WHATSAPP_NUMBER = "966500000000"; // ← put the real number (no +, no spaces)
+export const WHATSAPP_NUMBER = ""; // ← put the real number (no +, no spaces). Empty = buttons stay inert.
 ```
 
 Every WhatsApp button and the click-to-call link read from this single constant.
 Each service card also passes a pre-filled Arabic WhatsApp message.
+
+**2. Brand images** — drop the real عدة creatives into `public/brand/` using the
+filenames listed in `public/brand/README.md` (`master.jpg`, `precision.jpg`,
+`trust-water.jpg`, `products.jpg`, `tools-float.jpg`). They replace the labelled
+placeholders automatically. Dark originals are auto-brightened to match the
+bright identity; tune per-image in `src/lib/brandImages.ts`.
 
 ---
 

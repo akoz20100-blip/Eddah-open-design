@@ -5,32 +5,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Midnight & Copper system
+        // Warm near-black for text
         ink: {
-          DEFAULT: "#0B0B0F",
-          900: "#0B0B0F",
-          800: "#101117",
-          700: "#16181F",
-          600: "#1E212A",
-          500: "#272B36",
+          DEFAULT: "#1A1714",
+          900: "#1A1714",
+          800: "#241F1A",
+          700: "#3A332C",
+          600: "#5A5046",
+          500: "#756B5E",
+          400: "#9A9082",
+          300: "#B6AC9D",
         },
-        sand: {
-          DEFAULT: "#EDE7DC",
-          50: "#F6F2EA",
-          100: "#EDE7DC",
-          300: "#C9C1B2",
-          500: "#9A958B",
-          700: "#6B675F",
+        // Warm neutral surfaces (the "paper" of the brand)
+        clay: {
+          50: "#FBFAF7",
+          100: "#F4EEE6",
+          200: "#EAE1D4",
+          300: "#D9CDBB",
+          400: "#C3B6A1",
         },
-        copper: {
-          DEFAULT: "#C8773D",
-          light: "#E2A86C",
-          300: "#E2A86C",
-          400: "#D38F4F",
-          500: "#C8773D",
-          600: "#A85F2C",
-          700: "#824620",
-          glow: "#F2B978",
+        // Brand orange (from the عدة logo)
+        orange: {
+          50: "#FDF2E4",
+          100: "#FBE3C6",
+          200: "#F8D0A2",
+          300: "#F6B877",
+          400: "#F39B3D",
+          500: "#F0851A",
+          600: "#DC6E0B",
+          700: "#B0530A",
+          800: "#8A4109",
         },
       },
       fontFamily: {
@@ -42,24 +46,26 @@ const config: Config = {
         "5xl": "2.75rem",
       },
       boxShadow: {
-        "copper-glow": "0 0 0 1px rgba(200,119,61,0.18), 0 24px 60px -20px rgba(200,119,61,0.35)",
-        "card": "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 30px 60px -30px rgba(0,0,0,0.8)",
-        "lift": "0 40px 80px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06) inset",
+        soft: "0 1px 2px rgba(26,23,20,0.04), 0 8px 24px -12px rgba(26,23,20,0.12)",
+        card: "0 2px 4px rgba(26,23,20,0.03), 0 24px 48px -24px rgba(26,23,20,0.18)",
+        lift: "0 40px 80px -32px rgba(26,23,20,0.28), 0 2px 6px rgba(26,23,20,0.05)",
+        "orange-glow": "0 16px 40px -12px rgba(240,133,26,0.45)",
       },
       letterSpacing: {
         tightest: "-0.04em",
       },
       keyframes: {
         "pulse-ring": {
-          "0%": { transform: "scale(0.6)", opacity: "0.7" },
+          "0%": { transform: "scale(0.6)", opacity: "0.6" },
           "100%": { transform: "scale(2.4)", opacity: "0" },
         },
         "float-slow": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
-        "shimmer": {
-          "100%": { transform: "translateX(100%)" },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
         },
       },
       animation: {

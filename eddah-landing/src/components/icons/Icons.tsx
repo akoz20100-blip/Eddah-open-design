@@ -93,6 +93,14 @@ export function WhatsappIcon({ className }: IconProps) {
   );
 }
 
+export function StarIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M12 2.5l2.7 5.9 6.4.7-4.8 4.4 1.3 6.3L12 17l-5.6 3.5 1.3-6.3L2.9 9.8l6.4-.7L12 2.5Z" />
+    </svg>
+  );
+}
+
 export function RouteIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke}>

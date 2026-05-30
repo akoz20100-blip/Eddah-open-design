@@ -10,8 +10,8 @@ export function BrandMark({ className }: { className?: string }) {
     <svg viewBox="0 0 100 100" className={className} aria-hidden>
       <defs>
         <linearGradient id="markCopper" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F2B978" />
-          <stop offset="1" stopColor="#B96A2E" />
+          <stop offset="0" stopColor="#F6B877" />
+          <stop offset="1" stopColor="#DC6E0B" />
         </linearGradient>
       </defs>
       <g fill="url(#markCopper)">
@@ -37,7 +37,7 @@ export function Logo({
     <div className={cn("flex items-center gap-2.5", className)}>
       <BrandMark className="h-9 w-9 shrink-0" />
       {showWord && (
-        <span className="text-[22px] font-bold leading-none tracking-tight text-sand">
+        <span className="text-[22px] font-bold leading-none tracking-tight text-ink">
           عدة
         </span>
       )}
