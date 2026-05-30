@@ -5,8 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { PlumbingIcon, ElectricalIcon, CoolingIcon } from "@/components/icons/ServiceIcons";
-import { ArrowIcon, CheckIcon } from "@/components/icons/Icons";
-import { BrandImage } from "@/components/ui/BrandImage";
+import { ArrowIcon } from "@/components/icons/Icons";
 import { whatsappLink } from "@/lib/brand";
 
 const services = [
@@ -90,36 +89,6 @@ export function Services() {
             </Reveal.Item>
           ))}
         </Reveal.Group>
-
-        {/* Products / tools band */}
-        <Reveal className="mt-5">
-          <div className="card grid items-center gap-8 overflow-hidden p-7 md:grid-cols-2 md:p-9">
-            <div>
-              <span className="eyebrow">
-                <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-                أدوات ومنتجات
-              </span>
-              <h3 className="mt-4 text-balance text-2xl font-bold leading-snug text-ink md:text-[30px]">
-                نأتي مجهّزين بالأداة المناسبة لكل مهمة
-              </h3>
-              <p className="pretty mt-4 text-[15.5px] leading-relaxed text-ink-600">
-                قطع ومنتجات موثوقة وأدوات احترافية — حتى تُنجَز الخدمة من أول
-                زيارة، بجودة تدوم ولا تعيد المشكلة بعد أيام.
-              </p>
-              <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
-                {["قطع غيار أصلية", "أدوات احترافية", "تشخيص دقيق", "ضمان على التنفيذ"].map((t) => (
-                  <li key={t} className="flex items-center gap-2.5 text-[14.5px] text-ink-700">
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600">
-                      <CheckIcon className="h-3 w-3" />
-                    </span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <BrandImage image="products" className="aspect-square w-full rounded-[1.5rem] ring-1 ring-clay-200" />
-          </div>
-        </Reveal>
       </Container>
     </section>
   );

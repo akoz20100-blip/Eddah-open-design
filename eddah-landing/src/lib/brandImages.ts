@@ -26,7 +26,7 @@ export type BrandImageMeta = {
 export const BRAND_IMAGES: Record<BrandImageKey, BrandImageMeta> = {
   master: {
     file: "master.jpg",
-    label: "صاحب المهمات المستحيلة",
+    label: "القوة اللي ما تحتاج صوت",
     tone: "dark",
   },
   toolsFloat: {
