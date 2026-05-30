@@ -7,3 +7,7 @@ next-env.d.ts
 .DS_Store
 .env*.local
 .vercel
+
+# Agent skills (local dev aid)
+.agents/
+skills-lock.json

@@ -30,6 +30,19 @@ export function Hero() {
   return (
     <section id="top" ref={ref} className="relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-36">
       <div className="orange-wash pointer-events-none absolute inset-0" />
+      {/* ambient drifting blobs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{ y: [0, -24, 0], x: [0, 12, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-[8%] top-[22%] h-48 w-48 rounded-full bg-orange-200/40 blur-3xl"
+        />
+        <motion.div
+          animate={{ y: [0, 28, 0], x: [0, -16, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute right-[14%] bottom-[10%] h-56 w-56 rounded-full bg-orange-100/50 blur-3xl"
+        />
+      </div>
       <Container className="relative z-10">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           {/* Copy */}
