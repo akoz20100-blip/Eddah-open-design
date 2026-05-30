@@ -1,9 +1,31 @@
 import { cn } from "@/lib/cn";
 
 /**
- * عدة wordmark + monogram. The mark is a hex "toolhead" with a copper
- * aperture — abstract enough to feel like a brand, not a clip-art wrench.
+ * عدة brand mark — a bold peaked-roof monogram (home maintenance) with a
+ * stepped inner cut and a detached base block, reinterpreting the brand logo
+ * as clean vector so it stays crisp on dark surfaces and at any size.
  */
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="markCopper" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#F2B978" />
+          <stop offset="1" stopColor="#B96A2E" />
+        </linearGradient>
+      </defs>
+      <g fill="url(#markCopper)">
+        {/* right roof slope — long clean diagonal from apex to lower-right */}
+        <path d="M54 12 L90 53 L73 67 L45 35 Z" />
+        {/* left roof slope — shorter, steeper, with a horizontal step (the "F" shelf) */}
+        <path d="M54 12 L26 46 L44 46 L44 56 L62 56 L51 68 L33 68 L33 46 L45 35 Z" />
+        {/* detached base block — slanted foot, lower-left */}
+        <path d="M20 74 L44 74 L36 87 L12 87 Z" />
+      </g>
+    </svg>
+  );
+}
+
 export function Logo({
   className,
   showWord = true,
@@ -13,28 +35,7 @@ export function Logo({
 }) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <span className="relative grid h-9 w-9 place-items-center">
-        <svg viewBox="0 0 40 40" className="h-9 w-9">
-          <defs>
-            <linearGradient id="logoCopper" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#F2B978" />
-              <stop offset="1" stopColor="#A85F2C" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M20 2.5 34.7 11v18L20 37.5 5.3 29V11L20 2.5Z"
-            fill="none"
-            stroke="url(#logoCopper)"
-            strokeWidth="1.8"
-          />
-          <path
-            d="M20 11.5 28 16v8l-8 4.5L12 24v-8l8-4.5Z"
-            fill="url(#logoCopper)"
-            opacity="0.18"
-          />
-          <circle cx="20" cy="20" r="3.4" fill="none" stroke="url(#logoCopper)" strokeWidth="1.8" />
-        </svg>
-      </span>
+      <BrandMark className="h-9 w-9 shrink-0" />
       {showWord && (
         <span className="text-[22px] font-bold leading-none tracking-tight text-sand">
           عدة

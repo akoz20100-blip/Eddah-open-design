@@ -1,7 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { WhatsappIcon, PhoneIcon } from "@/components/icons/Icons";
-import { whatsappLink, WHATSAPP_NUMBER } from "@/lib/brand";
+import { whatsappLink, telLink } from "@/lib/brand";
 
 const nav = [
   { href: "#services", label: "الخدمات" },
@@ -47,7 +47,7 @@ export function Footer() {
               <WhatsappIcon className="h-5 w-5" />
             </a>
             <a
-              href={`tel:+${WHATSAPP_NUMBER}`}
+              href={telLink()}
               aria-label="اتصال"
               className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-sand-300 transition-colors hover:border-copper/50 hover:text-copper-light"
             >

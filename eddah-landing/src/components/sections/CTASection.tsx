@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { Reveal } from "@/components/ui/Reveal";
 import { WhatsappIcon, PhoneIcon, PinIcon } from "@/components/icons/Icons";
-import { whatsappLink, WHATSAPP_NUMBER } from "@/lib/brand";
+import { whatsappLink, telLink } from "@/lib/brand";
 
 export function CTASection() {
   return (
@@ -48,7 +48,7 @@ export function CTASection() {
                 اطلب عبر واتساب
               </MagneticButton>
               <MagneticButton
-                href={`tel:+${WHATSAPP_NUMBER}`}
+                href={telLink()}
                 variant="ghost"
                 icon={<PhoneIcon className="h-5 w-5" />}
               >
