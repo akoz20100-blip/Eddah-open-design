@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --bg: #fbfaf7;
-  --orange: #f0851a;
+  --bg: #fcf8f1;
+  --orange: #f2820c;
   --ink: #1a1714;
 }
 
@@ -52,7 +52,7 @@
   }
 
   .text-orange-gradient {
-    background: linear-gradient(135deg, #f6b877 0%, #f0851a 45%, #dc6e0b 100%);
+    background: linear-gradient(135deg, #ffc74d 0%, #f6a700 35%, #f2820c 65%, #dd6a06 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -89,14 +89,19 @@
     text-wrap: pretty;
   }
 
-  /* Warm radial wash used behind hero / CTA */
+  /* Warm radial wash used behind hero / CTA — golden, more present */
   .orange-wash {
     background: radial-gradient(
-      55% 55% at 75% 25%,
-      rgba(240, 133, 26, 0.16) 0%,
-      rgba(240, 133, 26, 0.04) 40%,
-      transparent 72%
-    );
+        50% 55% at 78% 18%,
+        rgba(246, 167, 0, 0.22) 0%,
+        rgba(242, 130, 12, 0.08) 38%,
+        transparent 70%
+      ),
+      radial-gradient(
+        45% 50% at 12% 85%,
+        rgba(255, 199, 77, 0.16) 0%,
+        transparent 65%
+      );
   }
 }
 

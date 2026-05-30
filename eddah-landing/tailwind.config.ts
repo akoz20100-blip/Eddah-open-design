@@ -16,25 +16,30 @@ const config: Config = {
           400: "#9A9082",
           300: "#B6AC9D",
         },
-        // Warm neutral surfaces (the "paper" of the brand)
+        // Warm neutral surfaces (the "paper" of the brand) — warmed up
         clay: {
-          50: "#FBFAF7",
-          100: "#F4EEE6",
-          200: "#EAE1D4",
-          300: "#D9CDBB",
-          400: "#C3B6A1",
+          50: "#FCF8F1",
+          100: "#F5EEE0",
+          200: "#ECE0CD",
+          300: "#DBCBB2",
+          400: "#C6B398",
         },
-        // Brand orange (from the عدة logo)
+        // Brand orange (from the عدة logo) — more vibrant, golden lean
         orange: {
-          50: "#FDF2E4",
-          100: "#FBE3C6",
-          200: "#F8D0A2",
-          300: "#F6B877",
-          400: "#F39B3D",
-          500: "#F0851A",
-          600: "#DC6E0B",
-          700: "#B0530A",
-          800: "#8A4109",
+          50: "#FFF5E1",
+          100: "#FDE7C0",
+          200: "#FACF8C",
+          300: "#F7B450",
+          400: "#F59A24",
+          500: "#F2820C",
+          600: "#DD6A06",
+          700: "#B0520A",
+          800: "#8A3F09",
+        },
+        // Golden highlight for eye-catching accents
+        gold: {
+          DEFAULT: "#F6A700",
+          light: "#FFC74D",
         },
       },
       fontFamily: {
