@@ -1,14 +1,14 @@
 import "./index.css";
 import { Composition } from "remotion";
-import { BrandLoop } from "./BrandLoop";
+import { BrandFilm } from "./BrandFilm";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        id="BrandLoop"
-        component={BrandLoop}
-        durationInFrames={150}
+        id="BrandFilm"
+        component={BrandFilm}
+        durationInFrames={360}
         fps={30}
         width={1600}
         height={900}

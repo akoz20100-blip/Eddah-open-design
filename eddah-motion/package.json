@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@fontsource/eb-garamond": "^5.2.7",
     "@fontsource/ibm-plex-sans-arabic": "^5.2.9",
     "@remotion/cli": "4.0.469",
     "@remotion/fonts": "^4.0.469",
