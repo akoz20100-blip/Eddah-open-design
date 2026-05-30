@@ -18,6 +18,7 @@ export function BrandImage({
   lighten,
   rounded = true,
   priority,
+  fit = "cover",
 }: {
   image: BrandImageKey;
   className?: string;
@@ -26,6 +27,7 @@ export function BrandImage({
   lighten?: boolean;
   rounded?: boolean;
   priority?: boolean;
+  fit?: "cover" | "contain";
 }) {
   const meta = BRAND_IMAGES[image];
   const [failed, setFailed] = useState(false);
@@ -46,7 +48,8 @@ export function BrandImage({
           loading={priority ? "eager" : "lazy"}
           onError={() => setFailed(true)}
           className={cn(
-            "h-full w-full object-cover",
+            "h-full w-full",
+            fit === "contain" ? "object-contain" : "object-cover",
             treat && "brightness-[1.12] contrast-[0.96] saturate-[1.02]",
             imgClassName,
           )}

@@ -132,7 +132,7 @@ export function Hero() {
             <div className="absolute -inset-3 rounded-[2.5rem] bg-orange-100/60 blur-2xl" />
             <motion.div style={{ y: yImg }} className="relative">
               <BrandImage
-                image="master"
+                image="craftsman"
                 priority
                 className="aspect-[4/5] w-full rounded-[2rem] shadow-lift ring-1 ring-black/5"
               />
