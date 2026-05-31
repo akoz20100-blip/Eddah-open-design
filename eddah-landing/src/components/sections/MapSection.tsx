@@ -2,7 +2,7 @@
 
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
-import { RiyadhMap } from "@/components/map/RiyadhMap";
+import { BrandImage } from "@/components/ui/BrandImage";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { WhatsappIcon, PinIcon } from "@/components/icons/Icons";
 import { whatsappLink } from "@/lib/brand";
@@ -20,9 +20,12 @@ export function MapSection() {
         <div className="card overflow-hidden p-2 shadow-card md:p-3">
           <div className="grid gap-2 lg:grid-cols-[1.35fr_1fr]">
             <Reveal className="relative overflow-hidden rounded-[1.5rem] ring-1 ring-clay-200">
-              <div className="aspect-[4/3] w-full lg:aspect-auto lg:h-full">
-                <RiyadhMap />
-              </div>
+              <BrandImage
+                image="labanMap"
+                rounded={false}
+                className="aspect-[4/3] w-full lg:aspect-auto lg:h-full lg:min-h-[26rem]"
+                imgClassName="object-cover"
+              />
             </Reveal>
 
             <Reveal className="flex flex-col justify-center p-7 md:p-10">

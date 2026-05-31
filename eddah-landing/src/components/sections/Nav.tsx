@@ -11,9 +11,10 @@ import { EASE_OUT } from "@/lib/motion";
 
 const links = [
   { href: "#services", label: "الخدمات" },
+  { href: "#how", label: "كيف نشتغل" },
+  { href: "#why", label: "ليش عدة" },
   { href: "#laban", label: "حي لبن" },
-  { href: "#how", label: "كيف نعمل" },
-  { href: "#map", label: "نطاق الخدمة" },
+  { href: "#contact", label: "تواصل" },
 ];
 
 export function Nav() {

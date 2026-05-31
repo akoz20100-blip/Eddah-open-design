@@ -5,10 +5,10 @@ import { whatsappLink, telLink } from "@/lib/brand";
 
 const nav = [
   { href: "#services", label: "الخدمات" },
+  { href: "#how", label: "كيف نشتغل" },
+  { href: "#why", label: "ليش عدة" },
   { href: "#laban", label: "حي لبن" },
-  { href: "#how", label: "كيف نعمل" },
-  { href: "#map", label: "نطاق الخدمة" },
-  { href: "#contact", label: "تواصل معنا" },
+  { href: "#contact", label: "تواصل" },
 ];
 
 export function Footer() {
@@ -17,10 +17,15 @@ export function Footer() {
       <Container>
         <div className="flex flex-col items-start justify-between gap-10 md:flex-row md:items-center">
           <div className="max-w-sm">
-            <Logo />
+            <div className="flex items-center gap-3">
+              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-orange-500 shadow-orange-glow ring-1 ring-orange-600/20">
+                <img src="/brand/logo-eddah.png" alt="شعار عدة" className="h-full w-full object-contain p-1.5" />
+              </span>
+              <Logo showWord />
+            </div>
             <p className="mt-4 text-[14.5px] leading-relaxed text-ink-500">
-              صيانة منزلية باحتراف في حي لبن بالرياض — سباكة، كهرباء، وتكييف وتبريد.
-              فنّيك في حيّك.
+              صيانة منزلية منظّمة وسريعة في حي لبن بالرياض — سباكة، كهرباء، وتكييف.
+              فنّيك في حيّك، تواصل وأبشر بالسعد.
             </p>
           </div>
 

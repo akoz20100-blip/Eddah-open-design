@@ -15,15 +15,15 @@ import {
 const values = [
   { icon: BoltSpeedIcon, title: "استجابة سريعة", body: "طلبك يصل مباشرة، ونتحرّك بأقرب فنّي داخل الحي بدون انتظار طويل." },
   { icon: CalendarIcon, title: "مواعيد منظّمة", body: "نحدّد موعدًا واضحًا ونلتزم به، فتعرف متى يصل الفنّي بالضبط." },
-  { icon: PinIcon, title: "خدمة محلية", body: "تركيزنا على حي لبن وحده يعني قُربًا حقيقيًا ومعرفة بتفاصيل المنطقة." },
-  { icon: ShieldIcon, title: "تنفيذ موثوق", body: "فنّيون مهرة وأدوات مناسبة، والعمل يُسلَّم نظيفًا ومضمون الجودة." },
+  { icon: PinIcon, title: "فنّي قريب منك", body: "تركيزنا على حي لبن وحده يعني قُربًا حقيقيًا ومعرفة بتفاصيل المنطقة." },
+  { icon: ShieldIcon, title: "ضمان على الشغل", body: "فنّيون مهرة وأدوات مناسبة، والعمل يُسلَّم نظيفًا ونقف خلف جودته." },
   { icon: ClockIcon, title: "وضوح من البداية", body: "نشرح المشكلة والحل والتكلفة قبل البدء — بلا مفاجآت ولا غموض." },
-  { icon: SparkleIcon, title: "تجربة أسهل", body: "خطوات قليلة من الطلب إلى الإنجاز، صُمّمت لتكون سريعة ومريحة." },
+  { icon: SparkleIcon, title: "تجربة مرتّبة من أول تواصل", body: "خطوات قليلة من الطلب إلى الإنجاز، صُمّمت لتكون سريعة ومريحة." },
 ];
 
 export function ValueProps() {
   return (
-    <section className="relative py-20 md:py-28">
+    <section id="why" className="relative scroll-mt-24 py-20 md:py-28">
       <Container>
         <SectionHeading
           eyebrow="لماذا عدة"

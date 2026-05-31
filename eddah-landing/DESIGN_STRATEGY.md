@@ -13,12 +13,14 @@ maintenance brand for one neighborhood — حي لبن. Focus is the product. Th
 page repeats that one idea instead of diluting it, which is also what makes it
 feel real rather than generic.
 
-**Identity — "Midnight & Copper."**
-- Canvas: near-black ink (`#0B0B0F`) — premium, calm, lets one accent do the work.
-- Type: warm sand (`#EDE7DC`) — softer and more editorial than pure white.
-- Accent: copper (`#C8773D` → `#E2A86C`) — warm, Saudi, "tools/craft," used
-  *sparingly* as a single light source, never as rainbow gradients.
-- A film-grain overlay kills the flat plasticky look that screams "AI gradient."
+**Identity — "Ivory & Amber" (light, bright, premium).** Palette derived from
+the حي لبن map creative (`public/brand/laban-map.png`): warm paper + an amber pin.
+- Canvas: ivory / warm off-white (`clay-50 #FCF8F1`) with sand surfaces
+  (`clay-100/200`) — light and airy, never dark or moody.
+- Type: warm near-black ink (`#1A1714`) — softer than pure black, highly readable.
+- Accent: amber/orange from the logo + map pin (`#F2820C → #F6A700`), used
+  *strategically* for CTAs, highlights, icons and brand emphasis — not everywhere.
+- A near-invisible paper grain (opacity ~0.035) adds tactility without darkening.
 
 **Typography.** One family — IBM Plex Sans Arabic — across weights 300–700.
 Large, tightly-tracked Arabic display headings; relaxed body line-height for

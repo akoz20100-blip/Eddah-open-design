@@ -23,12 +23,17 @@ export const metadata: Metadata = {
     "تكييف",
     "عدة",
   ],
+  icons: {
+    icon: "/brand/logo-eddah.png",
+    apple: "/brand/logo-eddah.png",
+  },
   openGraph: {
     title: "عدة — فنّيك في حيّك",
     description:
-      "صيانة منزلية باحتراف في حي لبن بالرياض: سباكة، كهرباء، وتكييف وتبريد.",
+      "صيانة منزلية منظّمة وسريعة في حي لبن بالرياض: سباكة، كهرباء، وتكييف.",
     locale: "ar_SA",
     type: "website",
+    images: ["/brand/logo-eddah.png"],
   },
 };
 

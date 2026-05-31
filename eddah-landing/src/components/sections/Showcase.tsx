@@ -20,7 +20,7 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    image: "precision",
+    image: "precisionWorkshop",
     eyebrow: "إتقان التنفيذ",
     title: (
       <>
@@ -32,7 +32,7 @@ const features: Feature[] = [
     aspect: "aspect-[4/5]",
   },
   {
-    image: "trustWater",
+    image: "servicePlumbing",
     eyebrow: "موثوقية تستحقها",
     title: (
       <>

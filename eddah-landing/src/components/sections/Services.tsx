@@ -7,20 +7,31 @@ import { Reveal } from "@/components/ui/Reveal";
 import { PlumbingIcon, ElectricalIcon, CoolingIcon } from "@/components/icons/ServiceIcons";
 import { ArrowIcon, CheckIcon } from "@/components/icons/Icons";
 import { BrandImage } from "@/components/ui/BrandImage";
+import type { BrandImageKey } from "@/lib/brandImages";
 import { whatsappLink } from "@/lib/brand";
 
-const services = [
+const services: {
+  index: string;
+  Icon: typeof PlumbingIcon;
+  image: BrandImageKey;
+  title: string;
+  tagline: string;
+  items: string[];
+  msg: string;
+}[] = [
   {
     index: "٠١",
     Icon: PlumbingIcon,
+    image: "servicePlumbing",
     title: "السباكة",
-    tagline: "ماء يجري كما يجب، بلا تسريب ولا انسداد.",
+    tagline: "ماء يجري كما يجب, بلا تسريب ولا انسداد.",
     items: ["كشف وإصلاح التسريبات", "تسليك المجاري والانسدادات", "تركيب وصيانة الخلاطات والسخانات", "معالجة ضعف الضغط"],
     msg: "السلام عليكم، أحتاج خدمة سباكة في حي لبن.",
   },
   {
     index: "٠٢",
     Icon: ElectricalIcon,
+    image: "serviceElectrical",
     title: "الكهرباء",
     tagline: "كهرباء آمنة ومستقرة في كل زاوية من بيتك.",
     items: ["إصلاح الأعطال والقواطع", "تمديد وصيانة الإنارة", "تركيب الأفياش والمفاتيح", "معالجة مشاكل اللوحة الكهربائية"],
@@ -29,10 +40,11 @@ const services = [
   {
     index: "٠٣",
     Icon: CoolingIcon,
-    title: "التكييف والتبريد",
+    image: "serviceAc",
+    title: "التكييف",
     tagline: "أجواء باردة ومريحة طوال صيف الرياض.",
     items: ["صيانة وتنظيف المكيفات", "إصلاح ضعف التبريد", "تعبئة الفريون", "تركيب وفك الوحدات"],
-    msg: "السلام عليكم، أحتاج خدمة تكييف وتبريد في حي لبن.",
+    msg: "السلام عليكم، أحتاج خدمة تكييف في حي لبن.",
   },
 ];
 
@@ -52,18 +64,27 @@ export function Services() {
               <motion.article
                 whileHover={{ y: -8 }}
                 transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                className="group card relative flex h-full flex-col overflow-hidden p-7 hover:shadow-card"
+                className="group card relative flex h-full flex-col overflow-hidden hover:shadow-card"
               >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-orange-300 via-orange-500 to-orange-300 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gradient-to-l from-orange-300 via-orange-500 to-orange-300 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-                <div className="flex items-start justify-between">
-                  <span className="grid h-16 w-16 place-items-center rounded-2xl bg-orange-50 text-orange-500 ring-1 ring-orange-100 transition-transform duration-500 group-hover:scale-105">
+                {/* real service photo */}
+                <div className="relative">
+                  <BrandImage
+                    image={s.image}
+                    rounded={false}
+                    className="aspect-[16/11] w-full"
+                    imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" />
+                  <span className="absolute bottom-0 right-7 grid h-16 w-16 translate-y-1/2 place-items-center rounded-2xl bg-white text-orange-500 shadow-card ring-1 ring-orange-100 transition-transform duration-500 group-hover:scale-105">
                     <s.Icon className="h-9 w-9" />
                   </span>
-                  <span className="text-2xl font-bold text-clay-300">{s.index}</span>
+                  <span className="absolute left-5 top-4 text-2xl font-bold text-white/90 drop-shadow">{s.index}</span>
                 </div>
 
-                <h3 className="mt-6 text-2xl font-bold text-ink">{s.title}</h3>
+                <div className="flex flex-1 flex-col p-7 pt-9">
+                <h3 className="text-2xl font-bold text-ink">{s.title}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-500">{s.tagline}</p>
 
                 <ul className="mt-6 space-y-3 border-t border-clay-200 pt-6">
@@ -86,6 +107,7 @@ export function Services() {
                   اطلب {s.title}
                   <ArrowIcon className="h-[18px] w-[18px] transition-transform duration-300 group-hover:-translate-x-1" />
                 </a>
+                </div>
               </motion.article>
             </Reveal.Item>
           ))}
@@ -117,7 +139,7 @@ export function Services() {
                 ))}
               </ul>
             </div>
-            <BrandImage image="products" fit="contain" className="aspect-[4/3] w-full rounded-[1.5rem] bg-white ring-1 ring-clay-200" imgClassName="p-3" />
+            <BrandImage image="toolsShowcase" className="aspect-[4/3] w-full rounded-[1.5rem] ring-1 ring-clay-200" />
           </div>
         </Reveal>
       </Container>

@@ -15,7 +15,7 @@ import {
 import { whatsappLink } from "@/lib/brand";
 import { EASE_OUT, staggerContainer, wordReveal, fadeUp } from "@/lib/motion";
 
-const headlineTop = ["صيانة", "منزلية", "باحتراف"];
+const headlineTop = ["فنّيك", "في", "حيّك،"];
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -71,15 +71,14 @@ export function Hero() {
               </span>
               <span className="mt-1 block overflow-hidden">
                 <motion.span variants={wordReveal} className="inline-block text-orange-gradient">
-                  في قلب حي لبن
+                  تواصل وأبشر بالسعد
                 </motion.span>
               </span>
             </h1>
 
             <motion.p variants={fadeUp} className="pretty mt-6 max-w-xl text-[18px] leading-relaxed text-ink-600">
-              سباكة، كهرباء، وتكييف وتبريد — بفريق محلي يعرف الحي،
-              يصل بسرعة، وينفّذ بدقّة لا تغلط وثقة لا تتسرّب.
-              فنّيك في حيّك، على بُعد رسالة واتساب.
+              خدمة صيانة منزلية منظّمة وسريعة في حي لبن لخدمات السباكة
+              والكهرباء والتكييف، بمواعيد واضحة وضمان على الشغل.
             </motion.p>
 
             <motion.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-3">
@@ -90,10 +89,10 @@ export function Hero() {
                 variant="primary"
                 icon={<WhatsappIcon className="h-5 w-5" />}
               >
-                اطلب خدمتك الآن
+                اطلب الفني الآن
               </MagneticButton>
               <MagneticButton href="#services" variant="ghost" icon={<ArrowIcon className="h-[18px] w-[18px]" />}>
-                تصفّح الخدمات
+                شاهد الخدمات
               </MagneticButton>
             </motion.div>
 
@@ -132,7 +131,7 @@ export function Hero() {
             <div className="absolute -inset-3 rounded-[2.5rem] bg-orange-100/60 blur-2xl" />
             <motion.div style={{ y: yImg }} className="relative">
               <BrandImage
-                image="craftsman"
+                image="heroTechnician"
                 priority
                 className="aspect-[4/5] w-full rounded-[2rem] shadow-lift ring-1 ring-black/5"
               />

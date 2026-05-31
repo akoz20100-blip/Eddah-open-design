@@ -14,7 +14,7 @@ export function CTASection() {
         <Reveal className="relative overflow-hidden rounded-[2.25rem] border border-orange-200 bg-gradient-to-br from-orange-50 via-clay-50 to-orange-50 px-7 py-16 text-center shadow-card md:px-12 md:py-24">
           {/* faded brand creative as backdrop */}
           <div className="pointer-events-none absolute inset-0 opacity-[0.10]">
-            <BrandImage image="toolsFloat" rounded={false} lighten className="h-full w-full" imgClassName="object-cover" />
+            <BrandImage image="toolsShowcase" rounded={false} className="h-full w-full" imgClassName="object-cover" />
           </div>
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-clay-50/90 via-clay-50/40 to-clay-50/80" />
 
@@ -25,9 +25,9 @@ export function CTASection() {
             </span>
 
             <h2 className="mx-auto mt-7 max-w-3xl text-balance text-[clamp(2rem,5vw,3.4rem)] font-bold leading-[1.08] tracking-tightest text-ink">
-              بيتك يحتاج إصلاحًا؟
+              جاهز نرسل لك
               <br />
-              <span className="text-orange-gradient">فنّيك في حيّك.</span>
+              <span className="text-orange-gradient">الفنّي؟</span>
             </h2>
 
             <p className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-ink-600">
@@ -37,14 +37,14 @@ export function CTASection() {
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <MagneticButton href={whatsappLink()} target="_blank" rel="noopener noreferrer" variant="whatsapp" icon={<WhatsappIcon className="h-5 w-5" />}>
-                اطلب عبر واتساب
+                تواصل واتساب
               </MagneticButton>
               <MagneticButton href={telLink()} variant="ghost" icon={<PhoneIcon className="h-5 w-5" />}>
-                اتصل بنا
+                اطلب الفني الآن
               </MagneticButton>
             </div>
 
-            <p className="mt-8 text-[13px] text-ink-500">خدمة سباكة وكهرباء وتكييف وتبريد — حي لبن، الرياض.</p>
+            <p className="mt-8 text-[13px] text-ink-500">خدمة سباكة وكهرباء وتكييف — حي لبن، الرياض.</p>
           </div>
         </Reveal>
       </Container>
