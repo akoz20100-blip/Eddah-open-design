@@ -1,11 +1,14 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { BrandImage } from "@/components/ui/BrandImage";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-import { WhatsappIcon, PinIcon } from "@/components/icons/Icons";
+import { WhatsappIcon, ClockIcon, RouteIcon } from "@/components/icons/Icons";
 import { whatsappLink } from "@/lib/brand";
+import { fadeUp, inViewProps } from "@/lib/motion";
 
 const legend = [
   { color: "#F0851A", label: "نطاق الخدمة الحالي — حي لبن" },
@@ -14,57 +17,104 @@ const legend = [
 ];
 
 export function MapSection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const yImg = useTransform(scrollYProgress, [0, 1], ["-4%", "4%"]);
+
   return (
-    <section id="map" className="relative scroll-mt-24 bg-clay-100/60 py-20 md:py-28">
+    <section id="map" className="relative scroll-mt-24 overflow-hidden bg-clay-100/60 py-20 md:py-28">
       <Container>
-        <div className="card overflow-hidden p-2 shadow-card md:p-3">
-          <div className="grid gap-2 lg:grid-cols-[1.35fr_1fr]">
-            <Reveal className="relative overflow-hidden rounded-[1.5rem] ring-1 ring-clay-200">
+        <div className="grid items-stretch gap-5 lg:grid-cols-[1.5fr_1fr]">
+          {/* the real branded حي لبن map — the main visual */}
+          <motion.div
+            ref={ref}
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={inViewProps.viewport}
+            className="relative overflow-hidden rounded-[2.25rem] ring-1 ring-clay-200/70 shadow-card"
+          >
+            <motion.div style={{ y: yImg }} className="absolute inset-x-0 -inset-y-[5%] -z-10">
               <BrandImage
                 image="labanMap"
                 rounded={false}
-                className="aspect-[4/3] w-full lg:aspect-auto lg:h-full lg:min-h-[26rem]"
+                priority
+                className="h-full w-full"
                 imgClassName="object-cover"
               />
-            </Reveal>
+            </motion.div>
+            {/* keep a tall, immersive frame even when the panel is short */}
+            <div className="min-h-[24rem] lg:min-h-[34rem]" />
 
-            <Reveal className="flex flex-col justify-center p-7 md:p-10">
-              <span className="eyebrow">
-                <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-                نطاق الخدمة
+            {/* floating glass badges over the map */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="absolute right-5 top-5 flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-4 py-2 shadow-card backdrop-blur"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-70" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500" />
               </span>
-              <h2 className="mt-4 text-balance text-3xl font-bold leading-[1.12] tracking-tightest text-ink md:text-[38px]">
-                خدمتنا اليوم مركّزة على
-                <span className="text-orange-gradient"> حي لبن</span>
-              </h2>
-              <p className="pretty mt-5 text-[16px] leading-relaxed text-ink-600">
-                نخدم حي لبن في غرب الرياض حصرًا في هذه المرحلة. هذا التركيز يضمن
-                وصولًا أسرع، ومعرفة أدق بالمنطقة، وجودة لا تتشتّت على مساحات واسعة.
+              <span className="text-[13px] font-bold text-ink">نطاق الخدمة · حي لبن</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="absolute bottom-5 left-5 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/85 p-3.5 shadow-card backdrop-blur"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500 text-white">
+                <ClockIcon className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[13.5px] font-bold text-ink">وصول أسرع</p>
+                <p className="text-[12px] text-ink-500">فنّي قريب داخل الحي</p>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* frosted info panel */}
+          <Reveal className="flex flex-col justify-center rounded-[2.25rem] border border-white/70 bg-white/80 p-7 shadow-soft backdrop-blur-xl md:p-10">
+            <span className="eyebrow">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+              نطاق الخدمة
+            </span>
+            <h2 className="mt-4 text-balance text-3xl font-bold leading-[1.12] tracking-tightest text-ink md:text-[40px]">
+              خدمتنا اليوم مركّزة على
+              <span className="text-orange-gradient"> حي لبن</span>
+            </h2>
+            <p className="pretty mt-5 text-[16px] leading-relaxed text-ink-600">
+              نخدم حي لبن في غرب الرياض حصرًا في هذه المرحلة. هذا التركيز يضمن
+              وصولًا أسرع، ومعرفة أدق بالمنطقة، وجودة لا تتشتّت على مساحات واسعة.
+            </p>
+
+            <ul className="mt-7 space-y-3.5">
+              {legend.map((l) => (
+                <li key={l.label} className="flex items-center gap-3 text-[14.5px] text-ink-700">
+                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: l.color, boxShadow: `0 0 0 4px ${l.color}1f` }} />
+                  {l.label}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex items-center gap-3 rounded-2xl bg-clay-100 p-4">
+              <RouteIcon className="h-6 w-6 shrink-0 text-orange-500" />
+              <p className="text-[14px] leading-relaxed text-ink-600">
+                خارج حي لبن؟ راسلنا — نسجّل طلبك ضمن قائمة التوسّع القادمة.
               </p>
+            </div>
 
-              <ul className="mt-7 space-y-3.5">
-                {legend.map((l) => (
-                  <li key={l.label} className="flex items-center gap-3 text-[14.5px] text-ink-700">
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: l.color, boxShadow: `0 0 0 4px ${l.color}1f` }} />
-                    {l.label}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 flex items-center gap-3 rounded-2xl bg-clay-100 p-4">
-                <PinIcon className="h-6 w-6 shrink-0 text-orange-500" />
-                <p className="text-[14px] leading-relaxed text-ink-600">
-                  خارج حي لبن؟ راسلنا — نسجّل طلبك ضمن قائمة التوسّع القادمة.
-                </p>
-              </div>
-
-              <div className="mt-7">
-                <MagneticButton href={whatsappLink()} target="_blank" rel="noopener noreferrer" variant="primary" icon={<WhatsappIcon className="h-5 w-5" />}>
-                  اطلب داخل حي لبن
-                </MagneticButton>
-              </div>
-            </Reveal>
-          </div>
+            <div className="mt-7">
+              <MagneticButton href={whatsappLink()} target="_blank" rel="noopener noreferrer" variant="primary" icon={<WhatsappIcon className="h-5 w-5" />}>
+                اطلب داخل حي لبن
+              </MagneticButton>
+            </div>
+          </Reveal>
         </div>
       </Container>
     </section>

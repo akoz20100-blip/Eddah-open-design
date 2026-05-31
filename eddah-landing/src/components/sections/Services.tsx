@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
@@ -9,8 +10,9 @@ import { ArrowIcon, CheckIcon } from "@/components/icons/Icons";
 import { BrandImage } from "@/components/ui/BrandImage";
 import type { BrandImageKey } from "@/lib/brandImages";
 import { whatsappLink } from "@/lib/brand";
+import { cn } from "@/lib/cn";
 
-const services: {
+type Service = {
   index: string;
   Icon: typeof PlumbingIcon;
   image: BrandImageKey;
@@ -18,13 +20,15 @@ const services: {
   tagline: string;
   items: string[];
   msg: string;
-}[] = [
+};
+
+const services: Service[] = [
   {
     index: "٠١",
     Icon: PlumbingIcon,
     image: "servicePlumbing",
     title: "السباكة",
-    tagline: "ماء يجري كما يجب, بلا تسريب ولا انسداد.",
+    tagline: "ماء يجري كما يجب، بلا تسريب ولا انسداد.",
     items: ["كشف وإصلاح التسريبات", "تسليك المجاري والانسدادات", "تركيب وصيانة الخلاطات والسخانات", "معالجة ضعف الضغط"],
     msg: "السلام عليكم، أحتاج خدمة سباكة في حي لبن.",
   },
@@ -50,85 +54,53 @@ const services: {
 
 export function Services() {
   return (
-    <section id="services" className="relative scroll-mt-24 bg-clay-100/60 py-20 md:py-28">
-      <Container>
+    <section id="services" className="relative scroll-mt-24 overflow-hidden bg-clay-100/60 py-20 md:py-28">
+      {/* map-line accent — concentric contours echoing the حي لبن map */}
+      <MapLines />
+
+      <Container className="relative">
         <SectionHeading
           eyebrow="خدماتنا"
           title="ثلاثة تخصصات، نتقنها جيدًا"
           description="ركّزنا على ما يهم البيت أكثر. لا قوائم طويلة بلا عمق — بل ثلاث خدمات أساسية ننفّذها باحتراف داخل حي لبن."
         />
 
-        <Reveal.Group className="mt-12 grid gap-5 lg:grid-cols-3" stagger={0.1}>
-          {services.map((s) => (
-            <Reveal.Item key={s.title}>
-              <motion.article
-                whileHover={{ y: -8 }}
-                transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                className="group card relative flex h-full flex-col overflow-hidden hover:shadow-card"
-              >
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1 bg-gradient-to-l from-orange-300 via-orange-500 to-orange-300 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        {/* asymmetric editorial bento: السباكة featured, الكهرباء + التكييف stacked */}
+        <div className="mt-12 grid gap-5 lg:grid-cols-3 lg:auto-rows-fr">
+          <Reveal className="h-full lg:col-span-2 lg:row-span-2">
+            <ServiceCard s={services[0]} featured />
+          </Reveal>
+          <Reveal className="h-full" delay={0.08}>
+            <ServiceCard s={services[1]} />
+          </Reveal>
+          <Reveal className="h-full" delay={0.16}>
+            <ServiceCard s={services[2]} />
+          </Reveal>
+        </div>
 
-                {/* real service photo */}
-                <div className="relative">
-                  <BrandImage
-                    image={s.image}
-                    rounded={false}
-                    className="aspect-[16/11] w-full"
-                    imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" />
-                  <span className="absolute bottom-0 right-7 grid h-16 w-16 translate-y-1/2 place-items-center rounded-2xl bg-white text-orange-500 shadow-card ring-1 ring-orange-100 transition-transform duration-500 group-hover:scale-105">
-                    <s.Icon className="h-9 w-9" />
-                  </span>
-                  <span className="absolute left-5 top-4 text-2xl font-bold text-white/90 drop-shadow">{s.index}</span>
-                </div>
-
-                <div className="flex flex-1 flex-col p-7 pt-9">
-                <h3 className="text-2xl font-bold text-ink">{s.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-500">{s.tagline}</p>
-
-                <ul className="mt-6 space-y-3 border-t border-clay-200 pt-6">
-                  {s.items.map((it) => (
-                    <li key={it} className="flex items-center gap-3 text-[14.5px] text-ink-600">
-                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600">
-                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
-                      </span>
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href={whatsappLink(s.msg)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-7 inline-flex items-center gap-2 text-[15px] font-semibold text-orange-600 transition-colors hover:text-orange-700"
-                >
-                  اطلب {s.title}
-                  <ArrowIcon className="h-[18px] w-[18px] transition-transform duration-300 group-hover:-translate-x-1" />
-                </a>
-                </div>
-              </motion.article>
-            </Reveal.Item>
-          ))}
-        </Reveal.Group>
-
-        {/* Products / tools band */}
+        {/* tools / readiness band — image bleeds under an overlapping stone panel */}
         <Reveal className="mt-5">
-          <div className="card grid items-center gap-8 overflow-hidden p-7 md:grid-cols-2 md:p-9">
-            <div>
+          <div className="relative overflow-hidden rounded-[2.25rem] ring-1 ring-clay-200/70 shadow-soft">
+            <BrandImage
+              image="toolsShowcase"
+              rounded={false}
+              className="absolute inset-0 -z-10 h-full w-full"
+              imgClassName="object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-l from-white/95 via-white/80 to-white/35" />
+            <div className="max-w-xl p-8 md:p-12">
               <span className="eyebrow">
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
                 أدوات ومنتجات
               </span>
-              <h3 className="mt-4 text-balance text-2xl font-bold leading-snug text-ink md:text-[30px]">
+              <h3 className="mt-4 text-balance text-2xl font-bold leading-snug text-ink md:text-[32px]">
                 نأتي مجهّزين بالأداة المناسبة لكل مهمة
               </h3>
               <p className="pretty mt-4 text-[15.5px] leading-relaxed text-ink-600">
                 قطع ومنتجات موثوقة وأدوات احترافية — حتى تُنجَز الخدمة من أول
                 زيارة، بجودة تدوم ولا تعيد المشكلة بعد أيام.
               </p>
-              <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
+              <ul className="mt-6 grid max-w-md gap-2.5 sm:grid-cols-2">
                 {["قطع غيار أصلية", "أدوات احترافية", "تشخيص دقيق", "ضمان على التنفيذ"].map((t) => (
                   <li key={t} className="flex items-center gap-2.5 text-[14.5px] text-ink-700">
                     <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600">
@@ -139,10 +111,107 @@ export function Services() {
                 ))}
               </ul>
             </div>
-            <BrandImage image="toolsShowcase" className="aspect-[4/3] w-full rounded-[1.5rem] ring-1 ring-clay-200" />
           </div>
         </Reveal>
       </Container>
     </section>
+  );
+}
+
+function ServiceCard({ s, featured = false }: { s: Service; featured?: boolean }) {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], featured ? ["-7%", "7%"] : ["-5%", "5%"]);
+
+  return (
+    <motion.article
+      ref={ref}
+      whileHover={{ y: -6 }}
+      transition={{ type: "spring", stiffness: 240, damping: 24 }}
+      className={cn(
+        "group relative isolate flex h-full flex-col overflow-hidden rounded-[2.25rem] ring-1 ring-clay-200/70 shadow-soft transition-shadow duration-500 hover:shadow-lift",
+        featured ? "min-h-[28rem]" : "min-h-[20rem]",
+      )}
+    >
+      {/* parallax image layer */}
+      <motion.div style={{ y }} className="absolute inset-x-0 -inset-y-[7%] -z-10">
+        <BrandImage
+          image={s.image}
+          rounded={false}
+          priority={featured}
+          className="h-full w-full"
+          imgClassName="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+        />
+      </motion.div>
+
+      {/* gentle top scrim so the index reads on bright images */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-ink-900/18 via-transparent to-transparent" />
+
+      <span className="absolute right-6 top-5 text-[15px] font-bold tracking-[0.25em] text-white/95 drop-shadow">
+        {s.index}
+      </span>
+
+      <div className="flex-1" />
+
+      {/* frosted glass content panel overlapping the image */}
+      <div className="relative m-3 rounded-[1.6rem] border border-white/70 bg-white/80 p-6 shadow-card backdrop-blur-xl md:m-4 md:p-7">
+        {/* icon badge straddling the panel edge */}
+        <span className="absolute -top-7 right-6 grid h-14 w-14 place-items-center rounded-2xl bg-orange-500 text-white shadow-orange-glow ring-4 ring-white transition-transform duration-500 group-hover:-translate-y-1">
+          <s.Icon className="h-7 w-7" />
+        </span>
+
+        <h3 className="text-2xl font-bold text-ink">{s.title}</h3>
+        <p className="mt-2 text-[14.5px] leading-relaxed text-ink-500">{s.tagline}</p>
+
+        <ul
+          className={cn(
+            "mt-5 gap-x-6 gap-y-2.5 border-t border-clay-200/80 pt-5",
+            featured ? "grid sm:grid-cols-2" : "grid",
+          )}
+        >
+          {s.items.map((it) => (
+            <li key={it} className="flex items-center gap-2.5 text-[14px] text-ink-700">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600">
+                <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 13 4 4L19 7" /></svg>
+              </span>
+              {it}
+            </li>
+          ))}
+        </ul>
+
+        <a
+          href={whatsappLink(s.msg)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex items-center gap-2 text-[15px] font-semibold text-orange-600 transition-colors hover:text-orange-700"
+        >
+          اطلب {s.title}
+          <ArrowIcon className="h-[18px] w-[18px] transition-transform duration-300 group-hover:-translate-x-1" />
+        </a>
+      </div>
+    </motion.article>
+  );
+}
+
+function MapLines() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+      <svg
+        className="absolute -left-24 top-8 h-[44rem] w-[44rem] opacity-[0.06]"
+        viewBox="0 0 400 400"
+        fill="none"
+        stroke="#DC6E0B"
+        strokeWidth="1.2"
+      >
+        {[150, 110, 72, 40].map((r) => (
+          <circle key={r} cx="200" cy="200" r={r} />
+        ))}
+        <path d="M0 150 H400 M0 250 H400 M150 0 V400 M250 0 V400" strokeWidth="0.8" />
+        <circle cx="200" cy="200" r="6" fill="#F2820C" stroke="none" />
+      </svg>
+    </div>
   );
 }
