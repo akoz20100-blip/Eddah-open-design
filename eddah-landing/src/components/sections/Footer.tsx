@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { WhatsappIcon, PhoneIcon } from "@/components/icons/Icons";
 import { whatsappLink, telLink } from "@/lib/brand";
+import { brandImageSrc } from "@/lib/brandImages";
 
 const nav = [
   { href: "#services", label: "الخدمات" },
@@ -19,7 +20,7 @@ export function Footer() {
           <div className="max-w-sm">
             <div className="flex items-center gap-3">
               <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-orange-500 shadow-orange-glow ring-1 ring-orange-600/20">
-                <img src="/brand/logo-eddah.png" alt="شعار عدة" className="h-full w-full object-contain p-1.5" />
+                <img src={brandImageSrc("logo")} alt="شعار عدة" className="h-full w-full object-contain p-1.5" />
               </span>
               <Logo showWord />
             </div>

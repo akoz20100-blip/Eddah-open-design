@@ -30,6 +30,8 @@ const display = localFont({
 });
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://eddah.sa").replace(/\/$/, "");
+// Deploy base path (empty in normal dev/Vercel; set for GitHub Pages project subpath).
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -46,8 +48,8 @@ export const metadata: Metadata = {
     "عدة",
   ],
   icons: {
-    icon: "/brand/logo-eddah.png",
-    apple: "/brand/logo-eddah.png",
+    icon: `${BASE_PATH}/brand/logo-eddah.png`,
+    apple: `${BASE_PATH}/brand/logo-eddah.png`,
   },
   alternates: {
     canonical: "/",
@@ -62,7 +64,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/brand/hero-technician.png",
+        url: `${BASE_PATH}/brand/hero-technician.png`,
         width: 1200,
         height: 1500,
         alt: "فنّي عدة لخدمات الصيانة المنزلية في حي لبن",
@@ -74,7 +76,7 @@ export const metadata: Metadata = {
     title: "عدة — صيانة منزلية في حي لبن",
     description:
       "سباكة، كهرباء، وتكييف داخل حي لبن بالرياض، بمواعيد واضحة وضمان على الشغل.",
-    images: ["/brand/hero-technician.png"],
+    images: [`${BASE_PATH}/brand/hero-technician.png`],
   },
 };
 

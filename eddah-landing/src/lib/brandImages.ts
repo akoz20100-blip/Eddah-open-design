@@ -69,5 +69,8 @@ export const BRAND_IMAGES: Record<BrandImageKey, BrandImageMeta> = {
   },
 };
 
+// Prefix with the deploy base path (empty in normal dev/Vercel; set for GitHub Pages).
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export const brandImageSrc = (key: BrandImageKey) =>
-  `/brand/${BRAND_IMAGES[key].file}`;
+  `${BASE_PATH}/brand/${BRAND_IMAGES[key].file}`;
