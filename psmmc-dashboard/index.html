@@ -3,226 +3,277 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<meta name="theme-color" content="#fb6340" />
+<meta name="theme-color" content="#ec6a4d" />
 <title>لوحة ذكاء مخزون نبكو — مدينة الأمير سلطان الطبية العسكرية</title>
 <style>
   :root{
-    --coral:#fb6340; --coral-soft:#fff1ec; --coral-ring:#ffd9cc;
-    --ink:#1d2433; --muted:#6b7280; --line:#eef0f4; --bg:#f6f7fb;
-    --card:#ffffff; --ok:#16a34a; --warn:#f59e0b; --crit:#ef4444; --safe:#0ea5e9;
-    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.06);
-    --radius:18px;
+    --coral:#ec6a4d; --coral-2:#e8593a; --coral-soft:#fbe9e3; --coral-ring:#f6d3c8;
+    --ink:#1b1a18; --ink-2:#2a2825; --muted:#8a857d; --muted-2:#b4afa7;
+    --bg:#f1efec; --card:#ffffff; --chip:#f3f1ee; --line:#ececea;
+    --ok:#2f9e58;
+    --shadow:0 1px 2px rgba(20,18,15,.03), 0 10px 30px rgba(20,18,15,.05);
+    --shadow-lg:0 20px 60px rgba(20,18,15,.10);
+    --r-xl:28px; --r-lg:22px; --r-md:16px;
+    --ease:cubic-bezier(.23,1,.32,1);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,"Noto Sans Arabic",sans-serif;
-    background:var(--bg); color:var(--ink); line-height:1.5;
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue","Noto Sans Arabic","Tajawal",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5; letter-spacing:-.01em;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1200px;margin:0 auto;padding:18px clamp(12px,3vw,28px) 64px}
-  /* Header */
-  header.appbar{
-    position:sticky;top:0;z-index:30;background:rgba(246,247,251,.82);
-    backdrop-filter:saturate(160%) blur(12px); border-bottom:1px solid var(--line);
-  }
-  .appbar-inner{max-width:1200px;margin:0 auto;padding:12px clamp(12px,3vw,28px);
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:plaintext}
+  .wrap{max-width:1320px;margin:0 auto;padding:14px clamp(10px,2.2vw,22px) 60px}
+
+  .topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 4px 16px}
+  .icon-btn{width:46px;height:46px;border-radius:50%;background:var(--card);border:1px solid var(--line);
+    display:grid;place-items:center;cursor:pointer;transition:.18s var(--ease);flex:0 0 auto;box-shadow:var(--shadow)}
+  .icon-btn:hover{transform:translateY(-1px)}
   .brand{display:flex;align-items:center;gap:12px;min-width:0}
-  .logo-badge{
-    width:46px;height:46px;border-radius:13px;flex:0 0 auto;
-    background:linear-gradient(135deg,#fff,#fff6f2);border:1px solid var(--coral-ring);
-    display:grid;place-items:center;box-shadow:var(--shadow);overflow:hidden;
-  }
-  .logo-badge img{width:100%;height:100%;object-fit:contain;padding:5px}
-  .brand h1{font-size:clamp(15px,2.4vw,19px);margin:0;font-weight:800;letter-spacing:-.2px}
-  .brand p{margin:1px 0 0;font-size:11.5px;color:var(--muted);font-weight:600}
-  .appbar-actions{margin-inline-start:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .btn{border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700;
-    font-size:13px;padding:9px 14px;border-radius:12px;cursor:pointer;display:inline-flex;
-    align-items:center;gap:7px;transition:.18s cubic-bezier(.23,1,.32,1);font-family:inherit}
-  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
-  .btn-primary{background:var(--coral);border-color:var(--coral);color:#fff}
-  .btn-primary:hover{background:#f4500f}
-  .btn-ghost{background:transparent}
-  .meta-chip{font-size:11.5px;color:var(--muted);background:#fff;border:1px solid var(--line);
-    padding:6px 10px;border-radius:999px;font-weight:600;white-space:nowrap}
-  .meta-chip b{color:var(--ink)}
-  /* Section title */
-  .sec-title{display:flex;align-items:center;gap:9px;margin:26px 2px 12px;font-weight:800;font-size:15px}
-  .sec-title .dot{width:8px;height:8px;border-radius:50%;background:var(--coral)}
-  .sec-title small{font-weight:600;color:var(--muted);font-size:12px}
-  /* Cards */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    box-shadow:var(--shadow)}
-  .pad{padding:clamp(14px,2.4vw,20px)}
-  /* Bulk search */
-  .bulk-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:14px}
-  @media(max-width:820px){.bulk-grid{grid-template-columns:1fr}}
-  .bulk textarea{width:100%;min-height:104px;resize:vertical;border:1px solid var(--line);
-    border-radius:13px;padding:12px 13px;font-size:14px;font-family:ui-monospace,"SFMono-Regular",
-    Menlo,Consolas,monospace;color:var(--ink);background:#fcfcfd;line-height:1.7;direction:ltr;text-align:left}
-  .bulk textarea:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 4px var(--coral-soft)}
-  .bulk-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
-  .hint{font-size:12px;color:var(--muted);font-weight:600}
-  .match-hero{background:linear-gradient(135deg,#fff,var(--coral-soft));
-    border:1px solid var(--coral-ring);border-radius:15px;padding:16px 18px;display:flex;
-    flex-direction:column;justify-content:center;gap:2px}
-  .match-hero .lbl{font-size:12px;color:#9a3412;font-weight:700}
-  .match-hero .val{font-size:clamp(26px,6vw,40px);font-weight:900;color:#b91c1c;letter-spacing:-1px;line-height:1.05}
-  .match-hero .val span{font-size:14px;font-weight:700;color:#9a3412;margin-inline-start:6px}
-  .match-hero .sub{font-size:12px;color:#9a3412;font-weight:600}
-  /* KPI grid */
-  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-  @media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  .logo-mark{width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;display:grid;
+    place-items:center;flex:0 0 auto;overflow:hidden;box-shadow:var(--shadow)}
+  .logo-mark img{width:100%;height:100%;object-fit:cover}
+  .logo-mark span{font-weight:800;font-size:20px;letter-spacing:-.5px}
+  .brand h1{margin:0;font-size:clamp(16px,2.2vw,21px);font-weight:800;line-height:1.05}
+  .brand p{margin:1px 0 0;font-size:12px;color:var(--muted);font-weight:600}
+  .topbar-spacer{flex:1 1 40px}
+  .search-pill{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:9px 16px;min-width:180px;flex:1 1 200px;max-width:340px;box-shadow:var(--shadow)}
+  .search-pill svg{color:var(--muted);flex:0 0 auto}
+  .search-pill input{border:0;outline:0;background:transparent;font-family:inherit;font-size:14px;width:100%;color:var(--ink)}
+  .profile{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px 6px 6px;box-shadow:var(--shadow)}
+  .profile .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--coral),var(--coral-2));
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px}
+  .profile b{font-size:13.5px;font-weight:800;display:block;line-height:1.1}
+  .profile small{font-size:11px;color:var(--muted);font-weight:600}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:800;font-family:inherit;
+    font-size:13.5px;padding:11px 18px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;
+    gap:8px;transition:.18s var(--ease);white-space:nowrap;box-shadow:var(--shadow)}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-coral{background:var(--coral);border-color:var(--coral);color:#fff}
+  .btn-coral:hover{background:var(--coral-2)}
+  .btn-dark{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .hello{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);padding:22px 26px;
+    margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:var(--shadow);
+    background-image:radial-gradient(120% 140% at 100% 0%, var(--coral-soft) 0%, transparent 45%)}
+  .hello .date-chip{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+  .hello .day{font-size:40px;font-weight:800;line-height:.9}
+  .hello .dow{font-size:13px;font-weight:700;color:var(--muted);line-height:1.2}
+  .hello .vsep{width:1px;height:46px;background:var(--line)}
+  .hello .greet{flex:1 1 240px;min-width:200px}
+  .hello .greet h2{margin:0;font-size:clamp(20px,3vw,30px);font-weight:800;letter-spacing:-.5px}
+  .hello .greet p{margin:2px 0 0;font-size:14px;color:var(--muted);font-weight:600}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+  .pad{padding:clamp(15px,2vw,22px)}
+  .card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .card-title h3{margin:0;font-size:15.5px;font-weight:800}
+  .card-title .sub{font-size:12px;color:var(--muted);font-weight:600}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12px;
+    font-weight:700;color:var(--ink-2)}
+
+  .bulk-grid{display:grid;grid-template-columns:1fr 360px;gap:14px}
+  @media(max-width:900px){.bulk-grid{grid-template-columns:1fr}}
+  .bulk textarea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:var(--r-md);
+    padding:13px 14px;font-size:15px;font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    background:#faf9f7;line-height:1.7;direction:ltr;text-align:left;color:var(--ink)}
+  .bulk textarea:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 4px var(--coral-soft);background:#fff}
+  .bulk-actions{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap;align-items:center}
+  .grand{background:linear-gradient(150deg,var(--ink),#33302b);color:#fff;border-radius:var(--r-lg);padding:20px 22px;
+    display:flex;flex-direction:column;justify-content:center;gap:4px;position:relative;overflow:hidden;min-height:150px}
+  .grand::after{content:"";position:absolute;left:-30px;bottom:-40px;width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle, rgba(236,106,77,.45), transparent 70%)}
+  .grand .lbl{font-size:12.5px;color:#cfc9c0;font-weight:700;position:relative;z-index:1}
+  .grand .v{font-size:clamp(34px,7vw,52px);font-weight:800;line-height:1;letter-spacing:-1.5px;position:relative;z-index:1}
+  .grand .v small{font-size:15px;font-weight:700;color:#d9d3ca;margin-inline-start:6px;letter-spacing:0}
+  .grand .meta{font-size:12px;color:#b8b2a8;font-weight:600;position:relative;z-index:1;line-height:1.5}
+  .grand .meta b{color:var(--coral)}
+
+  .res-wrap{margin-top:14px;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .res-wrap thead th{background:#faf9f7;color:var(--muted);font-size:11.5px;font-weight:800;text-align:right;
+    padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .res-wrap tbody td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .res-wrap tbody tr:last-child td{border-bottom:0}
+  .res-wrap tbody tr:hover{background:#fbfaf8}
+  .code-cell{font-weight:800;color:var(--ink);font-size:14px}
+  .lots{display:flex;flex-wrap:wrap;gap:5px}
+  .lot{background:var(--chip);border-radius:8px;padding:3px 8px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  .lot.exp{background:#fde7e1;color:#b53b22}
+  .tot-cell{font-weight:800;font-size:16px;color:var(--coral-2);text-align:left}
+  .grand-row td{background:#fff7f4;font-weight:800;border-top:2px solid var(--coral-ring)!important}
+  .not-found{margin-top:10px;font-size:12px;color:var(--coral-2);font-weight:700}
+
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:14px}
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
-  .kpi{padding:15px 15px 14px;position:relative;overflow:hidden}
-  .kpi .k-lbl{font-size:11.5px;color:var(--muted);font-weight:700;margin-bottom:7px;display:flex;
-    align-items:center;gap:6px}
-  .kpi .k-val{font-size:clamp(20px,3.4vw,26px);font-weight:900;letter-spacing:-.6px;line-height:1}
-  .kpi .k-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:6px}
-  .kpi.hero{grid-column:span 2;background:linear-gradient(135deg,#1d2433,#2b3a55);color:#fff;border-color:#2b3a55}
-  @media(max-width:560px){.kpi.hero{grid-column:span 2}}
-  .kpi.hero .k-lbl{color:#cbd5e1}.kpi.hero .k-val{font-size:clamp(28px,6vw,40px);color:#fff}
-  .kpi.hero .k-sub{color:#94a3b8}
-  .ic{width:15px;height:15px;color:var(--coral)}
-  /* Reading */
-  .reading p{margin:0 0 10px;font-size:14.5px;line-height:1.95}
-  .reading .lead{font-size:15.5px;font-weight:700}
-  .reading b{color:var(--coral);font-weight:800}
-  .reading ul{margin:8px 0 0;padding-inline-start:20px}
-  .reading li{margin:6px 0;font-size:14px}
-  /* Risk bars */
-  .riskrow{display:flex;align-items:center;gap:10px;margin:9px 0}
-  .riskrow .name{width:120px;font-size:12.5px;font-weight:700;flex:0 0 auto}
-  .bar{flex:1;height:11px;background:#f1f2f6;border-radius:99px;overflow:hidden}
-  .bar i{display:block;height:100%;border-radius:99px;transition:width .6s cubic-bezier(.23,1,.32,1)}
-  .riskrow .num{width:108px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);flex:0 0 auto;direction:ltr}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  @media(max-width:820px){.two-col{grid-template-columns:1fr}}
-  /* Table */
-  .table-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-  .table-tools input{border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:13px;
-    font-family:inherit;min-width:200px;flex:1}
+  .kpi{padding:16px 17px}
+  .kpi .ic{width:34px;height:34px;border-radius:50%;background:var(--coral-soft);display:grid;place-items:center;
+    color:var(--coral-2);margin-bottom:11px;font-weight:800}
+  .kpi .v{font-size:clamp(20px,2.6vw,26px);font-weight:800;letter-spacing:-.6px;line-height:1}
+  .kpi .l{font-size:12px;color:var(--muted);font-weight:700;margin-top:5px}
+  .kpi.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .kpi.dark .ic{background:rgba(255,255,255,.12);color:var(--coral)}
+  .kpi.dark .l{color:#b8b2a8}
+
+  .viz{display:grid;grid-template-columns:1.1fr .9fr 1.4fr;gap:14px;margin-top:14px}
+  @media(max-width:1000px){.viz{grid-template-columns:1fr 1fr}}
+  @media(max-width:660px){.viz{grid-template-columns:1fr}}
+  .ring-card{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ring-wrap{display:flex;align-items:center;justify-content:center;padding:6px 0}
+  .legend{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .legend .row{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}
+  .legend .dotc{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+  .legend .row .n{margin-inline-start:auto;color:var(--muted)}
+  .ring-card .legend .row .n{color:#b8b2a8}
+
+  .read{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media(max-width:760px){.read{grid-template-columns:1fr}}
+  .rank{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .rank:last-child{border-bottom:0}
+  .rank .i{width:24px;height:24px;border-radius:7px;background:var(--coral-soft);color:var(--coral-2);
+    display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
+  .rank .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .vv{margin-inline-start:auto;font-weight:800;font-size:14px}
+
+  .dt-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--r-md);max-height:540px;margin-top:12px}
+  #dataTable{min-width:780px;font-size:12.5px}
+  #dataTable thead th{position:sticky;top:0;background:#faf9f7;color:var(--muted);font-weight:800;text-align:right;
+    padding:11px 13px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:11.5px;z-index:1}
+  #dataTable tbody td{padding:10px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
+  #dataTable tbody tr:hover{background:#fbfaf8}
+  .pill{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px}
+  .pill.expired{background:#fde7e1;color:#b53b22}.pill.critical{background:#fdecd9;color:#b5701a}
+  .pill.warning{background:#fbf3d8;color:#8a6a14}.pill.medium{background:#e2eefb;color:#2c5d97}
+  .pill.safe{background:#dff2e6;color:#1f7a45}.pill.unknown{background:#f0efed;color:#7a756d}
+  .table-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .table-tools input{border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:13px;
+    font-family:inherit;min-width:200px;flex:1;background:#faf9f7}
   .table-tools input:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 4px var(--coral-soft)}
-  .tbl-scroll{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:560px}
-  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px}
-  thead th{position:sticky;top:0;background:#fbfbfd;color:var(--muted);font-weight:800;
-    text-align:right;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:11.5px;z-index:1}
-  tbody td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
-  tbody tr:hover{background:#fafafb}
-  .num-cell{font-variant-numeric:tabular-nums;font-weight:700;direction:ltr;text-align:left}
-  .pill{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:99px}
-  .pill.expired{background:#fee2e2;color:#b91c1c}.pill.critical{background:#ffedd5;color:#c2410c}
-  .pill.warning{background:#fef3c7;color:#a16207}.pill.medium{background:#e0f2fe;color:#0369a1}
-  .pill.safe{background:#dcfce7;color:#15803d}.pill.unknown{background:#f1f2f6;color:#6b7280}
-  .empty{padding:40px;text-align:center;color:var(--muted);font-weight:600}
-  /* dropzone overlay */
-  #drop{position:fixed;inset:0;background:rgba(29,36,51,.55);backdrop-filter:blur(4px);
-    display:none;place-items:center;z-index:50}
-  #drop.show{display:grid}
-  #drop .box{background:#fff;border:2px dashed var(--coral);border-radius:20px;padding:40px 56px;
-    text-align:center;font-weight:800;color:var(--coral);font-size:18px}
-  footer{margin-top:34px;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+
+  .empty{padding:30px;text-align:center;color:var(--muted);font-weight:700;font-size:13px}
+  footer{margin-top:30px;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
   footer .lock{color:var(--ok)}
-  .toast{position:fixed;bottom:18px;inset-inline-start:50%;transform:translateX(50%);
-    background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;font-size:13px;
-    box-shadow:var(--shadow);z-index:60;opacity:0;transition:.25s;pointer-events:none}
+  #drop{position:fixed;inset:0;background:rgba(27,26,24,.55);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50}
+  #drop.show{display:grid}
+  #drop .box{background:#fff;border:2px dashed var(--coral);border-radius:24px;padding:40px 56px;font-weight:800;color:var(--coral);font-size:18px}
+  .toast{position:fixed;bottom:18px;inset-inline-start:50%;transform:translateX(50%);background:var(--ink);color:#fff;
+    padding:12px 20px;border-radius:14px;font-weight:700;font-size:13px;box-shadow:var(--shadow-lg);z-index:60;opacity:0;transition:.25s var(--ease);pointer-events:none}
   .toast.show{opacity:1;transform:translateX(50%) translateY(-4px)}
-  .fade-in{animation:fi .5s cubic-bezier(.23,1,.32,1) both}
-  @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .fade{animation:fi .5s var(--ease) both}@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .sec{display:flex;align-items:center;gap:9px;margin:26px 4px 4px;font-weight:800;font-size:15px}
+  .sec .d{width:7px;height:7px;border-radius:50%;background:var(--coral)}
+  .sec small{font-weight:600;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-<header class="appbar">
-  <div class="appbar-inner">
-    <div class="brand">
-      <div class="logo-badge" id="logoBadge">
-        <!-- ضع شعارك هنا: استبدل هذا الـ SVG بصورة شعار PSMMC -->
-        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="PSMMC">
-          <rect x="20" y="8" width="8" height="32" rx="2" fill="#fb6340"/>
-          <rect x="8" y="20" width="32" height="8" rx="2" fill="#fb6340"/>
-          <circle cx="24" cy="24" r="21" stroke="#ffd9cc" stroke-width="2"/>
-        </svg>
-      </div>
-      <div>
-        <h1>لوحة ذكاء مخزون نبكو</h1>
-        <p>مدينة الأمير سلطان الطبية العسكرية · PSMMC NUPCO Stock Intelligence</p>
-      </div>
-    </div>
-    <div class="appbar-actions">
-      <span class="meta-chip" id="metaChip">بيانات تجريبية محمّلة</span>
-      <button class="btn btn-ghost" id="exportBtn" title="تصدير CSV">⬇︎ تصدير</button>
-      <button class="btn btn-primary" id="uploadBtn">⬆︎ ارفع ملف Excel</button>
-      <input type="file" id="fileInput" accept=".xls,.xlsx,.csv" style="display:none" />
-    </div>
-  </div>
-</header>
-
 <div class="wrap">
 
-  <!-- BULK SEARCH -->
-  <div class="sec-title"><span class="dot"></span> بحث جماعي بالأكواد <small>الصق عدة أكواد دفعة واحدة (سطر / فاصلة / مسافة) ويجمعها لك تلقائيًا</small></div>
-  <div class="card pad bulk fade-in">
+  <div class="topbar">
+    <button class="icon-btn" title="القائمة" aria-label="menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1b1a18" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h12M4 17h16"/></svg>
+    </button>
+    <div class="brand">
+      <!-- ضع شعار PSMMC هنا: استبدل <span>№</span> بـ <img src="logo.png" alt="PSMMC"> -->
+      <div class="logo-mark" id="logoMark"><span>№</span></div>
+      <div>
+        <h1>لوحة ذكاء مخزون نبكو</h1>
+        <p>مدينة الأمير سلطان الطبية العسكرية · PSMMC NUPCO</p>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="search-pill">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input id="topSearch" placeholder="بحث سريع في الأصناف…" />
+    </div>
+    <div class="profile">
+      <div class="av">PS</div>
+      <div><b>إدارة المخزون</b><small>PSMMC · NUPCO</small></div>
+    </div>
+    <button class="btn" id="exportBtn">⬇︎ تصدير</button>
+    <button class="btn btn-coral" id="uploadBtn">⬆︎ رفع ملف Excel</button>
+    <input type="file" id="fileInput" accept=".xls,.xlsx,.csv" style="display:none" />
+  </div>
+
+  <div class="hello fade">
+    <div class="date-chip">
+      <div><div class="day num" id="hDay">—</div></div>
+      <div class="dow" id="hDow">—<br>—</div>
+    </div>
+    <div class="vsep"></div>
+    <div class="greet">
+      <h2>أهلاً 👋 كم لديك في المخزون؟</h2>
+      <p id="helloSub">الصق أكواد نبكو (تبدأ بـ 5) في الأسفل وسأجمع كمياتها فورًا — يعمل محليًا بدون إنترنت.</p>
+    </div>
+    <button class="btn btn-dark" onclick="document.getElementById('bulkInput').focus()">ابدأ البحث الجماعي ←</button>
+  </div>
+
+  <div class="card pad bulk fade">
+    <div class="card-title">
+      <h3>بحث جماعي بالأكواد</h3>
+      <span class="chip">يُحسب فقط ما يبدأ كوده بـ «5» (نبكو)</span>
+    </div>
     <div class="bulk-grid">
       <div>
-        <textarea id="bulkInput" placeholder="مثال:&#10;10012345&#10;10067890, 10054321&#10;20009988 30001122"></textarea>
-        <div class="bulk-row">
-          <button class="btn btn-primary" id="bulkSearchBtn">🔎 ابحث عن الكل</button>
-          <button class="btn btn-ghost" id="bulkClearBtn">مسح</button>
-          <span class="hint" id="bulkHint">يبحث في رقم الصنف العام/التجاري/العميل والوصف</span>
+        <textarea id="bulkInput" placeholder="51012345&#10;51067831, 51034509&#10;51023401 51045612"></textarea>
+        <div class="bulk-actions">
+          <button class="btn btn-coral" id="bulkBtn">🔎 احسب المجموع</button>
+          <button class="btn" id="bulkClear">مسح</button>
         </div>
+        <div id="resBox"></div>
       </div>
-      <div class="match-hero" id="matchHero">
-        <div class="lbl">المخزون المتاح للأكواد المختارة</div>
-        <div class="val" id="matchVal">—<span>وحدة</span></div>
-        <div class="sub" id="matchSub">الصق الأكواد ثم اضغط «ابحث عن الكل»</div>
+      <div class="grand" id="grand">
+        <div class="lbl">المجموع الكلي للمخزون المتاح</div>
+        <div class="v num" id="grandVal">—<small>وحدة</small></div>
+        <div class="meta" id="grandMeta">الصق الأكواد ثم اضغط «احسب المجموع»</div>
       </div>
     </div>
   </div>
 
-  <!-- KPIs -->
-  <div class="sec-title"><span class="dot"></span> المؤشرات التنفيذية <small id="kpiScope">على كامل البيانات</small></div>
+  <div class="sec"><span class="d"></span> المؤشرات <small id="kpiScope"></small></div>
   <div class="kpis" id="kpis"></div>
 
-  <!-- READING -->
-  <div class="sec-title"><span class="dot"></span> القراءة الاحترافية للملف <small>تحليل تلقائي — أهم ما يجب أن تعرفه</small></div>
-  <div class="card pad reading fade-in" id="reading"></div>
-
-  <!-- RISK + WAREHOUSES -->
-  <div class="two-col" style="margin-top:14px">
-    <div class="card pad">
-      <div style="font-weight:800;margin-bottom:10px">توزيع مخاطر انتهاء الصلاحية</div>
-      <div id="riskBars"></div>
+  <div class="viz">
+    <div class="card pad fade">
+      <div class="card-title"><h3>أعلى العائلات الدوائية</h3><span class="sub">حسب المتاح</span></div>
+      <div class="ring-wrap"><div id="circles"></div></div>
+      <div class="legend" id="circlesLegend"></div>
     </div>
-    <div class="card pad">
-      <div style="font-weight:800;margin-bottom:10px">أعلى المستودعات بالمخزون المتاح</div>
-      <div id="whBars"></div>
+    <div class="card ring-card pad fade">
+      <div class="card-title"><h3 style="color:#fff">نسبة المخزون الآمن</h3></div>
+      <div class="ring-wrap"><div id="donut"></div></div>
+      <div class="legend" id="donutLegend"></div>
+    </div>
+    <div class="card pad fade">
+      <div class="card-title"><h3>توزيع المخزون المتاح</h3><span class="sub" id="waveSub"></span></div>
+      <div id="wave"></div>
     </div>
   </div>
 
-  <!-- TABLE -->
-  <div class="sec-title"><span class="dot"></span> تفاصيل الأصناف <small id="tableScope"></small></div>
-  <div class="card pad fade-in">
+  <div class="sec"><span class="d"></span> قراءة الأرقام <small>أعلى الأصناف والمستودعات (أرقام وأسماء فقط)</small></div>
+  <div class="read">
+    <div class="card pad fade"><div class="card-title"><h3>أعلى ١٠ أصناف بالمخزون</h3></div><div id="topItems"></div></div>
+    <div class="card pad fade"><div class="card-title"><h3>المستودعات</h3></div><div id="topWh"></div></div>
+  </div>
+
+  <div class="sec"><span class="d"></span> تفاصيل الأصناف <small id="tableScope"></small></div>
+  <div class="card pad fade">
     <div class="table-tools">
-      <input id="tableSearch" placeholder="بحث سريع في الجدول…" />
-      <span class="hint" id="tableCount"></span>
+      <input id="tableSearch" placeholder="بحث في الجدول…" />
+      <span class="chip" id="tableCount"></span>
     </div>
-    <div class="tbl-scroll">
-      <table id="dataTable">
-        <thead><tr>
-          <th>رقم الصنف</th><th>الوصف</th><th>المتاح</th><th>الإجمالي</th>
-          <th>محجوز</th><th>أيام للانتهاء</th><th>الحالة</th><th>المستودع</th>
-          <th>درجة الحرارة</th><th>الدفعة</th>
-        </tr></thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+    <div class="dt-wrap">
+      <table id="dataTable"><thead><tr>
+        <th>الكود (نبكو)</th><th>اسم الدواء</th><th>المتاح</th><th>الإجمالي</th><th>محجوز</th>
+        <th>أيام للانتهاء</th><th>الحالة</th><th>المستودع</th><th>الدفعة</th>
+      </tr></thead><tbody id="tableBody"></tbody></table>
     </div>
   </div>
 
-  <footer>
-    🔒 <span class="lock">تتم معالجة بياناتك محليًا داخل جهازك بالكامل</span> — لا يُرفع أي ملف إلى أي خادم. يعمل بدون إنترنت على الجوال والآيباد والحاسوب.
-  </footer>
+  <footer>🔒 <span class="lock">المعالجة محلية بالكامل داخل جهازك</span> — لا يُرفع أي ملف. يعمل بدون إنترنت على الجوال والآيباد والحاسوب.</footer>
 </div>
 
 <div id="drop"><div class="box">أفلت ملف Excel هنا ⬇︎</div></div>
@@ -254,387 +305,232 @@ a=bw(aw(t.messages[0].data)[1][0].data);n=Pw({deps:[1],location:r[a].location,ty
 t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="array";return R(a)}var n=0;if(t.sheet){if(typeof t.sheet=="number")n=t.sheet;else n=e.SheetNames.indexOf(t.sheet);if(!e.SheetNames[n])throw new Error("Sheet not found: "+t.sheet+" : "+typeof t.sheet)}switch(t.bookType||"xlsb"){case"xml":;case"xlml":return Ek(Ug(e,t),t);case"slk":;case"sylk":return Ek(Ql.from_sheet(e.Sheets[e.SheetNames[n]],t,e),t);case"htm":;case"html":return Ek(Sb(e.Sheets[e.SheetNames[n]],t),t);case"txt":return Ck(Uk(e.Sheets[e.SheetNames[n]],t),t);case"csv":return Ek(Mk(e.Sheets[e.SheetNames[n]],t),t,"\ufeff");case"dif":return Ek(eo.from_sheet(e.Sheets[e.SheetNames[n]],t),t);case"dbf":return _k(ql.from_sheet(e.Sheets[e.SheetNames[n]],t),t);case"prn":return Ek(to.from_sheet(e.Sheets[e.SheetNames[n]],t),t);case"rtf":return Ek(Ko(e.Sheets[e.SheetNames[n]],t),t);case"eth":return Ek(ro.from_sheet(e.Sheets[e.SheetNames[n]],t),t);case"fods":return Ek(Hb(e,t),t);case"wk1":return _k(no.sheet_to_wk1(e.Sheets[e.SheetNames[n]],t),t);case"wk3":return _k(no.book_to_wk3(e,t),t);case"biff2":if(!t.biff)t.biff=2;case"biff3":if(!t.biff)t.biff=3;case"biff4":if(!t.biff)t.biff=4;return _k(kb(e,t),t);case"biff5":if(!t.biff)t.biff=5;case"biff8":;case"xla":;case"xls":if(!t.biff)t.biff=8;return yk(e,t);case"xlsx":;case"xlsm":;case"xlam":;case"xlsb":;case"numbers":;case"ods":return kk(e,t);default:throw new Error("Unrecognized bookType |"+t.bookType+"|");}}function Ok(e){if(e.bookType)return;var r={xls:"biff8",htm:"html",slk:"sylk",socialcalc:"eth",Sh33tJS:"WTF"};var t=e.file.slice(e.file.lastIndexOf(".")).toLowerCase();if(t.match(/^\.[a-z]+$/))e.bookType=t.slice(1);e.bookType=r[e.bookType]||e.bookType}function Ik(e,r,t){var a=t||{};a.type="file";a.file=r;Ok(a);return xk(e,a)}function Rk(e,r,t){var a=t||{};a.type="file";a.file=r;Ok(a);return Sk(e,a)}function Nk(e,r,t,a){var n=t||{};n.type="file";n.file=e;Ok(n);n.type="buffer";var i=a;if(!(i instanceof Function))i=t;return er.writeFile(e,xk(r,n),i)}function Fk(e,r,t,a,n,i,s){var f=Wa(t);var l=s.defval,o=s.raw||!Object.prototype.hasOwnProperty.call(s,"raw");var c=true,h=e["!data"]!=null;var u=n===1?[]:{};if(n!==1){if(Object.defineProperty)try{Object.defineProperty(u,"__rowNum__",{value:t,enumerable:false})}catch(d){u.__rowNum__=t}else u.__rowNum__=t}if(!h||e["!data"][t])for(var v=r.s.c;v<=r.e.c;++v){var p=h?(e["!data"][t]||[])[v]:e[a[v]+f];if(p==null||p.t===undefined){if(l===undefined)continue;if(i[v]!=null){u[i[v]]=l}continue}var m=p.v;switch(p.t){case"z":if(m==null)break;continue;case"e":m=m==0?null:void 0;break;case"s":;case"b":;case"n":if(!p.z||!Le(p.z))break;m=vr(m);if(typeof m=="number")break;case"d":if(!(s&&(s.UTC||s.raw===false)))m=Fr(new Date(m));break;default:throw new Error("unrecognized type "+p.t);}if(i[v]!=null){if(m==null){if(p.t=="e"&&m===null)u[i[v]]=null;else if(l!==undefined)u[i[v]]=l;else if(o&&m===null)u[i[v]]=null;else continue}else{u[i[v]]=(p.t==="n"&&typeof s.rawNumbers==="boolean"?s.rawNumbers:o)?m:tn(p,m,s)}if(m!=null)c=false}}return{row:u,isempty:c}}function Dk(e,r){if(e==null||e["!ref"]==null)return[];var t={t:"n",v:0},a=0,n=1,i=[],s=0,f="";var l={s:{r:0,c:0},e:{r:0,c:0}};var o=r||{};var c=o.range!=null?o.range:e["!ref"];if(o.header===1)a=1;else if(o.header==="A")a=2;else if(Array.isArray(o.header))a=3;else if(o.header==null)a=0;switch(typeof c){case"string":l=en(c);break;case"number":l=en(e["!ref"]);l.s.r=c;break;default:l=c;}if(a>0)n=0;var h=Wa(l.s.r);var u=[];var d=[];var v=0,p=0;var m=e["!data"]!=null;var g=l.s.r,b=0;var w={};if(m&&!e["!data"][g])e["!data"][g]=[];var k=o.skipHidden&&e["!cols"]||[];var A=o.skipHidden&&e["!rows"]||[];for(b=l.s.c;b<=l.e.c;++b){if((k[b]||{}).hidden)continue;u[b]=$a(b);t=m?e["!data"][g][b]:e[u[b]+h];switch(a){case 1:i[b]=b-l.s.c;break;case 2:i[b]=u[b];break;case 3:i[b]=o.header[b-l.s.c];break;default:if(t==null)t={w:"__EMPTY",t:"s"};f=s=tn(t,null,o);p=w[s]||0;if(!p)w[s]=1;else{do{f=s+"_"+p++}while(w[f]);w[s]=p;w[f]=1}i[b]=f;}}for(g=l.s.r+n;g<=l.e.r;++g){if((A[g]||{}).hidden)continue;var T=Fk(e,l,g,u,a,i,o);if(T.isempty===false||(a===1?o.blankrows!==false:!!o.blankrows))d[v++]=T.row}d.length=v;return d}var Pk=/"/g;function Lk(e,r,t,a,n,i,s,f,l){var o=true;var c=[],h="",u=Wa(t);var d=e["!data"]!=null;var v=d&&e["!data"][t]||[];for(var p=r.s.c;p<=r.e.c;++p){if(!a[p])continue;var m=d?v[p]:e[a[p]+u];if(m==null)h="";else if(m.v!=null){o=false;h=""+(l.rawNumbers&&m.t=="n"?m.v:tn(m,null,l));for(var g=0,b=0;g!==h.length;++g)if((b=h.charCodeAt(g))===n||b===i||b===34||l.forceQuotes){h='"'+h.replace(Pk,'""')+'"';break}if(h=="ID"&&f==0&&c.length==0)h='"ID"'}else if(m.f!=null&&!m.F){o=false;h="="+m.f;if(h.indexOf(",")>=0)h='"'+h.replace(Pk,'""')+'"'}else h="";c.push(h)}if(l.strip)while(c[c.length-1]==="")--c.length;if(l.blankrows===false&&o)return null;return c.join(s)}function Mk(e,r){var t=[];var a=r==null?{}:r;if(e==null||e["!ref"]==null)return"";var n=en(e["!ref"]);var i=a.FS!==undefined?a.FS:",",s=i.charCodeAt(0);var f=a.RS!==undefined?a.RS:"\n",l=f.charCodeAt(0);var o="",c=[];var h=a.skipHidden&&e["!cols"]||[];var u=a.skipHidden&&e["!rows"]||[];for(var d=n.s.c;d<=n.e.c;++d)if(!(h[d]||{}).hidden)c[d]=$a(d);var v=0;for(var p=n.s.r;p<=n.e.r;++p){if((u[p]||{}).hidden)continue;o=Lk(e,n,p,c,s,l,i,v,a);if(o==null){continue}if(o||a.blankrows!==false)t.push((v++?f:"")+o)}return t.join("")}function Uk(e,r){if(!r)r={};r.FS="\t";r.RS="\n";var t=Mk(e,r);if(typeof a=="undefined"||r.type=="string")return t;var n=a.utils.encode(1200,t,"str");return String.fromCharCode(255)+String.fromCharCode(254)+n}function Bk(e,r){var t="",a,n="";if(e==null||e["!ref"]==null)return[];var i=en(e["!ref"]),s="",f=[],l;var o=[];var c=e["!data"]!=null;for(l=i.s.c;l<=i.e.c;++l)f[l]=$a(l);for(var h=i.s.r;h<=i.e.r;++h){s=Wa(h);for(l=i.s.c;l<=i.e.c;++l){t=f[l]+s;a=c?(e["!data"][h]||[])[l]:e[t];n="";if(a===undefined)continue;else if(a.F!=null){t=a.F;if(!a.f)continue;n=a.f;if(t.indexOf(":")==-1)t=t+":"+t}if(a.f!=null)n=a.f;else if(r&&r.values===false)continue;else if(a.t=="z")continue;else if(a.t=="n"&&a.v!=null)n=""+a.v;else if(a.t=="b")n=a.v?"TRUE":"FALSE";else if(a.w!==undefined)n="'"+a.w;else if(a.v===undefined)continue;else if(a.t=="s")n="'"+a.v;else n=""+a.v;o[o.length]=t+"="+n}}return o}function Wk(e,r,t){var a=t||{};var n=e?e["!data"]!=null:a.dense;if(b!=null&&n==null)n=b;var i=+!a.skipHeader;var s=e||{};if(!e&&n)s["!data"]=[];var f=0,l=0;if(s&&a.origin!=null){if(typeof a.origin=="number")f=a.origin;else{var o=typeof a.origin=="string"?Ka(a.origin):a.origin;f=o.r;l=o.c}}var c={s:{c:0,r:0},e:{c:l,r:f+r.length-1+i}};if(s["!ref"]){var h=en(s["!ref"]);c.e.c=Math.max(c.e.c,h.e.c);c.e.r=Math.max(c.e.r,h.e.r);if(f==-1){f=h.e.r+1;c.e.r=f+r.length-1+i}}else{if(f==-1){f=0;c.e.r=r.length-1+i}}var u=a.header||[],d=0;var v=[];r.forEach(function(e,r){if(n&&!s["!data"][f+r+i])s["!data"][f+r+i]=[];if(n)v=s["!data"][f+r+i];ir(e).forEach(function(t){if((d=u.indexOf(t))==-1)u[d=u.length]=t;var o=e[t];var c="z";var h="";var p=n?"":$a(l+d)+Wa(f+r+i);var m=n?v[l+d]:s[p];if(o&&typeof o==="object"&&!(o instanceof Date)){if(n)v[l+d]=o;else s[p]=o}else{if(typeof o=="number")c="n";else if(typeof o=="boolean")c="b";else if(typeof o=="string")c="s";else if(o instanceof Date){c="d";if(!a.UTC)o=Dr(o);if(!a.cellDates){c="n";o=dr(o)}h=m!=null&&m.z&&Le(m.z)?m.z:a.dateNF||q[14]}else if(o===null&&a.nullError){c="e";o=0}if(!m){if(!n)s[p]=m={t:c,v:o};else v[l+d]=m={t:c,v:o}}else{m.t=c;m.v=o;delete m.w;delete m.R;if(h)m.z=h}if(h)m.z=h}})});c.e.c=Math.max(c.e.c,l+u.length-1);var p=Wa(f);if(n&&!s["!data"][f])s["!data"][f]=[];if(i)for(d=0;d<u.length;++d){if(n)s["!data"][f][d+l]={t:"s",v:u[d]};else s[$a(d+l)+p]={t:"s",v:u[d]}}s["!ref"]=Ja(c);return s}function zk(e,r){return Wk(null,e,r)}function Hk(e,r,t){if(typeof r=="string"){if(e["!data"]!=null){var a=Ka(r);if(!e["!data"][a.r])e["!data"][a.r]=[];return e["!data"][a.r][a.c]||(e["!data"][a.r][a.c]={t:"z"})}return e[r]||(e[r]={t:"z"})}if(typeof r!="number")return Hk(e,Ya(r));return Hk(e,$a(t||0)+Wa(r))}function Vk(e,r){if(typeof r=="number"){if(r>=0&&e.SheetNames.length>r)return r;throw new Error("Cannot find sheet # "+r)}else if(typeof r=="string"){var t=e.SheetNames.indexOf(r);if(t>-1)return t;throw new Error("Cannot find sheet name |"+r+"|")}else throw new Error("Cannot find sheet |"+r+"|")}function $k(e,r){var t={SheetNames:[],Sheets:{}};if(e)Xk(t,e,r||"Sheet1");return t}function Xk(e,r,t,a){var n=1;if(!t)for(;n<=65535;++n,t=undefined)if(e.SheetNames.indexOf(t="Sheet"+n)==-1)break;if(!t||e.SheetNames.length>=65535)throw new Error("Too many worksheets");if(a&&e.SheetNames.indexOf(t)>=0&&t.length<32){var i=t.match(/\d+$/);n=i&&+i[0]||0;var s=i&&t.slice(0,i.index)||t;for(++n;n<=65535;++n)if(e.SheetNames.indexOf(t=s+n)==-1)break}Fm(t);if(e.SheetNames.indexOf(t)>=0)throw new Error("Worksheet with name |"+t+"| already exists!");e.SheetNames.push(t);e.Sheets[t]=r;return t}function Gk(e,r,t){if(!e.Workbook)e.Workbook={};if(!e.Workbook.Sheets)e.Workbook.Sheets=[];var a=Vk(e,r);if(!e.Workbook.Sheets[a])e.Workbook.Sheets[a]={};switch(t){case 0:;case 1:;case 2:break;default:throw new Error("Bad sheet visibility setting "+t);}e.Workbook.Sheets[a].Hidden=t}function jk(e,r){e.z=r;return e}function Kk(e,r,t){if(!r){delete e.l}else{e.l={Target:r};if(t)e.l.Tooltip=t}return e}function Yk(e,r,t){return Kk(e,"#"+r,t)}function Zk(e,r,t){if(!e.c)e.c=[];e.c.push({t:r,a:t||"SheetJS"})}function Jk(e,r,t,a){var n=typeof r!="string"?r:en(r);var i=typeof r=="string"?r:Ja(r);for(var s=n.s.r;s<=n.e.r;++s)for(var f=n.s.c;f<=n.e.c;++f){var l=Hk(e,s,f);l.t="n";l.F=i;delete l.v;if(s==n.s.r&&f==n.s.c){l.f=t;if(a)l.D=true}}var o=Za(e["!ref"]);if(o.s.r>n.s.r)o.s.r=n.s.r;if(o.s.c>n.s.c)o.s.c=n.s.c;if(o.e.r<n.e.r)o.e.r=n.e.r;if(o.e.c<n.e.c)o.e.c=n.e.c;e["!ref"]=Ja(o);return e}var qk={encode_col:$a,encode_row:Wa,encode_cell:Ya,encode_range:Ja,decode_col:Va,decode_row:Ba,split_cell:ja,decode_cell:Ka,decode_range:Za,format_cell:tn,sheet_new:nn,sheet_add_aoa:sn,sheet_add_json:Wk,sheet_add_dom:xb,aoa_to_sheet:fn,json_to_sheet:zk,table_to_sheet:Ob,table_to_book:Ib,sheet_to_csv:Mk,sheet_to_txt:Uk,sheet_to_json:Dk,sheet_to_html:Sb,sheet_to_formulae:Bk,sheet_to_row_object_array:Dk,sheet_get_cell:Hk,book_new:$k,book_append_sheet:Xk,book_set_sheet_visibility:Gk,cell_set_number_format:jk,cell_set_hyperlink:Kk,cell_set_internal_link:Yk,cell_add_comment:Zk,sheet_set_array_formula:Jk,consts:{SHEET_VISIBLE:0,SHEET_HIDDEN:1,SHEET_VERY_HIDDEN:2}};var Qk;function eA(e){Qk=e}function rA(e,r){var t=Qk();var a=r==null?{}:r;if(e==null||e["!ref"]==null){t.push(null);return t}var n=en(e["!ref"]);var i=a.FS!==undefined?a.FS:",",s=i.charCodeAt(0);var f=a.RS!==undefined?a.RS:"\n",l=f.charCodeAt(0);var o="",c=[];var h=a.skipHidden&&e["!cols"]||[];var u=a.skipHidden&&e["!rows"]||[];for(var d=n.s.c;d<=n.e.c;++d)if(!(h[d]||{}).hidden)c[d]=$a(d);var v=n.s.r;var p=false,m=0;t._read=function(){if(!p){p=true;return t.push("\ufeff")}while(v<=n.e.r){++v;if((u[v-1]||{}).hidden)continue;o=Lk(e,n,v-1,c,s,l,i,m,a);if(o!=null){if(o||a.blankrows!==false)return t.push((m++?f:"")+o)}}return t.push(null)};return t}function tA(e,r){var t=Qk();var a=r||{};var n=a.header!=null?a.header:yb;var i=a.footer!=null?a.footer:Eb;t.push(n);var s=Za(e["!ref"]);t.push(_b(e,s,a));var f=s.s.r;var l=false;t._read=function(){if(f>s.e.r){if(!l){l=true;t.push("</table>"+i)}return t.push(null)}while(f<=s.e.r){t.push(Tb(e,s,f,a));++f;break}};return t}function aA(e,r){var t=Qk({objectMode:true});if(e==null||e["!ref"]==null){t.push(null);return t}var a={t:"n",v:0},n=0,i=1,s=[],f=0,l="";var o={s:{r:0,c:0},e:{r:0,c:0}};var c=r||{};var h=c.range!=null?c.range:e["!ref"];if(c.header===1)n=1;else if(c.header==="A")n=2;else if(Array.isArray(c.header))n=3;switch(typeof h){case"string":o=en(h);break;case"number":o=en(e["!ref"]);o.s.r=h;break;default:o=h;}if(n>0)i=0;var u=Wa(o.s.r);var d=[];var v=0;var p=e["!data"]!=null;var m=o.s.r,g=0;var b={};if(p&&!e["!data"][m])e["!data"][m]=[];var w=c.skipHidden&&e["!cols"]||[];var k=c.skipHidden&&e["!rows"]||[];for(g=o.s.c;g<=o.e.c;++g){if((w[g]||{}).hidden)continue;d[g]=$a(g);a=p?e["!data"][m][g]:e[d[g]+u];switch(n){case 1:s[g]=g-o.s.c;break;case 2:s[g]=d[g];break;case 3:s[g]=c.header[g-o.s.c];break;default:if(a==null)a={w:"__EMPTY",t:"s"};l=f=tn(a,null,c);v=b[f]||0;if(!v)b[f]=1;else{do{l=f+"_"+v++}while(b[l]);b[f]=v;b[l]=1}s[g]=l;}}m=o.s.r+i;t._read=function(){while(m<=o.e.r){if((k[m-1]||{}).hidden)continue;var r=Fk(e,o,m,d,n,s,c);++m;if(r.isempty===false||(n===1?c.blankrows!==false:!!c.blankrows)){t.push(r.row);return}}return t.push(null)};return t}function nA(e,r){var t=Qk();var a=r==null?{}:r;var n=+a.stride||10;if(!e.SSF)e.SSF=Ar(q);if(e.SSF){$e();Ve(e.SSF);a.revssf=lr(e.SSF);a.revssf[e.SSF[65535]]=0;a.ssf=e.SSF;a.cellXfs=[];Tv(a.cellXfs,{},{revssf:{General:0}})}e.SheetNames.forEach(function(r){var t=e.Sheets[r];if(!t||!t["!ref"])return;var n=Za(t["!ref"]);var i=t["!data"]!=null;var s=i?t["!data"]:[];var f={r:0,c:0};for(var l=n.s.r;l<=n.e.r;++l){f.r=l;if(i&&!s[l])continue;for(var o=n.s.c;o<=n.e.c;++o){f.c=o;var c=i?s[l][o]:t[$a(o)+Wa(l)];if(!c)continue;if(c.t=="d"&&c.z==null){c=Ar(c);c.z=q[14]}void Tv(a.cellXfs,c,a)}}});var i=xg(e,a);var s=0,f=0,l=e.Sheets[e.SheetNames[f]],o=en(l),c=-1,h=false;var u=[],d=0,v=false,p=[],m={r:0,c:0};t._read=function(){switch(s){case 0:{s=1;t.push(at);t.push("<Workbook"+Ut({xmlns:Gt.ss,"xmlns:o":Gt.o,"xmlns:x":Gt.x,"xmlns:ss":Gt.ss,"xmlns:dt":Gt.dt,"xmlns:html":Gt.html})+">")}break;case 1:{s=2;t.push(_g(e,a));t.push(Sg(e,a))}break;case 2:{s=3;t.push(i);t.push(Ig(e,a))}break;case 3:{h=false;if(f>=e.SheetNames.length){s=-1;t.push("");break}t.push("<Worksheet"+Ut({"ss:Name":bt(e.SheetNames[f])})+">");l=e.Sheets[e.SheetNames[f]];if(!l){t.push("</Worksheet>");return void++f}var r=Rg(l,a,f,e);if(r.length)t.push("<Names>"+r+"</Names>");if(!l["!ref"])return s=5;o=en(l["!ref"]);c=o.s.r;s=4}break;case 4:{if(c<0||c>o.e.r){if(h)t.push("</Table>");return void(s=5)}if(c<=o.s.r){if(l["!cols"])l["!cols"].forEach(function(e,r){oc(e);var a=!!e.width;var n=kv(r,e);var i={"ss:Index":r+1};if(a)i["ss:Width"]=nc(n.width);if(e.hidden)i["ss:Hidden"]="1";if(!h){h=true;t.push("<Table>")}t.push(Bt("Column",null,i))});v=l["!data"]!=null;if(v)p=l["!data"];m.r=m.c=0}for(var g=0;c<=o.e.r&&g<n;++c,++g){var b=[Pg(c,(l["!rows"]||[])[c])];m.r=c;if(!(v&&!p[c]))for(var w=o.s.c;w<=o.e.c;++w){m.c=w;var k=false;for(d=0;d!=u.length;++d){if(u[d].s.c>w)continue;if(u[d].s.r>c)continue;if(u[d].e.c<w)continue;if(u[d].e.r<c)continue;if(u[d].s.c!=w||u[d].s.r!=c)k=true;break}if(k)continue;var A=$a(w)+Wa(c),T=v?p[c][w]:l[A];b.push(Dg(T,A,l,a,f,e,m))}b.push("</Row>");if(!h){h=true;t.push("<Table>")}t.push(b.join(""))}}break;case 5:{t.push(Ng(l,a,f,e));if(l&&l["!autofilter"])t.push('<AutoFilter x:Range="'+nu(qa(l["!autofilter"].ref),{r:0,c:0})+'" xmlns="urn:schemas-microsoft-com:office:excel"></AutoFilter>');t.push("</Worksheet>");f++;c=-1;return void(s=3)};case-1:{s=-2;t.push("</Workbook>")}break;case-2:t.push(null);break;}};return t}var iA={to_json:aA,to_html:tA,to_csv:rA,to_xlml:nA,set_readable:eA};if(typeof Kg!=="undefined")e.parse_xlscfb=Kg;e.parse_zip=nk;e.read=mk;e.readFile=gk;e.readFileSync=gk;e.write=xk;e.writeFile=Ik;e.writeFileSync=Ik;e.writeFileAsync=Nk;e.utils=qk;e.writeXLSX=Sk;e.writeFileXLSX=Rk;e.set_fs=rr;e.set_cptable=g;e.SSF=Xe;if(typeof iA!=="undefined")e.stream=iA;if(typeof Qe!=="undefined")e.CFB=Qe;if(typeof require!=="undefined"){var sA=undefined;if((sA||{}).Readable)eA(sA.Readable);try{er=undefined}catch(au){}}}if(typeof exports!=="undefined")make_xlsx_lib(exports);else if(typeof module!=="undefined"&&module.exports)make_xlsx_lib(module.exports);else if(typeof define==="function"&&define.amd)define("xlsx",function(){if(!XLSX.version)make_xlsx_lib(XLSX);return XLSX});else make_xlsx_lib(XLSX);if(typeof window!=="undefined"&&!window.XLSX)try{window.XLSX=XLSX}catch(e){}
 </script>
 <script>
-/* ===================== PSMMC NUPCO Dashboard — single-file, offline ===================== */
 (function(){
 "use strict";
-const $ = s => document.querySelector(s);
-const fmt = n => (n==null||isNaN(n)) ? "0" : Math.round(n).toLocaleString("en-US");
-const today = new Date(); today.setHours(0,0,0,0);
+const $=s=>document.querySelector(s);
+const fmt=n=>(n==null||isNaN(n))?"0":Math.round(n).toLocaleString("en-US");
+const today=new Date();today.setHours(0,0,0,0);
 
-/* ---- header alias map ---- */
-const ALIASES = {
-  client:["client"],
-  genNo:["generic item number","generic item no","generic number"],
-  genDesc:["generic item description","generic description"],
-  tradeNo:["trade item number","trade item no"],
-  custNo:["customer item number","customer item no"],
-  tradeDesc:["trade item description","trade description"],
-  totalQty:["total qty","total quantity"],
-  allocQty:["total allocated qty","allocated qty"],
-  pickedQty:["total picked qty","picked qty"],
-  stagingQty:["total receive staging qty","receive staging qty"],
-  holdQty:["total hold qty","hold qty"],
-  availQty:["total available qty","available qty"],
-  batch:["lot no/batch","lot no","batch","lot/batch","lot"],
-  prodDate:["production date","prod date"],
-  expDate:["expiry date","expiration date","expire date"],
-  familyKey:["item family short key","family short key"],
-  building:["building"],
-  warehouse:["warehouse"],
-  sloc:["sloc/plant","sloc","plant"],
-  custody:["custody"],
-  familyGroup:["item family group","family group"],
-  tempCode:["temperature code","temp code","temperature"],
-  uom:["uom","unit"],
-  aging:["aging profile","aging"],
-  daysToExpire:["days to expire","days to expiry"]
-};
-const norm = s => String(s==null?"":s).trim().toLowerCase().replace(/\s+/g," ");
-function buildHeaderMap(headers){
-  const map={}; const H=headers.map(norm);
-  for(const key in ALIASES){
-    for(const a of ALIASES[key]){
-      const i=H.indexOf(a); if(i>=0){ map[key]=i; break; }
-    }
-  }
-  return map;
-}
-function num(v){ if(v==null||v==="") return 0; const n=Number(String(v).replace(/[, ]/g,"")); return isNaN(n)?0:n; }
-function parseDate(v){
-  if(v==null||v==="") return null;
-  if(v instanceof Date) return isNaN(v)?null:v;
-  if(typeof v==="number"){ // excel serial
-    const d=new Date(Math.round((v-25569)*86400*1000)); return isNaN(d)?null:d;
-  }
-  const s=String(v).trim();
-  let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/); // DD-MM-YYYY
-  if(m){ let[_,d,mo,y]=m; if(y.length===2)y="20"+y; return new Date(+y,+mo-1,+d); }
-  const d=new Date(s); return isNaN(d)?null:d;
-}
-function riskOf(days){
-  if(days==null) return "unknown";
-  if(days<0) return "expired";
-  if(days<=30) return "critical";
-  if(days<=60) return "warning";
-  if(days<=90) return "medium";
-  return "safe";
-}
-const RISK_META={
-  expired:{label:"منتهي",color:"#ef4444"}, critical:{label:"حرِج (≤30 يوم)",color:"#f97316"},
-  warning:{label:"تحذير (31–60)",color:"#f59e0b"}, medium:{label:"متوسط (61–90)",color:"#0ea5e9"},
-  safe:{label:"آمن (>90)",color:"#16a34a"}, unknown:{label:"غير معروف",color:"#9ca3af"}
-};
-function tempBucket(code){
-  const c=norm(code);
-  if(!c) return "غير محدد";
-  if(c.includes("freez")||c.includes("-20")) return "مجمّد −20°";
-  if(c.includes("cold")||c.includes("2-8")||c.includes("2–8")) return "مبرّد 2–8°";
-  if(c.includes("room")||c.includes("15-25")||c.includes("15–25")||c.includes("amb")) return "حرارة الغرفة";
-  return code;
+const ALIASES={genNo:["generic item number","generic item no","generic number"],
+ genDesc:["generic item description","generic description"],tradeNo:["trade item number","trade item no"],
+ custNo:["customer item number","customer item no"],tradeDesc:["trade item description","trade description"],
+ totalQty:["total qty","total quantity"],allocQty:["total allocated qty","allocated qty"],
+ holdQty:["total hold qty","hold qty"],availQty:["total available qty","available qty"],
+ batch:["lot no/batch","lot no","batch","lot/batch","lot"],expDate:["expiry date","expiration date","expire date"],
+ familyGroup:["item family group","family group","item family short key"],warehouse:["warehouse"],
+ building:["building"],tempCode:["temperature code","temp code","temperature"],uom:["uom","unit"],
+ daysToExpire:["days to expire","days to expiry"]};
+const norm=s=>String(s==null?"":s).trim().toLowerCase().replace(/\s+/g," ");
+function headerMap(h){const m={},H=h.map(norm);for(const k in ALIASES)for(const a of ALIASES[k]){const i=H.indexOf(a);if(i>=0){m[k]=i;break;}}return m;}
+function nu(v){if(v==null||v==="")return 0;const n=Number(String(v).replace(/[, ]/g,""));return isNaN(n)?0:n;}
+function pdate(v){if(v==null||v==="")return null;if(v instanceof Date)return isNaN(v)?null:v;
+ if(typeof v==="number"){const d=new Date(Math.round((v-25569)*86400*1000));return isNaN(d)?null:d;}
+ const s=String(v).trim();let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+ if(m){let[_,d,mo,y]=m;if(y.length===2)y="20"+y;return new Date(+y,+mo-1,+d);}const d=new Date(s);return isNaN(d)?null:d;}
+function riskOf(d){if(d==null)return"unknown";if(d<0)return"expired";if(d<=30)return"critical";if(d<=60)return"warning";if(d<=90)return"medium";return"safe";}
+const RM={expired:{l:"منتهي",c:"#e0573a"},critical:{l:"حرِج",c:"#e0922f"},warning:{l:"تحذير",c:"#d4b13a"},medium:{l:"متوسط",c:"#3d7dca"},safe:{l:"آمن",c:"#2f9e58"},unknown:{l:"—",c:"#b4afa7"}};
+
+function rowsFromAoA(aoa){let best=-1,bh=0;for(let r=0;r<Math.min(aoa.length,15);r++){const m=headerMap(aoa[r]||[]);const h=Object.keys(m).length;if(h>bh){bh=h;best=r;}}
+ if(best<0||bh<2)return[];const map=headerMap(aoa[best]);const g=(row,k)=>map[k]!=null?row[map[k]]:undefined;const out=[];
+ for(let r=best+1;r<aoa.length;r++){const row=aoa[r];if(!row||row.every(c=>c==null||c===""))continue;
+  const genNo=String(g(row,"genNo")||"").trim();const desc=String(g(row,"tradeDesc")||g(row,"genDesc")||"").trim();
+  if(!genNo&&!desc)continue;let days=g(row,"daysToExpire");let exp=pdate(g(row,"expDate"));
+  let dn=(days!=null&&days!=="")?nu(days):(exp?Math.round((exp-today)/86400000):null);
+  out.push({genNo,desc,tradeNo:String(g(row,"tradeNo")||"").trim(),custNo:String(g(row,"custNo")||"").trim(),
+   totalQty:nu(g(row,"totalQty")),holdQty:nu(g(row,"holdQty")),availQty:nu(g(row,"availQty")),
+   batch:String(g(row,"batch")||"").trim(),expDate:exp,familyGroup:String(g(row,"familyGroup")||"غير مصنّف").trim(),
+   warehouse:String(g(row,"warehouse")||"غير محدد").trim(),tempCode:String(g(row,"tempCode")||"").trim(),
+   daysToExpire:dn,risk:riskOf(dn)});}
+ return out;}
+
+function demo(){
+ const rows=[
+  ["51012345","PARACETAMOL 500MG TABLET",48000,1200,40800,410,"Analgesics","Main Pharmacy WH","Room 15-25C","PCM-A1"],
+  ["51012345","PARACETAMOL 500MG TABLET",16000,300,15000,200,"Analgesics","Main Pharmacy WH","Room 15-25C","PCM-A2"],
+  ["51012345","PARACETAMOL 500MG TABLET",9000,0,8600,95,"Analgesics","Bulk Store A","Room 15-25C","PCM-A3"],
+  ["51023401","AMOXICILLIN 500MG CAPSULE",22000,900,18100,175,"Antibiotics","Main Pharmacy WH","Room 15-25C","AMX-B1"],
+  ["51023401","AMOXICILLIN 500MG CAPSULE",7000,100,6400,40,"Antibiotics","Bulk Store A","Room 15-25C","AMX-B2"],
+  ["51034509","INSULIN GLARGINE 100IU/ML",3400,200,2600,54,"Hormones","Cold Chain WH","Cold 2-8C","INS-C1"],
+  ["51034509","INSULIN GLARGINE 100IU/ML",1800,0,1500,22,"Hormones","Cold Chain WH","Cold 2-8C","INS-C2"],
+  ["51045612","CEFTRIAXONE 1G INJECTION",9800,300,8300,22,"Antibiotics","Main Pharmacy WH","Room 15-25C","CFX-1"],
+  ["51056720","NORMAL SALINE 0.9% 1000ML",76000,2000,65000,620,"IV Fluids","Bulk Store A","Room 15-25C","NS-1"],
+  ["51067831","HEPARIN 5000IU/ML VIAL",5400,150,4550,-8,"Anticoagulants","Cold Chain WH","Cold 2-8C","HEP-1"],
+  ["51078945","OMEPRAZOLE 40MG INJECTION",7200,250,6050,41,"GI","Main Pharmacy WH","Room 15-25C","OMP-1"],
+  ["51089056","INFLUENZA VACCINE 0.5ML",8800,400,7300,38,"Vaccines","Cold Chain WH","Cold 2-8C","FLU-1"],
+  ["51090167","ROTAVIRUS VACCINE ORAL",2100,90,1710,12,"Vaccines","Cold Chain WH","Freezer -20C","ROT-1"],
+  ["51101278","METFORMIN 1000MG TABLET",33000,800,28200,300,"Antidiabetics","Main Pharmacy WH","Room 15-25C","MET-1"],
+  ["51112389","ATORVASTATIN 20MG TABLET",27000,600,23200,260,"Cardio","Main Pharmacy WH","Room 15-25C","ATV-1"],
+  ["51123490","MORPHINE 10MG/ML AMPOULE",1200,60,940,88,"Controlled","Controlled WH","Room 15-25C","MOR-1"],
+  ["51134501","SALBUTAMOL INHALER 100MCG",9600,240,8260,150,"Respiratory","Main Pharmacy WH","Room 15-25C","SAL-1"],
+  ["51145612","ADRENALINE 1MG/ML AMPOULE",3300,120,2680,-3,"Emergency","Cold Chain WH","Cold 2-8C","ADR-1"],
+  ["51156723","PROPOFOL 200MG/20ML",4200,150,3450,29,"Anaesthesia","Main Pharmacy WH","Room 15-25C","PRO-1"],
+  ["51167834","DEXAMETHASONE 4MG/ML",5600,180,4720,70,"Steroids","Main Pharmacy WH","Room 15-25C","DEX-1"],
+  ["51178945","ENOXAPARIN 40MG SYRINGE",4800,160,4040,33,"Anticoagulants","Cold Chain WH","Cold 2-8C","ENX-1"],
+  ["51189056","FUROSEMIDE 20MG/2ML",6100,200,5100,18,"Diuretics","Main Pharmacy WH","Room 15-25C","FUR-1"],
+  ["51190167","HYDROCORTISONE 100MG VIAL",3900,130,3270,58,"Steroids","Main Pharmacy WH","Room 15-25C","HYC-1"],
+  ["51201278","CHLORHEXIDINE 2% SOLUTION",18000,400,15600,430,"Antiseptics","Main Pharmacy WH","Room 15-25C","CHX-1"],
+  ["51212389","TRAMADOL 100MG/2ML",2400,90,1960,-1,"Controlled","Controlled WH","Room 15-25C","TRA-1"],
+  ["30012345","SURGICAL GLOVES STERILE 7.5",120000,3000,102000,900,"Devices","Consumables WH","Room 15-25C","GLV-1"],
+  ["30023401","IV CANNULA 20G",88000,1800,77200,680,"Devices","Consumables WH","Room 15-25C","CAN-1"],
+  ["20011223","BLOOD COLLECTION TUBE EDTA",150000,3000,135000,800,"Lab","Lab Store","Room 15-25C","EDTA-1"],
+  ["10099887","SYRINGE 5ML LUER",260000,5000,233000,870,"Devices","Consumables WH","Room 15-25C","SYR-1"]
+ ];
+ return rows.map(r=>{const exp=new Date(today);exp.setDate(exp.getDate()+r[5]);
+  return{genNo:r[0],desc:r[1],tradeNo:"",custNo:"",totalQty:r[2],holdQty:r[3],availQty:r[4],
+   batch:r[9],expDate:exp,familyGroup:r[6],warehouse:r[7],tempCode:r[8],daysToExpire:r[5],risk:riskOf(r[5])};});
 }
 
-/* ---- normalize a raw AoA into rows ---- */
-function rowsFromAoA(aoa){
-  // find header row (the one containing the most known aliases)
-  let best=-1,bestHit=0;
-  for(let r=0;r<Math.min(aoa.length,15);r++){
-    const m=buildHeaderMap(aoa[r]||[]); const hit=Object.keys(m).length;
-    if(hit>bestHit){bestHit=hit;best=r;}
-  }
-  if(best<0||bestHit<2) return [];
-  const map=buildHeaderMap(aoa[best]);
-  const get=(row,k)=> map[k]!=null ? row[map[k]] : undefined;
-  const out=[];
-  for(let r=best+1;r<aoa.length;r++){
-    const row=aoa[r]; if(!row||row.every(c=>c==null||c==="")) continue;
-    const genNo=get(row,"genNo"), tradeNo=get(row,"tradeNo");
-    const desc=get(row,"tradeDesc")||get(row,"genDesc")||"";
-    if(!genNo&&!tradeNo&&!desc) continue;
-    let days=get(row,"daysToExpire");
-    let exp=parseDate(get(row,"expDate"));
-    let dnum = (days!=null&&days!=="") ? num(days) : (exp? Math.round((exp-today)/86400000): null);
-    out.push({
-      client:get(row,"client")||"", genNo:String(genNo||"").trim(), genDesc:get(row,"genDesc")||"",
-      tradeNo:String(tradeNo||"").trim(), custNo:String(get(row,"custNo")||"").trim(),
-      desc:String(desc).trim(),
-      totalQty:num(get(row,"totalQty")), allocQty:num(get(row,"allocQty")),
-      pickedQty:num(get(row,"pickedQty")), stagingQty:num(get(row,"stagingQty")),
-      holdQty:num(get(row,"holdQty")), availQty:num(get(row,"availQty")),
-      batch:String(get(row,"batch")||"").trim(), expDate:exp,
-      familyGroup:get(row,"familyGroup")||get(row,"familyKey")||"غير مصنّف",
-      building:get(row,"building")||"", warehouse:get(row,"warehouse")||"غير محدد",
-      tempCode:get(row,"tempCode")||"", uom:get(row,"uom")||"", aging:get(row,"aging")||"",
-      daysToExpire:dnum, risk:riskOf(dnum)
-    });
-  }
-  return out;
-}
+let ALL=[];let MEDS=[];
+let matchedSet=null;let matchedGroups=null;let notFound=[];
+let tableFilter="";
+function recomputeMeds(){MEDS=ALL.filter(r=>/^5/.test(String(r.genNo).trim()));}
 
-/* ===================== DEMO DATA (representative NUPCO schema) ===================== */
-function demoRows(){
-  const D=(off)=>{const d=new Date(today);d.setDate(d.getDate()+off);return d;};
-  const raw=[
-    // genNo, desc, total, alloc, hold, avail, daysOff, family, warehouse, temp, batch
-    ["10010234","PARACETAMOL 500MG TABLET",  48000, 6000, 1200, 40800,  410,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","PCM-2401"],
-    ["10010235","AMOXICILLIN 500MG CAPSULE", 22000, 3000,  900, 18100,  175,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","AMX-2312"],
-    ["10010236","INSULIN GLARGINE 100IU/ML",  3400,  600,  200,  2600,   54,"Pharmaceuticals","Cold Chain WH","Cold 2-8C","INS-2405"],
-    ["10010237","CEFTRIAXONE 1G INJECTION",   9800, 1200,  300,  8300,   22,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","CFX-2402"],
-    ["10010238","NORMAL SALINE 0.9% 1000ML", 76000, 9000, 2000, 65000,  620,"IV Fluids","Bulk Store A","Room 15-25C","NS-2398"],
-    ["10010239","HEPARIN 5000IU/ML VIAL",     5400,  700,  150,  4550,   -8,"Pharmaceuticals","Cold Chain WH","Cold 2-8C","HEP-2310"],
-    ["10010240","SURGICAL GLOVES STERILE 7.5",120000,15000,3000,102000, 900,"Consumables","Consumables WH","Room 15-25C","GLV-2390"],
-    ["10010241","FACE MASK 3PLY",            340000,20000,5000,315000, 730,"Consumables","Consumables WH","Room 15-25C","MSK-2388"],
-    ["10010242","OMEPRAZOLE 40MG INJECTION",  7200,  900,  250,  6050,   41,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","OMP-2403"],
-    ["10010243","INFLUENZA VACCINE 0.5ML",    8800, 1100,  400,  7300,   38,"Vaccines","Cold Chain WH","Cold 2-8C","FLU-2404"],
-    ["10010244","ROTAVIRUS VACCINE ORAL",     2100,  300,   90,  1710,   12,"Vaccines","Cold Chain WH","Freezer -20C","ROT-2406"],
-    ["10010245","WATER FOR INJECTION 10ML",  54000, 6000, 1000, 47000,  540,"IV Fluids","Bulk Store A","Room 15-25C","WFI-2395"],
-    ["10010246","METFORMIN 1000MG TABLET",   33000, 4000,  800, 28200,  300,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","MET-2401"],
-    ["10010247","ATORVASTATIN 20MG TABLET",  27000, 3200,  600, 23200,  260,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","ATV-2312"],
-    ["10010248","MORPHINE 10MG/ML AMPOULE",   1200,  200,   60,   940,   88,"Controlled Drugs","Controlled WH","Room 15-25C","MOR-2401"],
-    ["10010249","SALBUTAMOL INHALER 100MCG",  9600, 1100,  240,  8260,  150,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","SAL-2311"],
-    ["10010250","SUTURE VICRYL 3-0",         46000, 5000, 1000, 40000,  610,"Surgical","Surgical WH","Room 15-25C","VIC-2393"],
-    ["10010251","IV CANNULA 20G",            88000, 9000, 1800, 77200,  680,"Consumables","Consumables WH","Room 15-25C","CAN-2392"],
-    ["10010252","ADRENALINE 1MG/ML AMPOULE",  3300,  500,  120,  2680,   -3,"Pharmaceuticals","Cold Chain WH","Cold 2-8C","ADR-2309"],
-    ["10010253","PROPOFOL 200MG/20ML",        4200,  600,  150,  3450,   29,"Anaesthesia","Main Pharmacy WH","Room 15-25C","PRO-2402"],
-    ["10010254","BLOOD COLLECTION TUBE EDTA",150000,12000,3000,135000, 800,"Lab","Lab Store","Room 15-25C","EDTA-2390"],
-    ["10010255","COVID-19 PCR KIT",           6400,  800,  300,  5300,   46,"Lab","Cold Chain WH","Freezer -20C","PCR-2404"],
-    ["10010256","GAUZE SWAB 10X10",          210000,18000,4000,188000, 950,"Consumables","Consumables WH","Room 15-25C","GAZ-2389"],
-    ["10010257","DEXAMETHASONE 4MG/ML",       5600,  700,  180,  4720,   70,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","DEX-2401"],
-    ["10010258","ENOXAPARIN 40MG SYRINGE",    4800,  600,  160,  4040,   33,"Pharmaceuticals","Cold Chain WH","Cold 2-8C","ENX-2403"],
-    ["10010259","SODIUM BICARBONATE 8.4%",    2600,  400,  100,  2100,  120,"IV Fluids","Bulk Store A","Room 15-25C","BIC-2310"],
-    ["10010260","CHLORHEXIDINE 2% SOLUTION", 18000, 2000,  400, 15600,  430,"Antiseptics","Consumables WH","Room 15-25C","CHX-2401"],
-    ["10010261","TRAMADOL 100MG/2ML",         2400,  350,   90,  1960,   -1,"Controlled Drugs","Controlled WH","Room 15-25C","TRA-2309"],
-    ["10010262","HYDROCORTISONE 100MG VIAL",  3900,  500,  130,  3270,   58,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","HYC-2402"],
-    ["10010263","SYRINGE 5ML LUER",          260000,22000,5000,233000, 870,"Consumables","Consumables WH","Room 15-25C","SYR-2388"],
-    ["10010264","FUROSEMIDE 20MG/2ML",        6100,  800,  200,  5100,   18,"Pharmaceuticals","Main Pharmacy WH","Room 15-25C","FUR-2402"]
-  ];
-  return raw.map((r,i)=>{
-    const exp=new Date(today); exp.setDate(exp.getDate()+r[9]);
-    return {
-      client:"MOD-PSMMC", genNo:r[0], genDesc:r[1], tradeNo:String(20000000+i), custNo:String(C(i)),
-      desc:r[1], totalQty:r[2], allocQty:r[3], pickedQty:Math.round(r[3]*.6), stagingQty:0,
-      holdQty:r[4], availQty:r[5], batch:r[10], expDate:exp, familyGroup:r[6],
-      building:"Bldg "+(1+(i%4)), warehouse:r[7], tempCode:r[8], uom:"EA", aging:"",
-      daysToExpire:r[9], risk:riskOf(r[9])
-    };
-  });
-  function C(i){return 90010000+i;}
-}
+function kpis(rows){const k={total:0,avail:0,hold:0,expired:0,near:0,items:new Set(),wh:new Set(),safeAvail:0};
+ for(const r of rows){k.total+=r.totalQty;k.avail+=r.availQty;k.hold+=r.holdQty;
+  if(r.risk==="expired")k.expired++;if(r.risk==="critical"||r.risk==="warning")k.near++;
+  if(r.risk==="safe")k.safeAvail+=r.availQty;if(r.genNo)k.items.add(r.genNo);if(r.warehouse)k.wh.add(r.warehouse);}
+ return k;}
+function groupSum(rows,key,val){const m=new Map();for(const r of rows){const g=r[key]||"—";m.set(g,(m.get(g)||0)+r[val]);}return[...m.entries()].sort((a,b)=>b[1]-a[1]);}
 
-/* ===================== STATE ===================== */
-let ALL=[]; let META={name:"بيانات تجريبية",rows:0,date:""};
-let matchedSet=null;       // array of rows from bulk search (null = none)
-let tableFilter="";        // quick search text
+function donut(pct){const R=58,C=2*Math.PI*R,off=C*(1-pct/100);
+ return `<svg width="160" height="160" viewBox="0 0 160 160">
+  <circle cx="80" cy="80" r="${R}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="16"/>
+  <circle cx="80" cy="80" r="${R}" fill="none" stroke="#ec6a4d" stroke-width="16" stroke-linecap="round"
+   stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 80 80)"/>
+  <text x="80" y="74" text-anchor="middle" fill="#fff" font-size="30" font-weight="800">${pct}%</text>
+  <text x="80" y="96" text-anchor="middle" fill="#b8b2a8" font-size="11" font-weight="700">آمن &gt;90 يوم</text></svg>`;}
+function circles(items){const W=230,H=200;const max=Math.max(1,...items.map(i=>i[1]));const cols=["#f6d3c8","#f2b3a1","#ee8b72","#e8593a"];
+ let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+ items.forEach((it,idx)=>{const r=28+(Math.sqrt(it[1]/max))*68;const cx=W/2;const cy=H-r-6;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${cols[idx]||'#e8593a'}"/>`;
+  s+=`<text x="${cx}" y="${H-2*r+16}" text-anchor="middle" fill="#1b1a18" font-size="13" font-weight="800">${fmt(it[1])}</text>`;});
+ return s+`</svg>`;}
+function wave(vals){const W=420,H=150,P=16;if(!vals.length)vals=[0,0];const max=Math.max(1,...vals);const n=vals.length;
+ const X=i=>P+i*(W-2*P)/(n-1||1);const Y=v=>H-P-(v/max)*(H-2*P-10);
+ const pts=vals.map((v,i)=>[X(i),Y(v)]);let d=`M ${pts[0][0]} ${pts[0][1]}`;
+ for(let i=0;i<pts.length-1;i++){const cx=(pts[i][0]+pts[i+1][0])/2;d+=` C ${cx} ${pts[i][1]}, ${cx} ${pts[i+1][1]}, ${pts[i+1][0]} ${pts[i+1][1]}`;}
+ const area=d+` L ${pts[n-1][0]} ${H-P} L ${pts[0][0]} ${H-P} Z`;
+ return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ec6a4d" stop-opacity=".30"/><stop offset="1" stop-color="#ec6a4d" stop-opacity="0"/></linearGradient></defs>
+  <path d="${area}" fill="url(#wg)"/><path d="${d}" fill="none" stroke="#ec6a4d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
 
-/* ===================== COMPUTE ===================== */
-function kpisFor(rows){
-  const k={total:0,avail:0,hold:0,alloc:0,expired:0,critical:0,near:0,items:new Set(),wh:new Set(),cold:0};
-  for(const r of rows){
-    k.total+=r.totalQty; k.avail+=r.availQty; k.hold+=r.holdQty; k.alloc+=r.allocQty;
-    if(r.risk==="expired"){k.expired++;}
-    if(r.risk==="critical"){k.critical++;}
-    if(r.risk==="critical"||r.risk==="warning"){k.near++;}
-    if(r.genNo)k.items.add(r.genNo);
-    if(r.warehouse)k.wh.add(r.warehouse);
-    if(/cold|2-8|2–8|freez|-20/i.test(r.tempCode))k.cold+=r.availQty;
-  }
-  return k;
-}
-function groupSum(rows,key,val){
-  const m=new Map();
-  for(const r of rows){const g=r[key]||"غير محدد";m.set(g,(m.get(g)||0)+r[val]);}
-  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
-}
-
-/* ===================== RENDER ===================== */
 function render(){
-  const scope = matchedSet || ALL;
-  const k=kpisFor(scope);
-  $("#kpiScope").textContent = matchedSet ? `على ${matchedSet.length} صنف مطابق للأكواد` : "على كامل البيانات";
+ recomputeMeds();
+ const scope=matchedSet||MEDS;const k=kpis(scope);
+ const excluded=ALL.length-MEDS.length;
+ $("#kpiScope").textContent=matchedSet?`نتائج البحث · ${k.items.size} كود`:`أكواد نبكو (تبدأ بـ 5) — ${MEDS.length} سطر${excluded?` · مستبعد ${excluded} (أجهزة/أخرى)`:""}`;
+ const ic=p=>`<div class="ic">${p}</div>`;
+ $("#kpis").innerHTML=
+  `<div class="card kpi dark">${ic('★')}<div class="v num">${fmt(k.avail)}</div><div class="l">المخزون المتاح</div></div>`+
+  `<div class="card kpi">${ic('Σ')}<div class="v num">${fmt(k.total)}</div><div class="l">إجمالي الكمية</div></div>`+
+  `<div class="card kpi">${ic('⏸')}<div class="v num">${fmt(k.hold)}</div><div class="l">محجوز (Hold)</div></div>`+
+  `<div class="card kpi">${ic('#')}<div class="v num">${fmt(k.items.size)}</div><div class="l">عدد الأكواد</div></div>`+
+  `<div class="card kpi">${ic('!')}<div class="v num">${fmt(k.expired)}</div><div class="l">أصناف منتهية</div></div>`;
+ const fam=groupSum(scope,"familyGroup","availQty").slice(0,4);
+ const fcol=["#f6d3c8","#f2b3a1","#ee8b72","#e8593a"];
+ $("#circles").innerHTML=circles(fam);
+ $("#circlesLegend").innerHTML=fam.map((f,i)=>`<div class="row"><span class="dotc" style="background:${fcol[i]}"></span>${f[0]}<span class="n num">${fmt(f[1])}</span></div>`).join("")||'<div class="empty">—</div>';
+ const pct=k.avail?Math.round(k.safeAvail/k.avail*100):0;
+ $("#donut").innerHTML=donut(pct);
+ $("#donutLegend").innerHTML=`<div class="row"><span class="dotc" style="background:#ec6a4d"></span>متاح آمن<span class="n num">${fmt(k.safeAvail)}</span></div>`+
+  `<div class="row"><span class="dotc" style="background:rgba(255,255,255,.25)"></span>قارب/منتهٍ<span class="n num">${fmt(k.avail-k.safeAvail)}</span></div>`;
+ const top=[...scope].sort((a,b)=>b.availQty-a.availQty).slice(0,16);
+ $("#wave").innerHTML=wave(top.map(r=>r.availQty));
+ $("#waveSub").textContent=`أعلى ${top.length} صنف`;
+ const byItem=groupSum(scope,"genNo","availQty").slice(0,10);
+ const nameOf=c=>{const r=scope.find(x=>x.genNo===c);return r?r.desc:c;};
+ $("#topItems").innerHTML=byItem.map((it,i)=>`<div class="rank"><span class="i num">${i+1}</span><span class="nm">${nameOf(it[0])} <span style="color:var(--muted);font-weight:600">· ${it[0]}</span></span><span class="vv num">${fmt(it[1])}</span></div>`).join("")||'<div class="empty">—</div>';
+ const byWh=groupSum(scope,"warehouse","availQty");
+ $("#topWh").innerHTML=byWh.map((w,i)=>`<div class="rank"><span class="i num">${i+1}</span><span class="nm">${w[0]}</span><span class="vv num">${fmt(w[1])}</span></div>`).join("")||'<div class="empty">—</div>';
+ renderTable(scope);
+}
+function renderTable(rows){let data=rows;
+ if(tableFilter){const q=tableFilter.toLowerCase();data=rows.filter(r=>[r.genNo,r.desc,r.warehouse,r.batch].some(f=>String(f).toLowerCase().includes(q)));}
+ data=[...data].sort((a,b)=>b.availQty-a.availQty).slice(0,600);
+ $("#tableCount").textContent=`${data.length} / ${rows.length}`;
+ $("#tableScope").textContent=matchedSet?"(نتائج البحث الجماعي)":"(أكواد نبكو فقط)";
+ if(!data.length){$("#tableBody").innerHTML='<tr><td colspan="9"><div class="empty">لا نتائج.</div></td></tr>';return;}
+ $("#tableBody").innerHTML=data.map(r=>`<tr>
+  <td class="num" style="font-weight:800">${r.genNo||"—"}</td><td>${r.desc||"—"}</td>
+  <td class="num" style="font-weight:800">${fmt(r.availQty)}</td><td class="num">${fmt(r.totalQty)}</td>
+  <td class="num">${fmt(r.holdQty)}</td><td class="num">${r.daysToExpire==null?"—":r.daysToExpire}</td>
+  <td><span class="pill ${r.risk}">${RM[r.risk].l}</span></td><td>${r.warehouse||"—"}</td>
+  <td class="num">${r.batch||"—"}</td></tr>`).join("");
+}
 
-  // KPIs
-  $("#kpis").innerHTML = `
-    ${kpi("hero","المخزون المتاح الإجمالي",fmt(k.avail),"وحدة جاهزة للصرف — أهم رقم")}
-    ${kpi("","إجمالي الكمية",fmt(k.total),"شامل المحجوز والمخصص")}
-    ${kpi("","كمية محجوزة (Hold)",fmt(k.hold),"غير متاحة للصرف")}
-    ${kpi("","عدد الأصناف",fmt(k.items.size),"كود فريد")}
-    ${kpi("","مستودعات",fmt(k.wh.size),"موقع تخزين")}
-    ${kpi("","أصناف منتهية",fmt(k.expired),"تحتاج إتلاف/مراجعة")}
-  `;
-
-  renderReading(scope,k);
-  renderRisk(scope);
-  renderWh(scope);
-  renderTable(scope);
-}
-function kpi(cls,lbl,val,sub){
-  return `<div class="card kpi ${cls}">
-    <div class="k-lbl">${cls==="hero"?"★ ":""}${lbl}</div>
-    <div class="k-val">${val}</div><div class="k-sub">${sub}</div></div>`;
-}
-function renderReading(rows,k){
-  if(!rows.length){$("#reading").innerHTML='<p class="empty">لا توجد بيانات.</p>';return;}
-  const byFam=groupSum(rows,"familyGroup","availQty");
-  const byWh=groupSum(rows,"warehouse","availQty");
-  const topItems=[...rows].sort((a,b)=>b.availQty-a.availQty).slice(0,3);
-  const expiredUnits=rows.filter(r=>r.risk==="expired").reduce((s,r)=>s+r.availQty,0);
-  const critUnits=rows.filter(r=>r.risk==="critical").reduce((s,r)=>s+r.availQty,0);
-  const holdPct = k.total? Math.round(k.hold/k.total*100):0;
-  const scopeTxt = matchedSet ? `الأكواد المختارة (${rows.length} صنف)` : "هذا الملف";
-  let html=`<p class="lead">📊 لديك في ${scopeTxt} إجمالي <b>${fmt(k.avail)}</b> وحدة <b>متاحة للصرف</b> موزّعة على <b>${fmt(k.items.size)}</b> صنف و<b>${fmt(k.wh.size)}</b> مستودع.</p>`;
-  html+=`<ul>`;
-  html+=`<li>أعلى عائلة دوائية بالمخزون: <b>${byFam[0]?byFam[0][0]:"—"}</b> بـ ${fmt(byFam[0]?byFam[0][1]:0)} وحدة متاحة.</li>`;
-  html+=`<li>أكبر مستودع: <b>${byWh[0]?byWh[0][0]:"—"}</b> يحتفظ بـ ${fmt(byWh[0]?byWh[0][1]:0)} وحدة متاحة.</li>`;
-  html+=`<li>أعلى 3 أصناف متوفرة: ${topItems.map(r=>`<b>${r.desc}</b> (${fmt(r.availQty)})`).join("، ")}.</li>`;
-  if(expiredUnits>0) html+=`<li style="color:#b91c1c">⚠️ يوجد <b style="color:#b91c1c">${fmt(expiredUnits)}</b> وحدة <b style="color:#b91c1c">منتهية الصلاحية</b> في ${rows.filter(r=>r.risk==="expired").length} صنف — تحتاج إتلافًا أو مراجعة فورية.</li>`;
-  if(critUnits>0) html+=`<li style="color:#c2410c">⏳ <b style="color:#c2410c">${fmt(critUnits)}</b> وحدة تنتهي خلال <b>30 يومًا</b> — قدّمها في الصرف أو أعد توزيعها.</li>`;
-  html+=`<li>نسبة المحجوز (Hold) من الإجمالي: <b>${holdPct}%</b> (${fmt(k.hold)} وحدة) ${holdPct>15?"— مرتفعة، راجع أسباب الحجز":"— ضمن المعدّل الطبيعي"}.</li>`;
-  if(k.cold>0) html+=`<li>❄️ مخزون السلسلة الباردة المتاح: <b>${fmt(k.cold)}</b> وحدة — تأكد من سلامة التبريد.</li>`;
-  html+=`</ul>`;
-  $("#reading").innerHTML=html;
-}
-function renderRisk(rows){
-  const order=["expired","critical","warning","medium","safe","unknown"];
-  const c={}; order.forEach(o=>c[o]=0);
-  rows.forEach(r=>c[r.risk]++);
-  const max=Math.max(1,...order.map(o=>c[o]));
-  $("#riskBars").innerHTML=order.map(o=>{
-    const m=RISK_META[o];
-    return `<div class="riskrow"><span class="name">${m.label}</span>
-      <span class="bar"><i style="width:${c[o]/max*100}%;background:${m.color}"></i></span>
-      <span class="num">${fmt(c[o])} صنف</span></div>`;
-  }).join("");
-}
-function renderWh(rows){
-  const g=groupSum(rows,"warehouse","availQty").slice(0,7);
-  const max=Math.max(1,...g.map(x=>x[1]));
-  $("#whBars").innerHTML=g.map(([name,v])=>`
-    <div class="riskrow"><span class="name" style="width:140px">${name}</span>
-      <span class="bar"><i style="width:${v/max*100}%;background:var(--coral)"></i></span>
-      <span class="num">${fmt(v)}</span></div>`).join("") || '<p class="empty">—</p>';
-}
-function renderTable(rows){
-  let data=rows;
-  if(tableFilter){
-    const q=tableFilter.toLowerCase();
-    data=rows.filter(r=>[r.genNo,r.tradeNo,r.custNo,r.desc,r.warehouse,r.batch,r.tempCode]
-      .some(f=>String(f).toLowerCase().includes(q)));
+function tokenize(t){return[...new Set(String(t).split(/[\s,;،\n\r\t|]+/).map(x=>x.trim()).filter(Boolean))];}
+function runBulk(){
+ recomputeMeds();
+ const toks=tokenize($("#bulkInput").value);
+ if(!toks.length){clearBulk();toast("الصق أكوادًا أولًا");return;}
+ const groups=[];notFound=[];
+ for(const t of toks){
+  const rows=MEDS.filter(r=>r.genNo===t||r.tradeNo===t||r.custNo===t||r.desc.toLowerCase().includes(t.toLowerCase()));
+  if(!rows.length){notFound.push(t);continue;}
+  const byCode=new Map();
+  for(const r of rows){if(!byCode.has(r.genNo))byCode.set(r.genNo,[]);byCode.get(r.genNo).push(r);}
+  for(const[code,lots]of byCode){
+   if(groups.find(g=>g.code===code))continue;
+   groups.push({code,name:lots[0].desc,lots:lots.map(l=>({q:l.availQty,batch:l.batch,risk:l.risk})),total:lots.reduce((s,l)=>s+l.availQty,0),rows:lots});
   }
-  data=[...data].sort((a,b)=>b.availQty-a.availQty).slice(0,500);
-  $("#tableCount").textContent=`عرض ${data.length} من ${rows.length} صنف`;
-  $("#tableScope").textContent = matchedSet ? "(نتائج البحث الجماعي)" : "";
-  if(!data.length){$("#tableBody").innerHTML='<tr><td colspan="10"><div class="empty">لا نتائج مطابقة.</div></td></tr>';return;}
-  $("#tableBody").innerHTML=data.map(r=>{
-    const m=RISK_META[r.risk];
-    return `<tr>
-      <td class="num-cell">${r.genNo||r.tradeNo||"—"}</td>
-      <td>${r.desc||"—"}</td>
-      <td class="num-cell">${fmt(r.availQty)}</td>
-      <td class="num-cell">${fmt(r.totalQty)}</td>
-      <td class="num-cell">${fmt(r.holdQty)}</td>
-      <td class="num-cell">${r.daysToExpire==null?"—":r.daysToExpire}</td>
-      <td><span class="pill ${r.risk}">${m.label}</span></td>
-      <td>${r.warehouse||"—"}</td>
-      <td>${tempBucket(r.tempCode)}</td>
-      <td class="num-cell">${r.batch||"—"}</td>
-    </tr>`;
-  }).join("");
+ }
+ matchedGroups=groups;matchedSet=groups.flatMap(g=>g.rows);
+ const grand=groups.reduce((s,g)=>s+g.total,0);
+ $("#grandVal").innerHTML=`${fmt(grand)}<small>وحدة</small>`;
+ $("#grandMeta").innerHTML=groups.length?`<b>${groups.length}</b> كود · <b>${matchedSet.length}</b> تشغيلة (دفعة)${notFound.length?` · غير موجود: ${notFound.length}`:""}`:`لا مطابقة (تأكد أن الكود يبدأ بـ 5)`;
+ if(groups.length){
+  let h=`<div class="res-wrap"><table><thead><tr><th>الكود</th><th>اسم الدواء</th><th>التشغيلات (الدفعات)</th><th>المجموع المتاح</th></tr></thead><tbody>`;
+  for(const g of groups){
+   const lots=g.lots.map(l=>`<span class="lot ${l.risk==='expired'?'exp':''}" title="${l.batch}">${fmt(l.q)}</span>`).join("");
+   h+=`<tr><td class="code-cell num">${g.code}</td><td>${g.name}</td><td><div class="lots">${lots}</div></td><td class="tot-cell num">${fmt(g.total)}</td></tr>`;
+  }
+  h+=`<tr class="grand-row"><td colspan="3">المجموع الكلي (${groups.length} كود · ${matchedSet.length} تشغيلة)</td><td class="tot-cell num">${fmt(grand)}</td></tr>`;
+  h+=`</tbody></table></div>`;
+  if(notFound.length)h+=`<div class="not-found">⚠️ أكواد غير موجودة أو لا تبدأ بـ 5: ${notFound.slice(0,12).join("، ")}${notFound.length>12?"…":""}</div>`;
+  $("#resBox").innerHTML=h;
+ } else $("#resBox").innerHTML=`<div class="not-found">⚠️ لم يُعثر على أي كود نبكو (يبدأ بـ 5).</div>`;
+ render();
+ toast(`المجموع: ${fmt(grand)} وحدة`);
 }
+function clearBulk(){$("#bulkInput").value="";matchedSet=null;matchedGroups=null;notFound=[];$("#resBox").innerHTML="";
+ $("#grandVal").innerHTML='—<small>وحدة</small>';$("#grandMeta").textContent="الصق الأكواد ثم اضغط «احسب المجموع»";render();}
 
-/* ===================== BULK SEARCH ===================== */
-function tokenize(text){
-  return [...new Set(String(text).split(/[\s,;،\n\r\t|]+/).map(t=>t.trim()).filter(Boolean))];
-}
-function runBulkSearch(){
-  const toks=tokenize($("#bulkInput").value);
-  if(!toks.length){ clearBulk(); toast("الصق أكوادًا أولًا"); return; }
-  const lc=toks.map(t=>t.toLowerCase());
-  const matched=ALL.filter(r=>{
-    const hay=[r.genNo,r.tradeNo,r.custNo,r.desc.toLowerCase()];
-    return lc.some(t=> hay.some(h=> String(h).toLowerCase()===t) || r.desc.toLowerCase().includes(t));
-  });
-  matchedSet = matched;
-  const avail=matched.reduce((s,r)=>s+r.availQty,0);
-  const foundCodes=new Set(matched.map(r=>r.genNo).filter(Boolean));
-  const notFound=toks.filter(t=>!matched.some(r=>
-    String(r.genNo).toLowerCase()===t.toLowerCase()||String(r.tradeNo).toLowerCase()===t.toLowerCase()||String(r.custNo).toLowerCase()===t.toLowerCase()));
-  $("#matchVal").innerHTML=`${fmt(avail)}<span>وحدة</span>`;
-  $("#matchSub").innerHTML = matched.length
-    ? `طابقت <b>${matched.length}</b> صنف من <b>${toks.length}</b> كود${notFound.length?` · لم يُعثر على: ${notFound.slice(0,8).join("، ")}${notFound.length>8?"…":""}`:""}`
-    : `لم يُعثر على أي من الأكواد (${toks.length})`;
-  render();
-  toast(`تم تجميع ${matched.length} صنف`);
-  document.querySelector(".sec-title").scrollIntoView({behavior:"smooth",block:"start"});
-}
-function clearBulk(){
-  $("#bulkInput").value=""; matchedSet=null;
-  $("#matchVal").innerHTML='—<span>وحدة</span>';
-  $("#matchSub").textContent="الصق الأكواد ثم اضغط «ابحث عن الكل»";
-  render();
-}
+function loadFile(file){const rd=new FileReader();rd.onload=e=>{try{
+  if(typeof XLSX==="undefined"){toast("محرك Excel غير محمّل");return;}
+  const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array",cellDates:true});let rows=[];
+  for(const sn of wb.SheetNames){const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:""});const g=rowsFromAoA(aoa);if(g.length>rows.length)rows=g;}
+  if(!rows.length){toast("تعذّر التعرّف على الأعمدة");return;}
+  ALL=rows;recomputeMeds();clearBulk();
+  setHello();$("#helloSub").innerHTML=`الملف: <b>${file.name}</b> — ${fmt(MEDS.length)} كود نبكو من ${fmt(rows.length)} سطر.`;
+  toast(`تم تحميل ${fmt(rows.length)} سطر`);
+ }catch(err){console.error(err);toast("خطأ في قراءة الملف");}};rd.readAsArrayBuffer(file);}
 
-/* ===================== FILE LOAD ===================== */
-function loadFile(file){
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      if(typeof XLSX==="undefined"){toast("محرك Excel غير محمّل");return;}
-      const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array",cellDates:true});
-      let rows=[];
-      for(const sn of wb.SheetNames){
-        const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:""});
-        const got=rowsFromAoA(aoa);
-        if(got.length>rows.length) rows=got;
-      }
-      if(!rows.length){toast("تعذّر التعرّف على الأعمدة — تأكد أنه ملف Stock On Hand");return;}
-      ALL=rows; matchedSet=null;
-      META={name:file.name,rows:rows.length,date:new Date().toLocaleDateString("ar-SA")};
-      $("#metaChip").innerHTML=`<b>${file.name}</b> · ${fmt(rows.length)} سطر`;
-      clearBulk(); render();
-      toast(`تم تحميل ${fmt(rows.length)} سطر بنجاح`);
-    }catch(err){console.error(err);toast("خطأ في قراءة الملف");}
-  };
-  reader.readAsArrayBuffer(file);
-}
+function exportCSV(){const rows=matchedSet||MEDS;
+ const head=["NUPCO_Code","Drug","Available","Total","Hold","DaysToExpire","Risk","Warehouse","Batch"];
+ const esc=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+ const lines=[head.join(",")].concat(rows.map(r=>[r.genNo,r.desc,r.availQty,r.totalQty,r.holdQty,r.daysToExpire==null?"":r.daysToExpire,RM[r.risk].l,r.warehouse,r.batch].map(esc).join(",")));
+ const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="psmmc_nupco_"+Date.now()+".csv";a.click();URL.revokeObjectURL(a.href);toast("تم تصدير CSV");}
 
-/* ===================== EXPORT CSV ===================== */
-function exportCSV(){
-  const rows=matchedSet||ALL;
-  const head=["GenericNo","Description","Available","Total","Hold","DaysToExpire","Risk","Warehouse","Temp","Batch"];
-  const esc=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
-  const lines=[head.join(",")].concat(rows.map(r=>[r.genNo,r.desc,r.availQty,r.totalQty,r.holdQty,
-    r.daysToExpire==null?"":r.daysToExpire,RISK_META[r.risk].label,r.warehouse,tempBucket(r.tempCode),r.batch].map(esc).join(",")));
-  const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download="psmmc_stock_"+Date.now()+".csv";a.click();URL.revokeObjectURL(a.href);
-  toast("تم تصدير CSV");
-}
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2200);}
+function setHello(){const days=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+ const mon=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+ $("#hDay").textContent=today.getDate();$("#hDow").innerHTML=`${days[today.getDay()]}<br>${mon[today.getMonth()]}`;}
 
-/* ===================== TOAST ===================== */
-let toastT;
-function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);}
-
-/* ===================== WIRE UP ===================== */
 $("#uploadBtn").onclick=()=>$("#fileInput").click();
 $("#fileInput").onchange=e=>{if(e.target.files[0])loadFile(e.target.files[0]);};
-$("#bulkSearchBtn").onclick=runBulkSearch;
-$("#bulkClearBtn").onclick=clearBulk;
-$("#bulkInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")runBulkSearch();});
-$("#tableSearch").oninput=e=>{tableFilter=e.target.value;renderTable(matchedSet||ALL);};
+$("#bulkBtn").onclick=runBulk;$("#bulkClear").onclick=clearBulk;
+$("#bulkInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")runBulk();});
+$("#tableSearch").oninput=e=>{tableFilter=e.target.value;renderTable(matchedSet||MEDS);};
+$("#topSearch").oninput=e=>{tableFilter=e.target.value;$("#tableSearch").value=e.target.value;renderTable(matchedSet||MEDS);};
 $("#exportBtn").onclick=exportCSV;
-// drag/drop
 const drop=$("#drop");let dc=0;
 window.addEventListener("dragenter",e=>{e.preventDefault();dc++;drop.classList.add("show");});
 window.addEventListener("dragover",e=>e.preventDefault());
 window.addEventListener("dragleave",e=>{e.preventDefault();if(--dc<=0)drop.classList.remove("show");});
-window.addEventListener("drop",e=>{e.preventDefault();dc=0;drop.classList.remove("show");
-  if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+window.addEventListener("drop",e=>{e.preventDefault();dc=0;drop.classList.remove("show");if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
 
-/* ===================== BOOT ===================== */
-ALL=demoRows();
-META={name:"بيانات تجريبية",rows:ALL.length,date:new Date().toLocaleDateString("ar-SA")};
-$("#metaChip").innerHTML=`بيانات تجريبية · ${ALL.length} صنف <span style="opacity:.6">(ارفع ملفك لاستبدالها)</span>`;
-render();
+ALL=demo();setHello();render();
 })();
 </script>
 </body>
