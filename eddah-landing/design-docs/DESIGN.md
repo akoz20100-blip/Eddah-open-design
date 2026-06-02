@@ -1,65 +1,167 @@
-# DESIGN — الهوية البصرية ونظام التصميم
+# DESIGN — الهوية البصرية ونظام التصميم (آخر تحديث: 2 يونيو 2026)
 
-الهوية: **"Ivory & Amber"** — فاتحة، دافئة، فاخرة، محلية سعودية. مشتقّة من صورة
-خريطة حي لبن (`public/brand/laban-map.png`): ورق بيج دافئ + دبوس كهرماني.
+الهوية: **"Ivory & Amber"** — فاتحة، دافئة، فاخرة، محلية سعودية.
+مشتقّة من `public/brand/laban-map.png`: ورق بيج دافئ + دبوس كهرماني.
 
-## 1) الألوان (توكنات Tailwind — `tailwind.config.ts`)
-- **الخلفية/الأسطح (clay):** `clay-50 #FCF8F1` (آيفوري، الكانفس) · `clay-100 #F5EEE0` · `clay-200 #ECE0CD` · `clay-300 #DBCBB2` · `clay-400 #C6B398` (رملي/حجري دافئ).
-- **النص (ink):** `ink #1A1714` (فحمي دافئ) + تدرّجات 800–300 للنصوص الثانوية.
-- **الأكسنت (orange):** `#FFF5E1 → #F2820C(500) → #DD6A06(600) → #8A3F09(800)`؛ + `gold #F6A700`.
-- **متغيّرات CSS** (`globals.css`): `--bg #fcf8f1` · `--orange #f2820c` · `--ink #1a1714`.
+---
 
-**قواعد الاستخدام:** الخلفية فاتحة وهادئة؛ البرتقالي **بتركيز** (CTA، أيقونات، دبوس،
-خطوط أكسنت، تمييز علامة) مو في كل مكان؛ النص فحمي مقروء. تدرّج العلامة:
-`text-orange-gradient` (#FFC74D→#F6A700→#F2820C→#DD6A06) للكلمات المميّزة فقط.
+## 1) الألوان — Tailwind tokens (tailwind.config.ts)
 
-**تجنّب:** أسود ثقيل/خلفيات داكنة سينمائية · نيون · برتقالي مُفرط · تباين قاسي ·
-تدرّجات SaaS الباردة · أزرق مؤسسي كهوية رئيسية.
+### Clay (الخلفية والأسطح)
+| Token | Hex | الاستخدام |
+|---|---|---|
+| `clay-50` | `#FCF8F1` | الكانفس الرئيسي (body bg) |
+| `clay-100` | `#F5EEE0` | أسطح بديلة، أقسام |
+| `clay-200` | `#ECE0CD` | حدود، فواصل خفيفة |
+| `clay-300` | `#DBCBB2` | حدود أثقل |
+| `clay-400` | `#C6B398` | رملي/حجري |
 
-## 2) الخطوط (Typography)
-- العائلة: **IBM Plex Sans Arabic** (أوزان 300–700) عبر `next/font`، متغيّر `--font-arabic`.
-- عناوين كبيرة بتتبّع ضيّق (`tracking-tightest -0.04em`) و`text-balance`؛ نصوص بـ`leading` مريح و`text-pretty`.
-- مقياس مرجعي: H1 `clamp(2.9rem,7.4vw,5.4rem)`/`leading-1.02` · H2 `~clamp(2rem,3.8vw,44px)` · عنوان خدمة `~44px`.
-- أرقام عربية (٠١، ٢، ٣) عمداً للأصالة. RTL كامل (`dir="rtl"`)، استخدم خصائص منطقية.
-- **قلّل النص الصغير** داخل البطاقات: تفاصيل أقل وأقوى (٣ نقاط بدل قوائم طويلة).
+### Ink (النص)
+| Token | Hex |
+|---|---|
+| `ink` / `ink-900` | `#1A1714` |
+| `ink-800` | `#241F1A` |
+| `ink-700` | `#3A332C` |
+| `ink-600` | `#5A5046` |
+| `ink-500` | `#756B5E` |
+| `ink-400` | `#9A9082` |
+| `ink-300` | `#B6AC9D` |
+
+### Orange (الأكسنت — بتركيز)
+| Token | Hex |
+|---|---|
+| `orange-50` | `#FFF5E1` |
+| `orange-100` | `#FDE7C0` |
+| `orange-200` | `#FACF8C` |
+| `orange-300` | `#F7B450` |
+| `orange-400` | `#F59A24` |
+| `orange-500` | `#F2820C` ← الرئيسي |
+| `orange-600` | `#DD6A06` |
+| `orange-700` | `#B0520A` |
+| `orange-800` | `#8A3F09` |
+
+### Gold
+`gold` = `#F6A700` · `gold-light` = `#FFC74D`
+
+### CSS Variables (globals.css)
+`--bg: #fcf8f1` · `--orange: #f2820c` · `--ink: #1a1714`
+
+**قواعد اللون:** خلفية فاتحة وهادئة؛ برتقالي بتركيز (CTA، أيقونات، دبوس، خطوط أكسنت) لا في كل مكان؛ نص فحمي مقروء.
+تدرّج العلامة: `.text-orange-gradient` (#FFC74D→#F6A700→#F2820C→#DD6A06) للكلمات المميّزة فقط.
+
+---
+
+## 2) الخطوط
+- **IBM Plex Sans Arabic** (أوزان 300–700) عبر `next/font` · متغيّر `--font-arabic`
+- عناوين: tracking ضيّق `tracking-tightest -0.04em` + `text-balance`
+- نصوص: `leading` مريح + `text-pretty`
+- مقياس: H1 `clamp(2.9rem,7.4vw,5.4rem)` · H2 `~clamp(2rem,3.8vw,44px)` · عنوان خدمة `~44px`
+- أرقام عربية (٠١ · ٢ · ٣) عمداً للأصالة
+- RTL كامل (`dir="rtl"`) + خصائص منطقية CSS
+
+---
 
 ## 3) المسافات والإيقاع
-- حاوية واحدة `min(1180px, 100%-x)` متمركزة.
-- أقسام `py-20 md:py-28` (وأحياناً `py-32` للبطل) — فراغ سخيّ = إحساس فاخر.
-- لغة زوايا موحّدة: `rounded-[1.5rem | 2rem | 2.25rem | 2.75rem]`.
-- شبكة الخدمات **غير متناظرة** (split-panels بالتناوب) لا شبكة بطاقات متساوية.
+- حاوية واحدة `min(1180px, 100%-padding)` في `Container.tsx`
+- أقسام: `py-20 md:py-28` (وأحياناً `py-32` للبطل) — فراغ سخيّ = إحساس فاخر
+- زوايا موحّدة: `rounded-[1.5rem | 2rem | 2.25rem | 2.75rem]` (+ `rounded-4xl` = 2rem · `rounded-5xl` = 2.75rem)
+- شبكة الخدمات **غير متناظرة** (split-panels بالتناوب) لا بطاقات متساوية
 
-## 4) الظلال والعمق
-- `soft` / `card` للعناصر العادية · `lift` للرفع القوي · `orange-glow` لأزرار/شارات الأكسنت.
-- **`airy` / `airy-lg`** = ظلال Orbai-soft (منتشرة، خفيفة جداً، بدون حافة حادة) — استخدمها
-  للبطاقات/الصور الفاخرة. تجنّب الحدود القاسية؛ استخدم حلقات خفيفة جداً (`ring-clay-200/40`).
+---
+
+## 4) الظلال — tailwind.config.ts
+
+| Class | الاستخدام |
+|---|---|
+| `shadow-soft` | عناصر عادية خفيفة |
+| `shadow-card` | بطاقات |
+| `shadow-lift` | رفع قوي عند hover |
+| `shadow-orange-glow` | أزرار/شارات الأكسنت البرتقالية |
+
+> ⚠️ **ملاحظة Codex:** `airy` / `airy-lg` (ظلال Orbai-soft منتشرة جداً) **لم تُضَف بعد** إلى tailwind.config.
+> المطلوب إضافتها:
+> ```ts
+> airy: "0 4px 32px -4px rgba(26,23,20,0.06), 0 1px 4px rgba(26,23,20,0.04)",
+> "airy-lg": "0 8px 64px -8px rgba(26,23,20,0.09), 0 2px 8px rgba(26,23,20,0.04)",
+> ```
+
+---
 
 ## 5) المكوّنات والأنماط
-- **الخدمات:** split-panel editorial (نصف صورة ↔ نصف محتوى، يتبادل الجهة)، رقم شبحي ضخم،
-  شارة أيقونة عائمة، شِب زجاجي عائم على الصورة، خط أكسنت برتقالي عند الـhover، صورة بـparallax.
-- **الزجاج (glass):** `bg-white/80 backdrop-blur-xl border border-white/70` للوحات الطافية.
-- **map-line accents:** أقواس/خطوط خريطة باهتة (`opacity ~0.06`) كموتيف يربط بهوية الخريطة.
-- **الشِبس:** حبوب صغيرة (`rounded-full border bg-white/80`) للوضوح والثقة.
-- **الأزرار:** `MagneticButton` (primary/ghost/whatsapp) + زر واتساب ممتلئ بـ`orange-glow`.
-- **BrandImage:** يقرأ من `brandImages.ts`، وفيه fallback أنيق لو الصورة ناقصة (ما نعتمد عليه — الصور موجودة).
-- **StickyWhatsApp:** زر عائم يظهر بعد البطل (تواصل دائم).
 
-## 6) الصور (Imagery)
-- **صور حقيقية فقط** من `public/brand` — لا stock، لا placeholder، لا «CSS بدل صورة»، لا أصول داكنة قديمة.
-- قصّ مقصود لكل صورة عبر `object-position` (وجه الفني/اللوحة/المكيف) — `object-cover`.
-- `laban-map.png` قسم رئيسي وليس زينة صغيرة.
+### الخدمات (Services)
+- Split-panel editorial: نصف صورة ↔ نصف محتوى، يتبادل الجهة بين الخدمات
+- رقم شبحي ضخم (٠١ · ٠٢ · ٠٣) · شارة أيقونة عائمة · شِب زجاجي على الصورة
+- خط أكسنت برتقالي عند hover · صورة بـparallax
 
-## 7) الحركة (تفصيلها في AGENT.md)
-لغة واحدة: easing `expoOut [0.16,1,0.3,1]`؛ `fadeUp`/stagger/wordReveal؛ parallax خفيف؛
-رفع عند hover؛ كل شي يحترم `prefers-reduced-motion`. بدون مكتبات حركة إضافية (لا Lenis).
+### الزجاج (Glass panels)
+`bg-white/80 backdrop-blur-xl border border-white/70`
 
-## 8) قائمة الجودة (Do / Don't)
-**Do:** طبقات/تراكب · قصّ editorial · شارات عائمة · زجاج/حجر دافئ · ظلال ناعمة · أكسنت
-برتقالي رفيع · خطوط خريطة · عدم تناظر · فراغ سخيّ · هرمية خط قوية · موبايل مصمَّم.
-**Don't:** بطاقات مستطيلة متساوية مملّة · صورة+نص مسطّح · حدود ثقيلة · بطاقات أيقونات
-generic · تكرار ممل · داكن/سينمائي · نص صغير كثير.
+### Map-line accents
+أقواس/خطوط خريطة باهتة (`opacity ~0.06`) كموتيف هوية — تربط بـ laban-map.
 
-## 9) مراجع الجودة (للمستوى لا النسخ)
-- Orbai — https://orbai-template.framer.website/ (فخامة، تركيب، إيقاع حركة، فراغ).
-- Plumbo — https://plumbo.framer.website/ (تدفّق صفحة خدمات + إيقاع تحويل).
-لا تنسخ أصول/كود/ألوان/هوية/تخطيط أي منهما.
+### الشِبس (Chips)
+`rounded-full border bg-white/80` — للوضوح والثقة
+
+### الأزرار
+`MagneticButton` (primary / ghost / whatsapp) + زر واتساب ممتلئ بـ`shadow-orange-glow`
+
+### BrandImage
+يقرأ من `brandImages.ts`، fallback أنيق لو الصورة ناقصة (الصور موجودة كلها).
+
+### StickyWhatsApp FAB
+⚠️ **غير منفّذ بعد** — مطلوب إنشاؤه: زر عائم يظهر بعد تجاوز Hero بـ scrollY، ينفّذ واجهة `MagneticButton` variant whatsapp.
+
+---
+
+## 6) الصور
+- **صور حقيقية فقط** من `public/brand` — لا stock · لا placeholder · لا CSS بديل · لا أصول داكنة قديمة
+- قصّ مقصود: `object-cover` + `object-position` لكل صورة (وجه الفني / اللوحة / المكيف)
+- `laban-map.png` = قسم رئيسي، ليس زينة صغيرة
+
+---
+
+## 7) الحركة (motion.ts)
+| المتغيّر | الاستخدام |
+|---|---|
+| `EASE_OUT = [0.16,1,0.3,1]` | كل الحركة — expoOut |
+| `EASE_IN_OUT = [0.65,0,0.35,1]` | حركة ثنائية الاتجاه |
+| `fadeUp` | ظهور مع blur + ارتفاع |
+| `fadeUpSmall` | ظهور خفيف (بدون blur) |
+| `wordReveal` | كشف الكلمات كلمة بكلمة |
+| `scaleIn` | ظهور مع تكبير خفيف |
+| `staggerContainer(stagger, delay)` | حاوية تُرتّب ظهور أبنائها |
+| `inViewProps` | { initial, whileInView, viewport } جاهز للصق |
+
+**قواعد الحركة:**
+- بدون مكتبات إضافية (لا Lenis · لا GSAP · لا AOS)
+- كل شي يحترم `@media (prefers-reduced-motion: reduce)` — موجود في globals.css
+- parallax خفيف للصور عبر `useScroll + useTransform`
+
+---
+
+## 8) CSS Utilities (globals.css)
+| Class | الوظيفة |
+|---|---|
+| `.eyebrow` | label صغير ملوّن فوق العناوين |
+| `.text-orange-gradient` | تدرّج الكلمات المميّزة |
+| `.orange-wash` | توهّج ذهبي خلفي (Hero / CTA) |
+| `.noise` (pseudo) | حبيبة خفيفة على الأسطح |
+| `.balance` | `text-wrap: balance` |
+| `.pretty` | `text-wrap: pretty` |
+
+---
+
+## 9) Do / Don't
+
+**✅ Do:**
+طبقات وتراكب · قصّ editorial · شارات عائمة · زجاج دافئ · ظلال ناعمة · أكسنت برتقالي رفيع · خطوط خريطة · عدم تناظر · فراغ سخيّ · هرمية خط قوية · موبايل مصمَّم أولاً.
+
+**❌ Don't:**
+بطاقات مستطيلة متساوية مملّة · صورة+نص مسطّح · حدود ثقيلة · بطاقات أيقونات generic · داكن/سينمائي · نص صغير كثير داخل البطاقات · برتقالي مُفرط.
+
+---
+
+## 10) مراجع الجودة (للمستوى — لا تنسخ)
+- **Orbai** — orbai-template.framer.website (فخامة، تركيب، إيقاع حركة، فراغ)
+- **Plumbo** — plumbo.framer.website (تدفّق صفحة خدمات + إيقاع تحويل)
