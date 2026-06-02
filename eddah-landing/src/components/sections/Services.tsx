@@ -132,10 +132,15 @@ function ServiceCard({ s, featured = false }: { s: Service; featured?: boolean }
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 240, damping: 24 }}
       className={cn(
-        "group relative isolate flex h-full flex-col overflow-hidden rounded-[2.25rem] ring-1 ring-clay-200/70 shadow-soft transition-shadow duration-500 hover:shadow-lift",
+        "group relative isolate flex h-full flex-col overflow-hidden rounded-[2.25rem] ring-1 ring-clay-200/70 shadow-airy transition-[box-shadow,ring-color] duration-500 hover:ring-orange-300/70 hover:shadow-airy-lg",
         featured ? "min-h-[28rem]" : "min-h-[20rem]",
       )}
     >
+      <span
+        aria-hidden
+        className="absolute inset-x-5 top-0 z-20 h-1 origin-right scale-x-0 rounded-b-full bg-orange-500 transition-transform duration-500 ease-out group-hover:scale-x-100"
+      />
+
       {/* parallax image layer */}
       <motion.div style={{ y }} className="absolute inset-x-0 -inset-y-[7%] -z-10">
         <BrandImage
@@ -150,14 +155,14 @@ function ServiceCard({ s, featured = false }: { s: Service; featured?: boolean }
       {/* gentle top scrim so the index reads on bright images */}
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-ink-900/18 via-transparent to-transparent" />
 
-      <span className="absolute right-6 top-5 text-[15px] font-bold tracking-[0.25em] text-white/95 drop-shadow">
+      <span className="absolute right-5 top-5 z-20 rounded-full border border-white/55 bg-white/20 px-3 py-1.5 text-[13px] font-bold tracking-[0.25em] text-white shadow-airy backdrop-blur-xl ring-1 ring-ink/5 transition-colors duration-500 group-hover:bg-white/30">
         {s.index}
       </span>
 
       <div className="flex-1" />
 
       {/* frosted glass content panel overlapping the image */}
-      <div className="relative m-3 rounded-[1.6rem] border border-white/70 bg-white/80 p-6 shadow-card backdrop-blur-xl md:m-4 md:p-7">
+      <div className="relative m-3 rounded-[1.6rem] border border-white/80 bg-white/[0.86] p-6 shadow-airy backdrop-blur-2xl ring-1 ring-white/60 transition-colors duration-500 group-hover:bg-white/[0.9] md:m-4 md:p-7">
         {/* icon badge straddling the panel edge */}
         <span className="absolute -top-7 right-6 grid h-14 w-14 place-items-center rounded-2xl bg-orange-500 text-white shadow-orange-glow ring-4 ring-white transition-transform duration-500 group-hover:-translate-y-1">
           <s.Icon className="h-7 w-7" />

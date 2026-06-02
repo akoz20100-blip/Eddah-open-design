@@ -12,11 +12,13 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import { Trust } from "@/components/sections/Trust";
 import { CTASection } from "@/components/sections/CTASection";
 import { Footer } from "@/components/sections/Footer";
+import { StickyWhatsApp } from "@/components/ui/StickyWhatsApp";
 
 export default function Home() {
   return (
     <>
       <ScrollProgress />
+      <StickyWhatsApp />
       <Nav />
       <main>
         <Hero />

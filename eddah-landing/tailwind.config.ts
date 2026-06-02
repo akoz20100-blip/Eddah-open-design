@@ -53,6 +53,8 @@ const config: Config = {
       boxShadow: {
         soft: "0 1px 2px rgba(26,23,20,0.04), 0 8px 24px -12px rgba(26,23,20,0.12)",
         card: "0 2px 4px rgba(26,23,20,0.03), 0 24px 48px -24px rgba(26,23,20,0.18)",
+        airy: "0 4px 32px -4px rgba(26,23,20,0.06), 0 1px 4px rgba(26,23,20,0.04)",
+        "airy-lg": "0 8px 64px -8px rgba(26,23,20,0.09), 0 2px 8px rgba(26,23,20,0.04)",
         lift: "0 40px 80px -32px rgba(26,23,20,0.28), 0 2px 6px rgba(26,23,20,0.05)",
         "orange-glow": "0 16px 40px -12px rgba(240,133,26,0.45)",
       },

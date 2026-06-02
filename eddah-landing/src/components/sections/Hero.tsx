@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { BrandImage } from "@/components/ui/BrandImage";
@@ -16,16 +16,18 @@ import { whatsappLink } from "@/lib/brand";
 import { EASE_OUT, staggerContainer, wordReveal, fadeUp } from "@/lib/motion";
 
 const headlineTop = ["فنّيك", "في", "حيّك،"];
+const headlineBottom = ["تواصل", "وأبشر", "بالسعد"];
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
-  const yImg = useTransform(scrollYProgress, [0, 1], [0, 70]);
-  const yCardA = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const yCardB = useTransform(scrollYProgress, [0, 1], [0, 50]);
+  const yImg = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-18, 110]);
+  const yCardA = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [0, 0] : [0, -40]);
+  const yCardB = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [0, 0] : [0, 50]);
 
   return (
     <section id="top" ref={ref} className="relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-36">
@@ -69,10 +71,14 @@ export function Hero() {
                   </span>
                 ))}
               </span>
-              <span className="mt-1 block overflow-hidden">
-                <motion.span variants={wordReveal} className="inline-block text-orange-gradient">
-                  تواصل وأبشر بالسعد
-                </motion.span>
+              <span className="mt-1 flex flex-wrap gap-x-4">
+                {headlineBottom.map((w, i) => (
+                  <span key={i} className="overflow-hidden">
+                    <motion.span variants={wordReveal} className="inline-block text-orange-gradient">
+                      {w}
+                    </motion.span>
+                  </span>
+                ))}
               </span>
             </h1>
 
@@ -128,7 +134,8 @@ export function Hero() {
             className="relative mx-auto w-full max-w-md"
           >
             {/* soft orange plate */}
-            <div className="absolute -inset-3 rounded-[2.5rem] bg-orange-100/60 blur-2xl" />
+            <div className="orange-wash pointer-events-none absolute -inset-12 rounded-[3rem] opacity-90" />
+            <div className="absolute -inset-3 rounded-[2.5rem] bg-orange-100/45 blur-2xl" />
             <motion.div style={{ y: yImg }} className="relative">
               <BrandImage
                 image="heroTechnician"
