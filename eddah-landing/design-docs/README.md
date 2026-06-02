@@ -15,7 +15,7 @@
 **العلامة:** عدة / EDDAH — صيانة منزلية، حي لبن، الرياض
 **الخدمات:** السباكة · الكهرباء · التكييف (٣ فقط، لا غير)
 **الهوية:** Ivory & Amber — فاتح · دافئ · فاخر · RTL عربي
-**التحويل:** واتساب (WHATSAPP_NUMBER في src/lib/brand.ts — فاضي حالياً)
+**التحويل:** واتساب (رقم عدة الافتراضي في `src/lib/brand.ts`: `966509005845`)
 
 **Repo:** `akoz20100-blip/Eddah-open-design`
 **Branch:** `claude/test-coverage-analysis-V9g4A`
@@ -24,11 +24,11 @@
 ## الحالة الحالية
 - ✅ 13 قسم + footer مبنية وعاملة
 - ✅ نظام التصميم مكتمل (tokens + motion + brandImages)
-- ✅ 8 صور حقيقية في public/brand
-- ❌ StickyWhatsApp FAB — لم يُنفَّذ
-- ❌ shadow-airy — لم يُضَف لـ tailwind.config
-- ❌ WHATSAPP_NUMBER — فاضي
-- ⏳ polish passes: Hero · Services · Map · Trust · Showcase
+- ✅ 8 صور حقيقية + الشعار الرسمي الشفاف في public/brand
+- ✅ StickyWhatsApp FAB منفّذ
+- ✅ shadow-airy / shadow-airy-lg مضافة
+- ✅ رقم واتساب عدة مضبوط: `966509005845`
+- ✅ polish passes: Hero · Services · Map · Trust · Showcase
 
 ## للبدء في Codex
 ابدأ بأمر البداية الكامل في `AGENT.md` (قسم "أمر بداية Codex").

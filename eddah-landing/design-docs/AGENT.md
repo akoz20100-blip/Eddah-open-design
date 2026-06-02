@@ -71,20 +71,20 @@ grep -rn "labanMap" src
 ## قائمة المهام المعلّقة لـ Codex
 
 ### أولوية عالية
-- [ ] **`StickyWhatsApp` FAB** — زر واتساب عائم يظهر بعد تجاوز Hero بـ scrollY. يستخدم `MagneticButton` variant whatsapp + `whatsappLink()`. مع `framer-motion` animate presence.
-- [ ] **`shadow-airy` + `shadow-airy-lg`** — أضفهما لـ `tailwind.config.ts`:
+- [x] **`StickyWhatsApp` FAB** — زر واتساب عائم يظهر بعد تجاوز Hero بـ scrollY. يستخدم `MagneticButton` variant whatsapp + `whatsappLink()`. مع `framer-motion` animate presence.
+- [x] **`shadow-airy` + `shadow-airy-lg`** — أضفهما لـ `tailwind.config.ts`:
   ```ts
   airy: "0 4px 32px -4px rgba(26,23,20,0.06), 0 1px 4px rgba(26,23,20,0.04)",
   "airy-lg": "0 8px 64px -8px rgba(26,23,20,0.09), 0 2px 8px rgba(26,23,20,0.04)",
   ```
-- [ ] **`WHATSAPP_NUMBER`** في `src/lib/brand.ts` — أضف رقم الواتساب الفعلي (صيغة دولية بدون +: `9665XXXXXXXX`).
+- [x] **`WHATSAPP_NUMBER`** في `src/lib/brand.ts` — الرقم الفعلي: `966509005845`.
 
 ### أولوية متوسطة (polish passes)
-- [ ] **Hero micro-polish** — wordReveal للعنوان · parallax للصورة أقوى · توهّج كهرماني خلف الصورة · تحسين موبايل.
-- [ ] **Services micro-polish** — تحسين hover state · شارة الأيقونة العائمة · الشِب الزجاجي على الصورة أوضح.
-- [ ] **MapSection pass 2** — تحسين legend alignment · ربط الدبوس بصورة laban-map بشكل أوضح.
-- [ ] **Trust pass 2** — تحسين Marquee + بطاقات الضمان بـ `shadow-airy`.
-- [ ] **Showcase pass 2** — تحسين split-panel + parallax أقوى للصورتين.
+- [x] **Hero micro-polish** — wordReveal للعنوان · parallax للصورة أقوى · توهّج كهرماني خلف الصورة · تحسين موبايل.
+- [x] **Services micro-polish** — تحسين hover state · شارة الأيقونة العائمة · الشِب الزجاجي على الصورة أوضح.
+- [x] **MapSection pass 2** — تحسين legend alignment · ربط الدبوس بصورة laban-map بشكل أوضح.
+- [x] **Trust pass 2** — تحسين Marquee + بطاقات الضمان بـ `shadow-airy`.
+- [x] **Showcase pass 2** — تحسين split-panel + parallax أقوى للصورتين.
 
 ### أولوية منخفضة (تحسينات بصرية)
 - [ ] توحيد tone الصور الثلاث بفلاتر CSS خفيفة.

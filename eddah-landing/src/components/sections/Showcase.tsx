@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { BrandImage } from "@/components/ui/BrandImage";
@@ -59,13 +60,31 @@ export function Showcase() {
 }
 
 function FeatureRow({ image, eyebrow, title, body, points, flip, aspect }: Feature) {
+  const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const yImg = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? ["0%", "0%"] : ["-10%", "10%"]);
+
   return (
-    <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+    <div ref={ref} className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
       {/* image */}
       <Reveal className={flip ? "lg:order-2" : ""}>
-        <div className="relative">
-          <div className="absolute -inset-3 rounded-[2.5rem] bg-orange-100/50 blur-2xl" />
-          <BrandImage image={image} className={`${aspect} w-full rounded-[2rem] shadow-lift ring-1 ring-black/5`} />
+        <div className="relative overflow-hidden rounded-[2.15rem] shadow-airy-lg ring-1 ring-black/5">
+          <div className="orange-wash pointer-events-none absolute -inset-10 opacity-75" />
+          <motion.div style={{ y: yImg }} className="absolute inset-x-0 -inset-y-[10%]">
+            <BrandImage
+              image={image}
+              rounded={false}
+              className="h-full w-full"
+              imgClassName="object-cover transition-transform duration-[1200ms] ease-out hover:scale-[1.035]"
+            />
+          </motion.div>
+          <div className={`${aspect} relative`} />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-900/12 via-transparent to-white/10" />
+          <div className="pointer-events-none absolute inset-4 rounded-[1.65rem] ring-1 ring-white/45" />
         </div>
       </Reveal>
 

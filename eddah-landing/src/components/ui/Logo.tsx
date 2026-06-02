@@ -1,28 +1,34 @@
 import { cn } from "@/lib/cn";
+import { brandImageSrc } from "@/lib/brandImages";
+
+const officialLogoMask = brandImageSrc("logoOfficial");
 
 /**
- * عدة brand mark — a bold peaked-roof monogram (home maintenance) with a
- * stepped inner cut and a detached base block, reinterpreting the brand logo
- * as clean vector so it stays crisp on dark surfaces and at any size.
+ * Several contexts need the mark by itself. The official transparent logo
+ * includes the Arabic word underneath, so this masks the top mark area and
+ * recolors it with the brand gradient for light UI surfaces.
  */
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="markCopper" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F6B877" />
-          <stop offset="1" stopColor="#DC6E0B" />
-        </linearGradient>
-      </defs>
-      <g fill="url(#markCopper)">
-        {/* right roof slope — long clean diagonal from apex to lower-right */}
-        <path d="M54 12 L90 53 L73 67 L45 35 Z" />
-        {/* left roof slope — shorter, steeper, with a horizontal step (the "F" shelf) */}
-        <path d="M54 12 L26 46 L44 46 L44 56 L62 56 L51 68 L33 68 L33 46 L45 35 Z" />
-        {/* detached base block — slanted foot, lower-left */}
-        <path d="M20 74 L44 74 L36 87 L12 87 Z" />
-      </g>
-    </svg>
+    <span
+      className={cn("block shrink-0", className)}
+      aria-hidden
+      style={{
+        background: "linear-gradient(135deg, #F6B877 0%, #DC6E0B 100%)",
+        display: "block",
+        flexShrink: 0,
+        width: "2.25rem",
+        height: "2.25rem",
+        WebkitMaskImage: `url('${officialLogoMask}')`,
+        maskImage: `url('${officialLogoMask}')`,
+        WebkitMaskPosition: "center 7%",
+        maskPosition: "center 7%",
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskSize: "128% auto",
+        maskSize: "128% auto",
+      }}
+    />
   );
 }
 

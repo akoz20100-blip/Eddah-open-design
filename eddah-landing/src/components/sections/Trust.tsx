@@ -25,7 +25,7 @@ const guarantees = [
 export function Trust() {
   return (
     <section className="relative py-20 md:py-28">
-      <div className="border-y border-clay-200 bg-clay-100/50 py-10">
+      <div className="border-y border-clay-200 bg-clay-100/55 py-10 shadow-airy">
         <Marquee items={keywords} />
       </div>
 
@@ -40,7 +40,8 @@ export function Trust() {
         <Reveal.Group className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" stagger={0.09}>
           {guarantees.map((g) => (
             <Reveal.Item key={g.title}>
-              <div className="group card h-full p-6 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-card">
+              <div className="group relative h-full overflow-hidden rounded-3xl bg-white p-6 shadow-airy ring-1 ring-clay-200/70 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-airy-lg hover:ring-orange-200">
+                <span className="absolute inset-x-6 top-0 h-1 origin-right scale-x-0 rounded-b-full bg-orange-500 transition-transform duration-500 group-hover:scale-x-100" />
                 <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-500 ring-1 ring-orange-100 transition-colors duration-500 group-hover:bg-orange-500 group-hover:text-white">
                   <g.icon className="h-6 w-6" />
                 </span>

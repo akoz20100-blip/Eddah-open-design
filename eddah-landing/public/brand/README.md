@@ -16,6 +16,7 @@ is shown in its place (see `src/components/ui/BrandImage.tsx`).
 | `precision-workshop.png` | Showcase «دقّة لا تغلط»                | طاولة الفحص والمحابس + الشعار على الجدار   |
 | `laban-map.png`          | نطاق الخدمة (قسم الخريطة)               | خريطة حي لبن مع الدبوس البرتقالي والشعار   |
 | `logo-eddah.png`         | Footer brand tile · favicon · OG image | شعار عدة (أبيض على برتقالي)                |
+| `eddah-logo-official.png`| Nav/Footer Logo component              | شعار عدة الرسمي الشفاف                     |
 
 ## Notes
 

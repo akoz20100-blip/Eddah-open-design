@@ -75,15 +75,12 @@
 |---|---|
 | `shadow-soft` | عناصر عادية خفيفة |
 | `shadow-card` | بطاقات |
+| `shadow-airy` | بطاقات ومناطق إطلاق ناعمة |
+| `shadow-airy-lg` | رفع ناعم أكبر للعناصر المهمة |
 | `shadow-lift` | رفع قوي عند hover |
 | `shadow-orange-glow` | أزرار/شارات الأكسنت البرتقالية |
 
-> ⚠️ **ملاحظة Codex:** `airy` / `airy-lg` (ظلال Orbai-soft منتشرة جداً) **لم تُضَف بعد** إلى tailwind.config.
-> المطلوب إضافتها:
-> ```ts
-> airy: "0 4px 32px -4px rgba(26,23,20,0.06), 0 1px 4px rgba(26,23,20,0.04)",
-> "airy-lg": "0 8px 64px -8px rgba(26,23,20,0.09), 0 2px 8px rgba(26,23,20,0.04)",
-> ```
+تمت إضافة `airy` و`airy-lg` إلى `tailwind.config.ts`.
 
 ---
 
@@ -110,7 +107,7 @@
 يقرأ من `brandImages.ts`، fallback أنيق لو الصورة ناقصة (الصور موجودة كلها).
 
 ### StickyWhatsApp FAB
-⚠️ **غير منفّذ بعد** — مطلوب إنشاؤه: زر عائم يظهر بعد تجاوز Hero بـ scrollY، ينفّذ واجهة `MagneticButton` variant whatsapp.
+منفّذ في `src/components/ui/StickyWhatsApp.tsx`: زر عائم يظهر بعد 600px من التمرير، يستخدم `MagneticButton` + `whatsappLink()` ويحترم `prefers-reduced-motion`.
 
 ---
 

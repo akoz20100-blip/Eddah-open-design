@@ -12,7 +12,8 @@ export type BrandImageKey =
   | "toolsShowcase"
   | "precisionWorkshop"
   | "labanMap"
-  | "logo";
+  | "logo"
+  | "logoOfficial";
 
 export type BrandImageMeta = {
   file: string;
@@ -59,6 +60,11 @@ export const BRAND_IMAGES: Record<BrandImageKey, BrandImageMeta> = {
   logo: {
     file: "logo-eddah.png",
     label: "شعار عدة",
+    tone: "light",
+  },
+  logoOfficial: {
+    file: "eddah-logo-official.png",
+    label: "شعار عدة الرسمي الشفاف",
     tone: "light",
   },
 };

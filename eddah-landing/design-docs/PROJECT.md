@@ -30,7 +30,7 @@
 | رسائل الثقة | خدمة داخل حي لبن · مواعيد واضحة · ضمان على الشغل · فني قريب منك · تجربة مرتّبة من أول تواصل |
 
 ## ترتيب الأقسام (الحالي في page.tsx)
-`ScrollProgress → Nav → Hero → StatsBand → ValueProps → Services → Showcase → LocalFocus → HowItWorks → MapSection → Testimonials → Trust → CTASection → Footer`
+`ScrollProgress → StickyWhatsApp → Nav → Hero → StatsBand → MapSection → HowItWorks → ValueProps → Services → Showcase → LocalFocus → Testimonials → Trust → CTASection → Footer`
 
 ## الأصول (`public/brand/`) — حقيقية جميعها
 | المفتاح في brandImages.ts | الملف | الاستخدام |
@@ -43,6 +43,7 @@
 | `precisionWorkshop` | `precision-workshop.png` | Showcase (دقّة الإتقان) |
 | `labanMap` | `laban-map.png` | MapSection (القسم الرئيسي) + مصدر اللون |
 | `logo` | `logo-eddah.png` | Footer + favicon + OG |
+| `logoOfficial` | `eddah-logo-official.png` | مكوّن Logo الرسمي في Nav/Footer |
 
 أصول UUID أخرى في `public/brand/` — لا تستخدمها، غير موثّقة في brandImages.ts.
 
@@ -54,7 +55,7 @@ src/app/
   globals.css       ← CSS vars + utilities (eyebrow, text-orange-gradient, orange-wash, noise, reduced-motion)
 
 src/lib/
-  brand.ts          ← WHATSAPP_NUMBER (فاضي حالياً) + BRAND + whatsappLink() + telLink()
+  brand.ts          ← WHATSAPP_NUMBER (966509005845 افتراضياً) + BRAND + whatsappLink() + telLink()
   brandImages.ts    ← مانيفست الصور (مصدر واحد لكل /brand/*)
   motion.ts         ← EASE_OUT + staggerContainer + fadeUp + fadeUpSmall + wordReveal + scaleIn + inViewProps
   cn.ts             ← clsx helper
@@ -80,11 +81,11 @@ src/components/map/
 | جميع الأقسام (13 قسم + footer) | ✅ مبنية وعاملة |
 | نظام التصميم (tokens + motion + brandImages) | ✅ مكتمل |
 | الصور الحقيقية في public/brand | ✅ كلها موجودة |
-| `airy` / `airy-lg` في tailwind.config | ❌ غير مضاف بعد |
-| `StickyWhatsApp` FAB العائم | ❌ غير منفّذ بعد |
-| `WHATSAPP_NUMBER` | ❌ فاضي (أزرار تشير لـ `#`) |
-| micro-polish Hero + Services | ⏳ تصميم جاهز، تنفيذ Codex |
-| polish Map + Trust + Showcase pass 2 | ⏳ تصميم جاهز، تنفيذ Codex |
+| `airy` / `airy-lg` في tailwind.config | ✅ مضافة |
+| `StickyWhatsApp` FAB العائم | ✅ منفّذ |
+| `WHATSAPP_NUMBER` | ✅ `966509005845` |
+| micro-polish Hero + Services | ✅ منفّذ |
+| polish Map + Trust + Showcase pass 2 | ✅ منفّذ |
 
 ## تشغيل
 ```bash

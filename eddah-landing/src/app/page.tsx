@@ -23,12 +23,12 @@ export default function Home() {
       <main>
         <Hero />
         <StatsBand />
+        <MapSection />
+        <HowItWorks />
         <ValueProps />
         <Services />
         <Showcase />
         <LocalFocus />
-        <HowItWorks />
-        <MapSection />
         <Testimonials />
         <Trust />
         <CTASection />

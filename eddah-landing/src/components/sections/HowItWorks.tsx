@@ -7,7 +7,7 @@ import { SparkleIcon, WhatsappIcon } from "@/components/icons/Icons";
 import { PlumbingIcon } from "@/components/icons/ServiceIcons";
 
 const steps = [
-  { n: "١", Icon: PlumbingIcon, title: "اختر الخدمة", body: "حدّد ما تحتاجه: سباكة، كهرباء، أو تكييف وتبريد." },
+  { n: "١", Icon: PlumbingIcon, title: "اختر الخدمة", body: "حدّد ما تحتاجه: سباكة، كهرباء، أو تكييف." },
   { n: "٢", Icon: WhatsappIcon, title: "أرسل طلبك", body: "راسلنا عبر واتساب بوصف بسيط للمشكلة وموقعك في الحي." },
   { n: "٣", Icon: SparkleIcon, title: "ننسّق ونخدمك", body: "نؤكّد موعدًا واضحًا، يصل الفنّي، وينجز العمل بإتقان." },
 ];

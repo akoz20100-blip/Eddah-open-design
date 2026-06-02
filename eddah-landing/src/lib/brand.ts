@@ -3,11 +3,12 @@
  * Copy lives in Arabic; this file holds the few values reused across sections.
  */
 
-// Not set yet — leave empty until the project has a dedicated number.
-// لم يُحدَّد بعد. ضع الرقم بصيغة دولية بدون + ولا مسافات (مثال: "9665XXXXXXXX").
-// When empty, WhatsApp/call links fall back to "#" so the buttons stay visible
-// in the design without pointing anywhere broken.
-export const WHATSAPP_NUMBER = "";
+// Set NEXT_PUBLIC_WHATSAPP_NUMBER in the deployment environment to override.
+// صيغة الرقم: دولية بدون + ولا مسافات، مثال: 9665XXXXXXXX.
+// رقم عدة الافتراضي: +966 50 900 5845.
+export const WHATSAPP_NUMBER = (
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "966509005845"
+).replace(/[^\d]/g, "");
 
 export const WHATSAPP_MESSAGE = "السلام عليكم، أبغى أطلب خدمة صيانة في حي لبن.";
 
