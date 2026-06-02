@@ -25,6 +25,14 @@
     overflow-x: hidden;
   }
 
+  /* العناوين الكبيرة بخط ثمانية الرصيف (Serif Display) — إحساس تحريري فاخر.
+     النصوص وبطاقات العناوين الصغيرة (h3) تبقى بخط ثمانية Sans للقراءة النظيفة. */
+  h1,
+  h2 {
+    font-family: var(--font-display), var(--font-arabic), Georgia, serif;
+    font-feature-settings: "ss01", "liga", "kern";
+  }
+
   ::selection {
     background: rgba(240, 133, 26, 0.9);
     color: #fff;
@@ -87,6 +95,33 @@
   }
   .pretty {
     text-wrap: pretty;
+  }
+
+  /* فاصل شعري رفيع بين الأقسام — إيقاع تحريري بدل الحواف الحادة */
+  .rule-soft {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(219, 203, 178, 0.7) 18%,
+      rgba(219, 203, 178, 0.7) 82%,
+      transparent
+    );
+  }
+  /* نقطة فاصلة كهرمانية صغيرة (موتيف هوية) */
+  .rule-dot {
+    position: relative;
+  }
+  .rule-dot::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: #f2820c;
+    border-radius: 1px;
   }
 
   /* Warm radial wash used behind hero / CTA — golden, more present */

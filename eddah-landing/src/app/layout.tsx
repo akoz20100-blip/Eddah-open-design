@@ -1,11 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import { NebulaBackground } from "@/components/ui/NebulaBackground";
 
-const arabic = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+// خط ثمانية — الهوية البصرية الأساسية للموقع.
+// Thmanyah Sans للنصوص والواجهة، Thmanyah Serif Display للعناوين الكبيرة (إحساس تحريري).
+const arabic = localFont({
+  src: [
+    { path: "../../public/fonts/thmanyah/thmanyahsans-Light.woff2", weight: "300", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahsans-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahsans-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahsans-Bold.woff2", weight: "700", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahsans-Black.woff2", weight: "900", style: "normal" },
+  ],
   variable: "--font-arabic",
+  display: "swap",
+});
+
+const display = localFont({
+  src: [
+    { path: "../../public/fonts/thmanyah/thmanyahserifdisplay-Light.woff2", weight: "300", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahserifdisplay-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahserifdisplay-Medium.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2", weight: "700", style: "normal" },
+    { path: "../../public/fonts/thmanyah/thmanyahserifdisplay-Black.woff2", weight: "900", style: "normal" },
+  ],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -70,8 +90,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={arabic.variable}>
+    <html lang="ar" dir="rtl" className={`${arabic.variable} ${display.variable}`}>
       <body className="grain bg-clay-50 text-ink font-sans antialiased">
+        <NebulaBackground />
         {children}
       </body>
     </html>

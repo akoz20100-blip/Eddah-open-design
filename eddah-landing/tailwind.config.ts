@@ -44,7 +44,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-arabic)", "system-ui", "sans-serif"],
-        display: ["var(--font-arabic)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-arabic)", "Georgia", "serif"],
       },
       borderRadius: {
         "4xl": "2rem",
@@ -59,7 +59,8 @@ const config: Config = {
         "orange-glow": "0 16px 40px -12px rgba(240,133,26,0.45)",
       },
       letterSpacing: {
-        tightest: "-0.04em",
+        // ضبط لطيف يناسب الحرف العربي المتّصل (تتبّع سالب قوي يكسر الوصلات)
+        tightest: "-0.01em",
       },
       keyframes: {
         "pulse-ring": {

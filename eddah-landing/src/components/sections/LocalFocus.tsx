@@ -42,11 +42,11 @@ export function LocalFocus() {
               وجودة لا تتشتّت.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="mt-9 grid gap-3 sm:grid-cols-3">
+            <motion.div variants={fadeUp} className="mt-10 grid gap-x-8 gap-y-7 sm:grid-cols-3">
               {points.map((p) => (
-                <div key={p.title} className="card p-5 transition-shadow duration-500 hover:shadow-card">
-                  <p.icon className="h-6 w-6 text-orange-500" />
-                  <h3 className="mt-3 text-[16px] font-bold text-ink">{p.title}</h3>
+                <div key={p.title} className="group border-t border-clay-200/80 pt-5">
+                  <p.icon className="h-6 w-6 text-orange-500 transition-transform duration-500 group-hover:-translate-y-0.5" />
+                  <h3 className="mt-3.5 text-[16px] font-bold text-ink">{p.title}</h3>
                   <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-500">{p.body}</p>
                 </div>
               ))}

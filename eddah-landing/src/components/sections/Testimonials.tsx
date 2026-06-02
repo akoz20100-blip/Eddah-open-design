@@ -43,23 +43,17 @@ export function Testimonials() {
         <Reveal.Group className="mt-12 grid gap-4 md:grid-cols-3" stagger={0.1}>
           {items.map((t) => (
             <Reveal.Item key={t.label}>
-              <article className="flex h-full flex-col rounded-3xl bg-white p-7 shadow-airy ring-1 ring-clay-200/70">
-                <div className="flex items-center gap-3">
-                  <span
-                    className="grid h-11 w-11 place-items-center rounded-full text-[16px] font-bold text-white"
-                    style={{ backgroundColor: t.color }}
-                  >
-                    {t.initial}
-                  </span>
-                  <div>
-                    <p className="text-[13px] font-semibold text-orange-600">{t.label}</p>
-                    <h3 className="mt-0.5 text-[17px] font-bold text-ink">{t.concern}</h3>
-                  </div>
-                </div>
-                <p className="pretty mt-5 flex-1 text-[15.5px] leading-relaxed text-ink-600">
+              <article className="group flex h-full flex-col border-s-2 border-clay-200 ps-6 transition-colors duration-500 hover:border-orange-400">
+                <span className="text-[12.5px] font-semibold uppercase tracking-wide text-orange-600">
+                  {t.label}
+                </span>
+                <h3 className="mt-3 text-balance text-[21px] font-bold leading-snug text-ink md:text-[23px]">
+                  «{t.concern}»
+                </h3>
+                <p className="pretty mt-4 flex-1 text-[15.5px] leading-relaxed text-ink-600">
                   {t.answer}
                 </p>
-                <div className="mt-6 flex items-center gap-2 border-t border-clay-200 pt-5 text-[14px] font-semibold text-ink-700">
+                <div className="mt-6 flex items-center gap-2 text-[14px] font-semibold text-ink-700">
                   <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600">
                     <CheckIcon className="h-3 w-3" />
                   </span>
