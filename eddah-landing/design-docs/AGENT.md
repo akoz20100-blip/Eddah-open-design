@@ -51,3 +51,58 @@ grep -rn "labanMap" src                     # لازم مستخدم (قسم ال
 - ضبط type scale ومسافات أوسع، توهّج كهرماني أنعم/حبيبة خفيفة خلف البطل.
 - micro-interactions إضافية (cursor-follow، عدّاد أرقام، كشف صورة بـmask).
 - السقف الواقعي بالأصول الحالية ≈ 8.7–9/10؛ لتجاوزه تحتاج تصوير متّسق أو أصل 3D/جرافيك مخصّص.
+
+---
+
+## الانتقال إلى Codex — قائمة التحقّق
+
+> **متى تُستخدَم:** بعد انتهاء مرحلة التصميم في Claude Design وقبل بدء تنفيذ الكود في Codex.
+
+### 1 — تحقّق من التوثيق (Claude Design → design-docs)
+- [ ] `DESIGN.md` يعكس القرارات النهائية (بالِت، خطوط، مسافات، مكوّنات جديدة).
+- [ ] `PROJECT.md` محدَّث (أي أصول/مسارات أضيفت أو تغيّرت).
+- [ ] `README.md` يذكر أي قسم/صفحة جديدة أُضيفت في هذا البرانش.
+
+### 2 — تحقّق من الكود (git status نظيف)
+```bash
+cd eddah-landing
+npm run build          # لازم يمرّ بدون أخطاء
+git status             # لا يوجد uncommitted غير مقصود
+git log --oneline -5   # آخر 5 commits واضحة
+```
+
+### 3 — تحقّق من المحتوى (3 خدمات فقط)
+```bash
+grep -rE "تنظيف الخزانات|الدهانات|النجارة|مكافحة الحشرات" src  # لازم فاضي
+grep -rn "labanMap" src     # لازم موجود
+```
+
+### 4 — ارفع أي تغيير معلّق
+```bash
+git add eddah-landing/
+git commit -m "feat(design): apply Claude Design final changes"
+git push origin claude/test-coverage-analysis-V9g4A
+```
+
+### 5 — تأكّد على GitHub (بصرياً)
+افتح:
+`github.com/akoz20100-blip/Eddah-open-design/tree/claude/test-coverage-analysis-V9g4A/eddah-landing`
+
+تأكّد من وجود:
+- `design-docs/` — 4 ملفات (AGENT · DESIGN · PROJECT · README)
+- `src/` — تاريخ آخر تعديل صحيح
+- `public/brand/` — الصور الحقيقية
+
+### 6 — ابدأ في Codex
+في بداية كل جلسة Codex، أرسل:
+> "اقرأ `eddah-landing/design-docs/AGENT.md` و`DESIGN.md` و`PROJECT.md` أولاً، ثم نفّذ: [المهمة]."
+
+---
+
+### مرجع سريع
+| العنصر | القيمة |
+|---|---|
+| Repo | `akoz20100-blip/Eddah-open-design` |
+| Branch | `claude/test-coverage-analysis-V9g4A` |
+| مسار الموقع | `eddah-landing/` |
+| توثيق التصميم | `eddah-landing/design-docs/` |
