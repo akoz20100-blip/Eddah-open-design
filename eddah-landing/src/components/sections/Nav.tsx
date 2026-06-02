@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { MagneticButton } from "@/components/ui/MagneticButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { WhatsappIcon } from "@/components/icons/Icons";
 import { whatsappLink } from "@/lib/brand";
 import { EASE_OUT } from "@/lib/motion";
@@ -59,7 +60,8 @@ export function Nav() {
             ))}
           </nav>
 
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-2.5 md:flex">
+            <ThemeToggle />
             <MagneticButton
               href={whatsappLink()}
               target="_blank"
@@ -72,17 +74,20 @@ export function Nav() {
             </MagneticButton>
           </div>
 
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-clay-200 bg-white text-ink md:hidden"
-            aria-label="القائمة"
-          >
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="grid h-10 w-10 place-items-center rounded-full border border-clay-200 bg-white text-ink"
+              aria-label="القائمة"
+            >
             <div className="space-y-1.5">
               <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
               <span className={`block h-0.5 w-5 bg-current transition-opacity ${open ? "opacity-0" : ""}`} />
               <span className={`block h-0.5 w-5 bg-current transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`} />
             </div>
-          </button>
+            </button>
+          </div>
         </Container>
       </div>
 

@@ -1,80 +1,66 @@
 import type { Config } from "tailwindcss";
 
+// الألوان مبنية على متغيّرات CSS (R G B) عشان نبدّل الوضع نهاري/مسائي وقت التشغيل
+// بدون أي تعديل على المكوّنات. القيم معرّفة في globals.css (:root + [data-theme="night"]).
+const v = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Warm near-black for text
+        white: v("white"),
         ink: {
-          DEFAULT: "#1A1714",
-          900: "#1A1714",
-          800: "#241F1A",
-          700: "#3A332C",
-          600: "#5A5046",
-          500: "#756B5E",
-          400: "#9A9082",
-          300: "#B6AC9D",
+          DEFAULT: v("ink-900"),
+          900: v("ink-900"),
+          800: v("ink-800"),
+          700: v("ink-700"),
+          600: v("ink-600"),
+          500: v("ink-500"),
+          400: v("ink-400"),
+          300: v("ink-300"),
         },
-        // Warm neutral surfaces (the "paper" of the brand) — warmed up
         clay: {
-          50: "#FCF8F1",
-          100: "#F5EEE0",
-          200: "#ECE0CD",
-          300: "#DBCBB2",
-          400: "#C6B398",
+          50: v("clay-50"),
+          100: v("clay-100"),
+          200: v("clay-200"),
+          300: v("clay-300"),
+          400: v("clay-400"),
         },
-        // Brand orange (from the عدة logo) — more vibrant, golden lean
         orange: {
-          50: "#FFF5E1",
-          100: "#FDE7C0",
-          200: "#FACF8C",
-          300: "#F7B450",
-          400: "#F59A24",
-          500: "#F2820C",
-          600: "#DD6A06",
-          700: "#B0520A",
-          800: "#8A3F09",
+          50: v("orange-50"),
+          100: v("orange-100"),
+          200: v("orange-200"),
+          300: v("orange-300"),
+          400: v("orange-400"),
+          500: v("orange-500"),
+          600: v("orange-600"),
+          700: v("orange-700"),
+          800: v("orange-800"),
         },
-        // Golden highlight for eye-catching accents
         gold: {
-          DEFAULT: "#F6A700",
-          light: "#FFC74D",
+          DEFAULT: v("gold"),
+          light: v("gold-light"),
         },
       },
       fontFamily: {
         sans: ["var(--font-arabic)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-arabic)", "Georgia", "serif"],
       },
-      borderRadius: {
-        "4xl": "2rem",
-        "5xl": "2.75rem",
-      },
+      borderRadius: { "4xl": "2rem", "5xl": "2.75rem" },
       boxShadow: {
-        soft: "0 1px 2px rgba(26,23,20,0.04), 0 8px 24px -12px rgba(26,23,20,0.12)",
-        card: "0 2px 4px rgba(26,23,20,0.03), 0 24px 48px -24px rgba(26,23,20,0.18)",
-        airy: "0 4px 32px -4px rgba(26,23,20,0.06), 0 1px 4px rgba(26,23,20,0.04)",
-        "airy-lg": "0 8px 64px -8px rgba(26,23,20,0.09), 0 2px 8px rgba(26,23,20,0.04)",
-        lift: "0 40px 80px -32px rgba(26,23,20,0.28), 0 2px 6px rgba(26,23,20,0.05)",
-        "orange-glow": "0 16px 40px -12px rgba(240,133,26,0.45)",
+        soft: "0 1px 2px rgb(var(--shadow) / 0.05), 0 8px 24px -12px rgb(var(--shadow) / 0.18)",
+        card: "0 2px 4px rgb(var(--shadow) / 0.05), 0 24px 48px -24px rgb(var(--shadow) / 0.28)",
+        airy: "0 4px 32px -4px rgb(var(--shadow) / 0.10), 0 1px 4px rgb(var(--shadow) / 0.08)",
+        "airy-lg": "0 8px 64px -8px rgb(var(--shadow) / 0.16), 0 2px 8px rgb(var(--shadow) / 0.10)",
+        lift: "0 40px 80px -32px rgb(var(--shadow) / 0.42), 0 2px 6px rgb(var(--shadow) / 0.10)",
+        "orange-glow": "0 16px 40px -12px rgb(var(--glow) / 0.45)",
       },
-      letterSpacing: {
-        // ضبط لطيف يناسب الحرف العربي المتّصل (تتبّع سالب قوي يكسر الوصلات)
-        tightest: "-0.01em",
-      },
+      letterSpacing: { tightest: "-0.01em" },
       keyframes: {
-        "pulse-ring": {
-          "0%": { transform: "scale(0.6)", opacity: "0.6" },
-          "100%": { transform: "scale(2.4)", opacity: "0" },
-        },
-        "float-slow": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        marquee: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
-        },
+        "pulse-ring": { "0%": { transform: "scale(0.6)", opacity: "0.6" }, "100%": { transform: "scale(2.4)", opacity: "0" } },
+        "float-slow": { "0%, 100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-10px)" } },
+        marquee: { "0%": { transform: "translateX(0)" }, "100%": { transform: "translateX(-50%)" } },
       },
       animation: {
         "pulse-ring": "pulse-ring 3.2s cubic-bezier(0.16,1,0.3,1) infinite",

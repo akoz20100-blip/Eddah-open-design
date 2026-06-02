@@ -94,6 +94,12 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${arabic.variable} ${display.variable}`}>
       <body className="grain bg-clay-50 text-ink font-sans antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('eddah-theme')==='night')document.documentElement.setAttribute('data-theme','night')}catch(e){}",
+          }}
+        />
         <NebulaBackground />
         {children}
       </body>

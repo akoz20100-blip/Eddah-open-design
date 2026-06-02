@@ -2,10 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   THEME TOKENS — day (نهاري / Ivory & Amber) is the default :root.
+   night (مسائي / أسود + بنفسجي خفيف + كلمات برتقالية) overrides them.
+   Values are "R G B" so Tailwind's rgb(var(--x) / <alpha>) works.
+   ============================================================ */
 :root {
+  --white: 255 255 255;
+
+  --ink-900: 26 23 20;
+  --ink-800: 36 31 26;
+  --ink-700: 58 51 44;
+  --ink-600: 90 80 70;
+  --ink-500: 117 107 94;
+  --ink-400: 154 144 130;
+  --ink-300: 182 172 157;
+
+  --clay-50: 252 248 241;
+  --clay-100: 245 238 224;
+  --clay-200: 236 224 205;
+  --clay-300: 219 203 178;
+  --clay-400: 198 179 152;
+
+  --orange-50: 255 245 225;
+  --orange-100: 253 231 192;
+  --orange-200: 250 207 140;
+  --orange-300: 247 180 80;
+  --orange-400: 245 154 36;
+  --orange-500: 242 130 12;
+  --orange-600: 221 106 6;
+  --orange-700: 176 82 10;
+  --orange-800: 138 63 9;
+
+  --gold: 246 167 0;
+  --gold-light: 255 199 77;
+
+  --shadow: 26 23 20;
+  --glow: 240 133 26;
+
   --bg: #fcf8f1;
-  --orange: #f2820c;
   --ink: #1a1714;
+  --orange: #f2820c;
+}
+
+[data-theme="night"] {
+  --white: 12 11 17;
+
+  --ink-900: 245 242 255;
+  --ink-800: 234 228 251;
+  --ink-700: 215 207 241;
+  --ink-600: 184 175 221;
+  --ink-500: 154 144 194;
+  --ink-400: 126 118 166;
+  --ink-300: 103 95 143;
+
+  --clay-50: 3 3 5;
+  --clay-100: 8 8 12;
+  --clay-200: 21 19 28;
+  --clay-300: 34 31 43;
+  --clay-400: 50 46 60;
+
+  /* low tints = dark violet (badges/glows), mid/high = amber (text/buttons) */
+  --orange-50: 20 14 34;
+  --orange-100: 28 20 48;
+  --orange-200: 40 28 68;
+  --orange-300: 184 112 15;
+  --orange-400: 245 154 36;
+  --orange-500: 242 130 12;
+  --orange-600: 251 166 58;
+  --orange-700: 255 192 98;
+  --orange-800: 255 216 160;
+
+  --gold: 246 167 0;
+  --gold-light: 255 199 77;
+
+  --shadow: 0 0 0;
+  --glow: 242 130 12;
+
+  --bg: #030305;
+  --ink: #f5f2ff;
+  --orange: #f2820c;
 }
 
 @layer base {
@@ -23,10 +99,10 @@
     color: var(--ink);
     font-feature-settings: "ss01", "liga", "kern";
     overflow-x: hidden;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
 
-  /* العناوين الكبيرة بخط ثمانية الرصيف (Serif Display) — إحساس تحريري فاخر.
-     النصوص وبطاقات العناوين الصغيرة (h3) تبقى بخط ثمانية Sans للقراءة النظيفة. */
+  /* العناوين الكبيرة بخط ثمانية الرصيف (Serif Display) — إحساس تحريري فاخر. */
   h1,
   h2 {
     font-family: var(--font-display), var(--font-arabic), Georgia, serif;
@@ -34,7 +110,7 @@
   }
 
   ::selection {
-    background: rgba(240, 133, 26, 0.9);
+    background: rgb(var(--orange-500) / 0.9);
     color: #fff;
   }
 
@@ -42,15 +118,15 @@
     width: 11px;
   }
   ::-webkit-scrollbar-track {
-    background: #f4eee6;
+    background: rgb(var(--clay-100));
   }
   ::-webkit-scrollbar-thumb {
-    background: #d9cdbb;
+    background: rgb(var(--clay-300));
     border-radius: 999px;
-    border: 3px solid #f4eee6;
+    border: 3px solid rgb(var(--clay-100));
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #c3b6a1;
+    background: rgb(var(--clay-400));
   }
 }
 
@@ -66,19 +142,16 @@
     -webkit-text-fill-color: transparent;
   }
 
-  /* Premium light card */
   .card {
     @apply rounded-3xl border border-clay-200 bg-white shadow-soft;
   }
 
-  /* Pill chip */
   .chip {
     @apply inline-flex items-center gap-2 rounded-full border border-clay-200 bg-white/80 px-4 py-2 text-[13px] font-medium text-ink-600;
   }
 }
 
 @layer utilities {
-  /* Subtle paper grain — adds tactility, kills the flat digital look */
   .grain::before {
     content: "";
     position: fixed;
@@ -89,6 +162,10 @@
     mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
+  [data-theme="night"] .grain::before {
+    opacity: 0.05;
+    mix-blend-mode: soft-light;
+  }
 
   .balance {
     text-wrap: balance;
@@ -97,18 +174,16 @@
     text-wrap: pretty;
   }
 
-  /* فاصل شعري رفيع بين الأقسام — إيقاع تحريري بدل الحواف الحادة */
   .rule-soft {
     height: 1px;
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(219, 203, 178, 0.7) 18%,
-      rgba(219, 203, 178, 0.7) 82%,
+      rgb(var(--clay-300) / 0.7) 18%,
+      rgb(var(--clay-300) / 0.7) 82%,
       transparent
     );
   }
-  /* نقطة فاصلة كهرمانية صغيرة (موتيف هوية) */
   .rule-dot {
     position: relative;
   }
@@ -120,11 +195,11 @@
     width: 5px;
     height: 5px;
     transform: translate(-50%, -50%) rotate(45deg);
-    background: #f2820c;
+    background: rgb(var(--orange-500));
     border-radius: 1px;
   }
 
-  /* Warm radial wash used behind hero / CTA — golden, more present */
+  /* warm amber wash (day) */
   .orange-wash {
     background: radial-gradient(
         50% 55% at 78% 18%,
@@ -132,11 +207,16 @@
         rgba(242, 130, 12, 0.08) 38%,
         transparent 70%
       ),
-      radial-gradient(
-        45% 50% at 12% 85%,
-        rgba(255, 199, 77, 0.16) 0%,
-        transparent 65%
-      );
+      radial-gradient(45% 50% at 12% 85%, rgba(255, 199, 77, 0.16) 0%, transparent 65%);
+  }
+  /* faint violet wash (night) — no golden glow */
+  [data-theme="night"] .orange-wash {
+    background: radial-gradient(
+        50% 55% at 78% 18%,
+        rgba(124, 77, 255, 0.1) 0%,
+        transparent 60%
+      ),
+      radial-gradient(45% 50% at 12% 85%, rgba(124, 77, 255, 0.06) 0%, transparent 65%);
   }
 }
 
