@@ -51,13 +51,9 @@
   ::selection{background:rgb(var(--orange-500)/.9);color:#fff}
   a{color:inherit;text-decoration:none}
 
-  /* خلفية كهرمانية (warm wash) + نقطة بنفسجية ليلًا */
-  .wash{position:fixed;inset:0;z-index:-2;pointer-events:none;
-    background:radial-gradient(50% 55% at 80% 12%,rgba(246,167,0,.22),rgba(242,130,12,.08) 38%,transparent 70%),
-               radial-gradient(45% 50% at 10% 88%,rgba(255,199,77,.16),transparent 65%);}
-  [data-theme="night"] .wash{
-    background:radial-gradient(55% 60% at 80% 10%,rgba(124,77,255,.12),transparent 60%),
-               radial-gradient(45% 50% at 8% 90%,rgba(124,77,255,.07),transparent 65%);}
+  /* خلفية «سديم» — Canvas نيبولا متحرك (كهرماني نهارًا، بنفسجي على أسود مساءً) */
+  #nebula{position:fixed;inset:0;z-index:-2;width:100%;height:100%;pointer-events:none;
+    filter:blur(62px) saturate(120%);opacity:.72;transform:scale(1.16);transform-origin:center}
   .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   [data-theme="night"] .grain{opacity:.05;mix-blend-mode:soft-light}
@@ -192,7 +188,7 @@
 </style>
 </head>
 <body>
-  <div class="wash"></div><div class="grain"></div>
+  <canvas id="nebula" aria-hidden="true"></canvas><div class="grain"></div>
 
   <nav>
     <div class="container nav-row">
@@ -318,7 +314,68 @@
       var night = root.getAttribute("data-theme")==="night";
       var next = night ? "day":"night"; apply(next);
       try{ localStorage.setItem("eddah-theme",next); }catch(e){}
+      if(typeof nebulaRedraw==="function") nebulaRedraw();
     });
+  })();
+
+  // خلفية «سديم» — Canvas نيبولا متحرك (منقول من NebulaBackground.tsx)
+  var nebulaRedraw = function(){};
+  (function(){
+    var canvas = document.getElementById("nebula");
+    if(!canvas) return;
+    var ctx = canvas.getContext("2d");
+    if(!ctx) return;
+    var DAY = [
+      {rgb:"246,167,0",  r:0.62,peak:0.50,bx:0.80,by:0.10,ax:0.05,ay:0.07,sx:0.00022,sy:0.00017,px:0.0,py:1.2},
+      {rgb:"242,130,12", r:0.46,peak:0.42,bx:0.14,by:0.32,ax:0.07,ay:0.05,sx:0.00018,sy:0.00024,px:2.1,py:0.4},
+      {rgb:"255,199,77", r:0.58,peak:0.46,bx:0.52,by:0.82,ax:0.08,ay:0.05,sx:0.00015,sy:0.00020,px:4.0,py:3.0},
+      {rgb:"221,106,11", r:0.36,peak:0.32,bx:0.92,by:0.72,ax:0.05,ay:0.07,sx:0.00024,sy:0.00019,px:1.0,py:2.0},
+      {rgb:"255,221,150",r:0.50,peak:0.40,bx:0.32,by:0.04,ax:0.06,ay:0.06,sx:0.00020,sy:0.00016,px:5.2,py:4.1}
+    ];
+    var NIGHT = [
+      {rgb:"124,77,255", r:0.60,peak:0.50,bx:0.78,by:0.12,ax:0.05,ay:0.07,sx:0.00022,sy:0.00017,px:0.0,py:1.2},
+      {rgb:"157,108,255",r:0.46,peak:0.45,bx:0.16,by:0.34,ax:0.07,ay:0.05,sx:0.00018,sy:0.00024,px:2.1,py:0.4},
+      {rgb:"190,120,255",r:0.54,peak:0.40,bx:0.52,by:0.82,ax:0.08,ay:0.05,sx:0.00015,sy:0.00020,px:4.0,py:3.0},
+      {rgb:"214,93,177", r:0.34,peak:0.35,bx:0.92,by:0.70,ax:0.05,ay:0.07,sx:0.00024,sy:0.00019,px:1.0,py:2.0},
+      {rgb:"150,110,255",r:0.48,peak:0.42,bx:0.34,by:0.06,ax:0.06,ay:0.06,sx:0.00020,sy:0.00016,px:5.2,py:4.1}
+    ];
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var w=0,h=0,raf=0,running=true;
+    function isNight(){ return document.documentElement.getAttribute("data-theme")==="night"; }
+    function resize(){
+      var longSide = Math.max(window.innerWidth, window.innerHeight);
+      var scale = Math.min(0.28, 460/longSide);
+      w = Math.max(1, Math.round(window.innerWidth*scale));
+      h = Math.max(1, Math.round(window.innerHeight*scale));
+      canvas.width=w; canvas.height=h;
+    }
+    function draw(t){
+      var night=isNight(), clouds=night?NIGHT:DAY, base=Math.min(w,h);
+      ctx.clearRect(0,0,w,h);
+      ctx.globalCompositeOperation = night?"lighter":"source-over";
+      for(var i=0;i<clouds.length;i++){
+        var c=clouds[i];
+        var x=(c.bx+Math.sin(t*c.sx+c.px)*c.ax)*w;
+        var y=(c.by+Math.cos(t*c.sy+c.py)*c.ay)*h;
+        var radius=c.r*base;
+        var g=ctx.createRadialGradient(x,y,0,x,y,radius);
+        g.addColorStop(0,"rgba("+c.rgb+","+c.peak+")");
+        g.addColorStop(0.5,"rgba("+c.rgb+","+(c.peak*0.4)+")");
+        g.addColorStop(1,"rgba("+c.rgb+",0)");
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,radius,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalCompositeOperation="source-over";
+      canvas.style.opacity = night?"0.42":"0.72";
+    }
+    function loop(t){ if(!running) return; draw(t); raf=requestAnimationFrame(loop); }
+    nebulaRedraw = function(){ draw(6000); };
+    resize();
+    window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", function(){
+      if(document.hidden){ running=false; cancelAnimationFrame(raf); }
+      else if(!reduce){ running=true; raf=requestAnimationFrame(loop); }
+    });
+    if(reduce) draw(6000); else raf=requestAnimationFrame(loop);
   })();
 
   // كشف الأقسام عند الظهور (الأساس مرئي؛ الحركة تحسين فقط)
