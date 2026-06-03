@@ -1,17 +1,18 @@
 # نظام تصميم عدّة — EDDAH Design System
 
-> **المرجع الوحيد للتصميم في هذا المستودع.** أي تصميم مستقبلي (صفحة، مكوّن،
-> واجهة، عرض) يتبع هذا الملف. هذا هو النظام الذي تقرأه مهارة **impeccable**
-> تلقائيًا (`.claude/skills/impeccable`) عبر `context.mjs`.
+> **نظام تصميم مشروع «عدّة»** — أحد مشاريع [`designs/`](../README.md). تقرأه مهارة
+> **impeccable** عند تفعيل المشروع عبر `IMPECCABLE_CONTEXT_DIR=designs/eddah`.
+> الأساس العام (RTL/إتاحة/حركة/خط البيت) في [`designs/README.md`](../README.md)،
+> وهذا الملف يضيف هوية عدّة فوقه.
 >
-> الهوية والخطوط والأصول الكاملة منظّمة في مجلد واحد: [`eddah/`](eddah/).
-> التفاصيل الأعمق: [`eddah/design/DESIGN-SYSTEM.md`](eddah/design/DESIGN-SYSTEM.md) ·
-> [`eddah/design/THEMES.md`](eddah/design/THEMES.md) ·
-> [`eddah/design/NEBULA.md`](eddah/design/NEBULA.md) ·
-> [`eddah/design/BRAND.md`](eddah/design/BRAND.md).
+> الهوية والخطوط والأصول الكاملة في هذا المجلد `designs/eddah/`.
+> التفاصيل الأعمق: [`design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md) ·
+> [`design/THEMES.md`](design/THEMES.md) ·
+> [`design/NEBULA.md`](design/NEBULA.md) ·
+> [`design/BRAND.md`](design/BRAND.md).
 
 الهوية: **"Ivory & Amber"** نهارًا، و**"Black & Amber"** (بلمسة بنفسجية) مساءً —
-فاتحة دافئة فاخرة محلية سعودية، مشتقّة من `eddah/assets/laban-map.png`
+فاتحة دافئة فاخرة محلية سعودية، مشتقّة من `assets/laban-map.png`
 (ورق بيج دافئ + دبوس كهرماني). RTL كامل (`dir="rtl"`)، عربية أولًا.
 
 ---
@@ -20,7 +21,7 @@
 
 كل الألوان متغيّرات CSS بصيغة `R G B`، يستهلكها Tailwind عبر
 `rgb(var(--token) / <alpha-value>)` — فالوضع نهاري/مسائي يتبدّل وقت التشغيل بلا
-إعادة بناء. القيم الكاملة في [`eddah/code-snippets/globals.css`](eddah/code-snippets/globals.css).
+إعادة بناء. القيم الكاملة في [`code-snippets/globals.css`](code-snippets/globals.css).
 
 ### الوضع النهاري (Day · افتراضي · `:root`)
 
@@ -70,8 +71,8 @@
 
 ## 2) الخطوط — خط ثمانية (Thmanyah)
 
-الخطوط الفعلية في [`eddah/fonts/`](eddah/fonts/) — `woff2` للويب و`otf` للتصميم +
-[ملف الترخيص](eddah/fonts/) (راجعه قبل أي استخدام تجاري موسّع).
+الخطوط الفعلية في [`fonts/`](fonts/) — `woff2` للويب و`otf` للتصميم +
+[ملف الترخيص](fonts/) (راجعه قبل أي استخدام تجاري موسّع).
 
 - **Thmanyah Sans** → النصوص والواجهة والأزرار · متغيّر `--font-arabic` · أوزان `300/400/500/700/900`.
 - **Thmanyah Serif Display** → العناوين الكبيرة (H1, H2) · متغيّر `--font-display` · إحساس تحريري فاخر.
@@ -79,14 +80,14 @@
 - **العناوين:** `letter-spacing: -0.01em` كحدّ أقصى — **لا تتبّع سالب قوي على العربية** (الحروف متّصلة).
 - **المقياس:** H1 `clamp(2.6rem, 7vw, 4.7rem)` · H2 `clamp(1.875rem, 3.8vw, 44px)`.
 - أرقام عربية (٠ ١ ٢ ٣) عمدًا للأصالة · `font-feature-settings: "ss01","liga","kern"`.
-- التحميل في Next.js عبر `next/font/local` — انظر [`eddah/code-snippets/layout.tsx`](eddah/code-snippets/layout.tsx).
+- التحميل في Next.js عبر `next/font/local` — انظر [`code-snippets/layout.tsx`](code-snippets/layout.tsx).
 
 تفعيل `@font-face` لأي مشروع (المسارات نسبية لمجلد الخطوط):
 
 ```css
-@font-face{font-family:"Thmanyah Sans";src:url("eddah/fonts/thmanyah/thmanyahsans-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:"Thmanyah Sans";src:url("eddah/fonts/thmanyah/thmanyahsans-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
-@font-face{font-family:"Thmanyah Serif Display";src:url("eddah/fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Thmanyah Sans";src:url("fonts/thmanyah/thmanyahsans-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Thmanyah Sans";src:url("fonts/thmanyah/thmanyahsans-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Thmanyah Serif Display";src:url("fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
 /* بقية الأوزان (Light 300 · Medium 500 · Black 900) بنفس النمط لكل عائلة */
 ```
 
@@ -104,7 +105,7 @@
 
 ## 4) الظلال (theme-aware عبر `--shadow`)
 
-من [`eddah/code-snippets/tailwind.config.ts`](eddah/code-snippets/tailwind.config.ts):
+من [`code-snippets/tailwind.config.ts`](code-snippets/tailwind.config.ts):
 
 | Class | الاستخدام |
 |---|---|
@@ -120,7 +121,7 @@
 
 ## 5) الحركة (motion)
 
-من [`eddah/code-snippets/motion.ts`](eddah/code-snippets/motion.ts) — لغة easing واحدة لكل الموقع:
+من [`code-snippets/motion.ts`](code-snippets/motion.ts) — لغة easing واحدة لكل الموقع:
 
 | المتغيّر | القيمة/الاستخدام |
 |---|---|
@@ -139,18 +140,18 @@
 نيبولا على **Canvas 2D محلي** (بلا مكتبات): كهرمانية نهارًا (`source-over`, شفافية ~0.72)،
 بنفسجية خافتة ليلًا (`lighter`, شفافية ~0.42)، تُنعّم بـ `blur(62px)`، تحترم تقليل الحركة،
 وتتبدّل فورًا مع الوضع (`themechange`). الموضع `fixed inset-0 -z-10 pointer-events-none`.
-الكود: [`eddah/code-snippets/NebulaBackground.tsx`](eddah/code-snippets/NebulaBackground.tsx) ·
-نسخة شيدر مستقلة تفاعلية: [`eddah/code-snippets/sadim-shader-standalone.html`](eddah/code-snippets/sadim-shader-standalone.html) ·
-الشرح: [`eddah/design/NEBULA.md`](eddah/design/NEBULA.md).
+الكود: [`code-snippets/NebulaBackground.tsx`](code-snippets/NebulaBackground.tsx) ·
+نسخة شيدر مستقلة تفاعلية: [`code-snippets/sadim-shader-standalone.html`](code-snippets/sadim-shader-standalone.html) ·
+الشرح: [`design/NEBULA.md`](design/NEBULA.md).
 
 ---
 
 ## 7) الوضع النهاري/المسائي
 
 متغيّرات CSS على `:root` (نهاري) و`[data-theme="night"]` (مسائي) + زر
-[`ThemeToggle`](eddah/code-snippets/ThemeToggle.tsx) يضيف/يزيل `data-theme="night"`،
+[`ThemeToggle`](code-snippets/ThemeToggle.tsx) يضيف/يزيل `data-theme="night"`،
 يحفظ في `localStorage` (`eddah-theme`)، ويُطلق حدث `themechange`. سكربت سطري في
-`layout.tsx` يمنع وميض الإقلاع. التفاصيل: [`eddah/design/THEMES.md`](eddah/design/THEMES.md).
+`layout.tsx` يمنع وميض الإقلاع. التفاصيل: [`design/THEMES.md`](design/THEMES.md).
 
 ---
 
@@ -185,6 +186,6 @@
 ## مصدر الحقيقة
 
 هذا الملف مُلخّص تشغيلي. عند أي تعارض، التفصيل الكامل في
-[`eddah/design/DESIGN-SYSTEM.md`](eddah/design/DESIGN-SYSTEM.md) ومقاطع الكود في
-[`eddah/code-snippets/`](eddah/code-snippets/) هي المرجع. لإعادة بناء الموقع من
-الصفر بأي أداة: [`eddah/RECREATE-PROMPT.md`](eddah/RECREATE-PROMPT.md).
+[`design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md) ومقاطع الكود في
+[`code-snippets/`](code-snippets/) هي المرجع. لإعادة بناء الموقع من
+الصفر بأي أداة: [`RECREATE-PROMPT.md`](RECREATE-PROMPT.md).

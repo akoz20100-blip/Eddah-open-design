@@ -1,7 +1,8 @@
 # عدّة — PRODUCT
 
-> سياق المنتج لمهارة **impeccable** ولأي تصميم مستقبلي في هذا المستودع.
-> نظام التصميم الكامل في [`DESIGN.md`](DESIGN.md). الأصول والخطوط في [`eddah/`](eddah/).
+> سياق منتج مشروع «عدّة» (أحد مشاريع [`designs/`](../README.md)). يُفعّل عبر
+> `IMPECCABLE_CONTEXT_DIR=designs/eddah`. نظام التصميم في [`DESIGN.md`](DESIGN.md)،
+> والأصول والخطوط في هذا المجلد `designs/eddah/`.
 
 register: marketing
 
@@ -24,7 +25,7 @@ register: marketing
 - **القناة الوحيدة:** واتساب — الرقم `966509005845` (دولي بلا `+`).
 - الرابط: `https://wa.me/966509005845?text=<رسالة>` · الرسالة الافتراضية:
   «السلام عليكم، أبغى أطلب خدمة صيانة في حي لبن.»
-- ثوابت العلامة في [`eddah/code-snippets/brand.ts`](eddah/code-snippets/brand.ts).
+- ثوابت العلامة في [`code-snippets/brand.ts`](code-snippets/brand.ts).
 
 ## النصوص الرسمية
 
@@ -42,7 +43,7 @@ register: marketing
 Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS 3 · framer-motion 11 ·
 بدون أي dependency للرسوميات (خلفية «سديم» على Canvas محلي).
 
-## الأصول (في [`eddah/assets/`](eddah/assets/) — صور حقيقية فقط، لا stock/AI)
+## الأصول (في [`assets/`](assets/) — صور حقيقية فقط، لا stock/AI)
 
 `hero-technician.png` (البطل) · `service-plumbing.png` · `service-electrical.png` ·
 `service-ac.png` · `tools-showcase.png` · `precision-workshop.png` ·
