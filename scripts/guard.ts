@@ -128,6 +128,11 @@ const residualAllowedPathPrefixes = [
   "mocks/lib/",
   "mocks/mock-agent.mjs",
   "mocks/scripts/",
+  // Vendored impeccable design-skill runtime (installed via `npx impeccable
+  // skills install` into the GitHub harness folder). These are upstream
+  // single-file Node scripts shipped with the skill, not project-owned code,
+  // and must run directly via Node without a TypeScript transform.
+  ".github/skills/",
   "test-results/",
   "vendor/",
 ];

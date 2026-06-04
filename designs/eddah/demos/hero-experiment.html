@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>عدّة — تجربة Hero (impeccable)</title>
+<meta name="description" content="تجربة قسم Hero لعدّة مبنية على نظام التصميم عبر impeccable." />
+
+<!-- خط ثمانية (Thmanyah) — خط الهوية. المسارات نسبية لمجلد المشروع. -->
+<style>
+  @font-face{font-family:"Thmanyah Sans";src:url("../fonts/thmanyah/thmanyahsans-Light.woff2") format("woff2");font-weight:300;font-display:swap}
+  @font-face{font-family:"Thmanyah Sans";src:url("../fonts/thmanyah/thmanyahsans-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+  @font-face{font-family:"Thmanyah Sans";src:url("../fonts/thmanyah/thmanyahsans-Medium.woff2") format("woff2");font-weight:500;font-display:swap}
+  @font-face{font-family:"Thmanyah Sans";src:url("../fonts/thmanyah/thmanyahsans-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+  @font-face{font-family:"Thmanyah Sans";src:url("../fonts/thmanyah/thmanyahsans-Black.woff2") format("woff2");font-weight:900;font-display:swap}
+  @font-face{font-family:"Thmanyah Serif Display";src:url("../fonts/thmanyah/thmanyahserifdisplay-Light.woff2") format("woff2");font-weight:300;font-display:swap}
+  @font-face{font-family:"Thmanyah Serif Display";src:url("../fonts/thmanyah/thmanyahserifdisplay-Medium.woff2") format("woff2");font-weight:500;font-display:swap}
+  @font-face{font-family:"Thmanyah Serif Display";src:url("../fonts/thmanyah/thmanyahserifdisplay-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+  @font-face{font-family:"Thmanyah Serif Display";src:url("../fonts/thmanyah/thmanyahserifdisplay-Black.woff2") format("woff2");font-weight:900;font-display:swap}
+
+  /* ===== توكنز عدّة — نهاري (افتراضي) ===== */
+  :root{
+    --white:255 255 255;
+    --ink-900:26 23 20; --ink-700:58 51 44; --ink-600:90 80 70; --ink-500:117 107 94;
+    --clay-50:252 248 241; --clay-100:245 238 224; --clay-200:236 224 205; --clay-300:219 203 178; --clay-400:198 179 152;
+    --orange-300:247 180 80; --orange-400:245 154 36; --orange-500:242 130 12; --orange-600:221 106 6;
+    --gold:246 167 0; --gold-light:255 199 77;
+    --shadow:26 23 20; --glow:240 133 26;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  [data-theme="night"]{
+    --white:12 11 17;
+    --ink-900:245 242 255; --ink-700:215 207 241; --ink-600:184 175 221; --ink-500:154 144 194;
+    --clay-50:3 3 5; --clay-100:8 8 12; --clay-200:21 19 28; --clay-300:34 31 43; --clay-400:50 46 60;
+    --orange-300:184 112 15; --orange-400:245 154 36; --orange-500:242 130 12; --orange-600:251 166 58;
+    --gold:246 167 0; --gold-light:255 199 77;
+    --shadow:0 0 0; --glow:242 130 12;
+  }
+
+  *{box-sizing:border-box;margin:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Thmanyah Sans",system-ui,sans-serif;
+    background-color:rgb(var(--clay-50));
+    color:rgb(var(--ink-900));
+    overflow-x:hidden;
+    font-feature-settings:"ss01","liga","kern";
+    transition:background-color .5s ease,color .5s ease;
+  }
+  h1,h2{font-family:"Thmanyah Serif Display","Thmanyah Sans",Georgia,serif;letter-spacing:-0.01em}
+  ::selection{background:rgb(var(--orange-500)/.9);color:#fff}
+  a{color:inherit;text-decoration:none}
+
+  /* خلفية «سديم» — Canvas نيبولا متحرك (كهرماني نهارًا، بنفسجي على أسود مساءً) */
+  #nebula{position:fixed;inset:0;z-index:-2;width:100%;height:100%;pointer-events:none;
+    filter:blur(62px) saturate(120%);opacity:.72;transform:scale(1.16);transform-origin:center}
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  [data-theme="night"] .grain{opacity:.05;mix-blend-mode:soft-light}
+
+  .container{max-width:1180px;margin-inline:auto;padding-inline:24px}
+  @media(min-width:768px){.container{padding-inline:40px}}
+
+  /* ===== Nav ===== */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgb(var(--clay-50)/.72);border-bottom:1px solid rgb(var(--clay-200)/.8)}
+  .nav-row{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px}
+  .brand .mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:900;
+    background:linear-gradient(135deg,rgb(var(--gold-light)),rgb(var(--orange-500)));box-shadow:0 8px 22px -10px rgb(var(--glow)/.7)}
+  .nav-actions{display:flex;align-items:center;gap:10px}
+  .toggle{width:42px;height:42px;border-radius:999px;border:1px solid rgb(var(--clay-300));
+    background:rgb(var(--white)/.8);color:rgb(var(--ink-700));font-size:18px;cursor:pointer;
+    display:grid;place-items:center;transition:transform .2s var(--ease),background .3s ease}
+  .toggle:hover{transform:translateY(-1px)}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;
+    padding:12px 20px;border-radius:999px;cursor:pointer;border:1px solid transparent;
+    transition:transform .22s var(--ease),box-shadow .22s var(--ease),background .3s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:rgb(var(--orange-500));color:#fff;box-shadow:0 16px 40px -12px rgb(var(--glow)/.45)}
+  .btn-ghost{background:rgb(var(--white)/.7);color:rgb(var(--ink-900));border-color:rgb(var(--clay-300))}
+  .btn-wa{background:#25D366;color:#06311a}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;padding-block:64px 96px}
+  @media(min-width:980px){.hero{padding-block:88px 120px}}
+  .hero-grid{display:grid;gap:48px;align-items:center}
+  @media(min-width:980px){.hero-grid{grid-template-columns:1.05fr .95fr;gap:64px}}
+
+  .clarity{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+    color:rgb(var(--ink-600));background:rgb(var(--white)/.7);border:1px solid rgb(var(--clay-200));
+    padding:8px 14px;border-radius:999px;margin-bottom:24px}
+  .clarity .dot{width:7px;height:7px;border-radius:999px;background:rgb(var(--orange-500));
+    box-shadow:0 0 0 4px rgb(var(--orange-500)/.18)}
+
+  h1.title{font-size:clamp(2.6rem,7vw,4.7rem);line-height:1.05;font-weight:900;text-wrap:balance;margin-bottom:22px}
+  .title .word{display:inline-block;will-change:transform,opacity;animation:reveal .85s var(--ease) backwards}
+  .grad{background:linear-gradient(135deg,#FFC74D,#F6A700 38%,#F2820C 68%,#DD6A06);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  @keyframes reveal{from{opacity:0;transform:translateY(.5em)}to{opacity:1;transform:translateY(0)}}
+
+  .lede{font-size:clamp(1.05rem,1.6vw,1.25rem);line-height:1.85;color:rgb(var(--ink-600));
+    max-width:54ch;text-wrap:pretty;margin-bottom:32px;animation:fade .8s var(--ease) .5s backwards}
+  @keyframes fade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .cta-row{display:flex;flex-wrap:wrap;gap:14px;animation:fade .8s var(--ease) .62s backwards}
+  .trust{display:flex;flex-wrap:wrap;gap:18px;margin-top:34px;color:rgb(var(--ink-500));font-size:14px;
+    animation:fade .8s var(--ease) .74s backwards}
+  .trust span{display:inline-flex;align-items:center;gap:7px}
+  .trust .tick{color:rgb(var(--orange-600));font-weight:900}
+
+  /* صورة الفني + بطاقات عائمة */
+  .media{position:relative}
+  .frame{position:relative;border-radius:2.25rem;overflow:hidden;aspect-ratio:4/5;
+    border:1px solid rgb(var(--clay-200));background:rgb(var(--clay-100));
+    box-shadow:0 40px 80px -32px rgb(var(--shadow)/.42),0 2px 6px rgb(var(--shadow)/.1);
+    animation:fade .9s var(--ease) .35s backwards}
+  .frame img{width:100%;height:100%;object-fit:cover;display:block}
+  .float{position:absolute;display:flex;align-items:center;gap:11px;padding:13px 16px;border-radius:1.1rem;
+    background:rgb(var(--white)/.82);backdrop-filter:blur(16px);border:1px solid rgb(var(--white)/.7);
+    box-shadow:0 18px 44px -16px rgb(var(--shadow)/.4);font-size:14px}
+  .float .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:17px;
+    background:rgb(var(--orange-500)/.14);color:rgb(var(--orange-600))}
+  .float small{display:block;color:rgb(var(--ink-500));font-size:12px;font-weight:500}
+  .float b{font-weight:800;color:rgb(var(--ink-900))}
+  .f-live{top:22px;inset-inline-start:-14px;animation:floaty 7s var(--ease) infinite}
+  .f-appt{bottom:26px;inset-inline-end:-12px;animation:floaty 7s var(--ease) .8s infinite}
+  .pulse{width:9px;height:9px;border-radius:999px;background:#19c37d;position:relative}
+  .pulse::after{content:"";position:absolute;inset:0;border-radius:999px;background:#19c37d;animation:ring 2.4s var(--ease) infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes ring{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+
+  /* ===== رؤوس الأقسام ===== */
+  .section{padding-block:72px}
+  @media(min-width:980px){.section{padding-block:96px}}
+  .sec-head{max-width:580px;margin-bottom:40px}
+  .sec-head h2{font-size:clamp(1.875rem,3.8vw,44px);line-height:1.14;font-weight:900;margin-bottom:14px;text-wrap:balance}
+  .sec-head p{color:rgb(var(--ink-600));font-size:1.05rem;line-height:1.8;text-wrap:pretty}
+
+  /* ===== الخدمات — bento غير متناظر ===== */
+  .bento{display:grid;gap:18px}
+  @media(min-width:880px){.bento{grid-template-columns:1.4fr 1fr;grid-template-rows:1fr 1fr}}
+  .svc{position:relative;overflow:hidden;border-radius:2rem;border:1px solid rgb(var(--clay-200));
+    background:rgb(var(--clay-100));min-height:236px;display:flex;flex-direction:column;justify-content:flex-end;
+    isolation:isolate;transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .svc:hover{transform:translateY(-3px);box-shadow:0 40px 80px -32px rgb(var(--shadow)/.42)}
+  .svc>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+  .svc::after{content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(to top,rgb(var(--clay-50)/.95) 4%,rgb(var(--clay-50)/.55) 44%,rgb(var(--clay-50)/.04) 82%)}
+  .svc-feature{min-height:300px}
+  @media(min-width:880px){.svc-feature{grid-row:1 / span 2;min-height:auto}}
+  .svc-body{padding:24px}
+  .ghost{position:absolute;top:10px;inset-inline-start:22px;font-family:"Thmanyah Serif Display",serif;
+    font-size:5rem;line-height:1;font-weight:900;color:rgb(var(--ink-900)/.08);z-index:-1;pointer-events:none}
+  .svc-feature .ghost{font-size:8rem}
+  .svc-ico{position:absolute;top:18px;inset-inline-end:18px;width:48px;height:48px;border-radius:14px;
+    display:grid;place-items:center;font-size:22px;background:rgb(var(--white)/.82);backdrop-filter:blur(12px);
+    border:1px solid rgb(var(--white)/.7);box-shadow:0 10px 24px -10px rgb(var(--shadow)/.35);animation:floaty 7s var(--ease) infinite}
+  .svc h3{font-size:1.5rem;font-weight:900;margin-bottom:6px}
+  .svc-feature h3{font-size:1.9rem}
+  .svc p{color:rgb(var(--ink-600));font-size:.95rem;line-height:1.7;margin-bottom:14px;max-width:44ch}
+  .svc-link{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:rgb(var(--orange-600));font-size:.95rem}
+
+  /* ===== الخريطة ===== */
+  .map-wrap{position:relative;border-radius:2.25rem;overflow:hidden;border:1px solid rgb(var(--clay-200));
+    box-shadow:0 40px 80px -36px rgb(var(--shadow)/.4)}
+  .map-wrap img{width:100%;height:clamp(330px,46vh,470px);object-fit:cover;display:block}
+  .map-wrap::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgb(var(--clay-50)/.5),transparent 55%)}
+  .pin{position:absolute;top:43%;inset-inline-start:39%;width:18px;height:18px;border-radius:999px;z-index:2;
+    background:rgb(var(--orange-500));box-shadow:0 0 0 5px rgb(var(--orange-500)/.22),0 8px 20px -4px rgb(var(--glow)/.7)}
+  .pin::after{content:"";position:absolute;inset:0;border-radius:999px;background:rgb(var(--orange-500));animation:ring 2.6s var(--ease) infinite}
+  .map-panel{position:absolute;inset-block-end:22px;inset-inline-start:22px;z-index:3;max-width:300px;
+    background:rgb(var(--white)/.86);backdrop-filter:blur(18px);border:1px solid rgb(var(--white)/.7);
+    border-radius:1.25rem;padding:18px 20px;box-shadow:0 22px 50px -18px rgb(var(--shadow)/.45)}
+  .map-panel small{color:rgb(var(--ink-500));font-size:12px;font-weight:700}
+  .map-panel b{display:block;font-size:1.15rem;font-weight:900;margin:3px 0 12px}
+
+  /* كشف عند الظهور — الأساس مرئي، والحركة تحسين فقط */
+  .reveal{opacity:1}
+  .reveal.in{animation:fade .7s var(--ease) backwards}
+
+  footer{padding:26px 0 40px;color:rgb(var(--ink-500));font-size:13px;text-align:center}
+
+  @media(prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  }
+</style>
+</head>
+<body>
+  <canvas id="nebula" aria-hidden="true"></canvas><div class="grain"></div>
+
+  <nav>
+    <div class="container nav-row">
+      <a class="brand" href="#"><span class="mark">ع</span> عدّة</a>
+      <div class="nav-actions">
+        <button class="toggle" id="themeBtn" aria-label="تبديل الوضع النهاري/المسائي">🌙</button>
+        <a class="btn btn-wa" href="https://wa.me/966509005845?text=السلام%20عليكم،%20أبغى%20أطلب%20خدمة%20صيانة%20في%20حي%20لبن." target="_blank" rel="noopener">تواصل واتساب</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="clarity"><span class="dot"></span> صيانة منزلية في حي لبن — سباكة · كهرباء · تكييف</span>
+        <h1 class="title" id="title" aria-label="فنّيك في حيّك، تواصل وأبشر بالسعد"></h1>
+        <p class="lede">خدمة صيانة منزلية منظّمة وسريعة في حي لبن لخدمات السباكة والكهرباء والتكييف، بمواعيد واضحة وضمان على الشغل.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://wa.me/966509005845?text=السلام%20عليكم،%20أبغى%20أطلب%20خدمة%20صيانة%20في%20حي%20لبن." target="_blank" rel="noopener">اطلب الفني الآن ←</a>
+          <a class="btn btn-ghost" href="#">شاهد الخدمات</a>
+        </div>
+        <div class="trust">
+          <span><span class="tick">✓</span> خدمة داخل حي لبن</span>
+          <span><span class="tick">✓</span> مواعيد واضحة</span>
+          <span><span class="tick">✓</span> ضمان على الشغل</span>
+        </div>
+      </div>
+
+      <div class="media">
+        <div class="frame">
+          <img src="../assets/hero-technician.png" alt="فنّي عدّة وحقيبة عدّته في بيت بحي لبن" />
+        </div>
+        <div class="float f-live">
+          <span class="pulse"></span>
+          <div><small>الحالة</small><b>فنّي متاح الآن</b></div>
+        </div>
+        <div class="float f-appt">
+          <span class="ico">📍</span>
+          <div><small>تأكيد الموعد</small><b>اليوم · حي لبن</b></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== الخدمات (bento غير متناظر) ===== -->
+  <section class="section container reveal" id="services">
+    <div class="sec-head">
+      <h2>ثلاث خدمات، نتقنها</h2>
+      <p>ما نشتّت — سباكة، كهرباء، وتكييف داخل حي لبن، بمواعيد واضحة وضمان على الشغل.</p>
+    </div>
+    <div class="bento">
+      <article class="svc svc-feature">
+        <img src="../assets/service-plumbing.png" alt="إصلاح سباكة دقيق تحت الحوض" />
+        <span class="ghost">٠١</span>
+        <span class="svc-ico" aria-hidden="true">🔧</span>
+        <div class="svc-body">
+          <h3>السباكة</h3>
+          <p>كشف التسريبات، المحابس، السخّانات، وتمديدات الحمّام والمطبخ — تنفيذ نظيف ومضمون.</p>
+          <a class="svc-link" href="#">اطلب فني سباكة ←</a>
+        </div>
+      </article>
+      <article class="svc">
+        <img src="../assets/service-electrical.png" alt="صيانة كهربائية آمنة للوحة المنزل" />
+        <span class="ghost">٠٢</span>
+        <span class="svc-ico" aria-hidden="true">⚡</span>
+        <div class="svc-body">
+          <h3>الكهرباء</h3>
+          <p>لوحات، قواطع، إنارة، ومخارج — أمان أولاً.</p>
+          <a class="svc-link" href="#">اطلب فني كهرباء ←</a>
+        </div>
+      </article>
+      <article class="svc">
+        <img src="../assets/service-ac.png" alt="صيانة وتنظيف وحدة التكييف" />
+        <span class="ghost">٠٣</span>
+        <span class="svc-ico" aria-hidden="true">❄️</span>
+        <div class="svc-body">
+          <h3>التكييف</h3>
+          <p>صيانة، تنظيف، وتعبئة فريون — برودة تعتمد عليها.</p>
+          <a class="svc-link" href="#">اطلب فني تكييف ←</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== الخريطة (حي لبن) ===== -->
+  <section class="section container reveal" id="area">
+    <div class="sec-head">
+      <h2>فنّي قريب منك في حي لبن</h2>
+      <p>نركّز على حي لبن غرب الرياض — القُرب يعني وصولًا أسرع وموعدًا أوضح.</p>
+    </div>
+    <div class="map-wrap">
+      <img src="../assets/laban-map.png" alt="نطاق خدمة عدّة — حي لبن، غرب الرياض" />
+      <span class="pin" aria-hidden="true"></span>
+      <div class="map-panel">
+        <small>نطاق الخدمة</small>
+        <b>حي لبن — غرب الرياض</b>
+        <a class="btn btn-primary" href="https://wa.me/966509005845?text=السلام%20عليكم،%20أبغى%20أطلب%20خدمة%20صيانة%20في%20حي%20لبن." target="_blank" rel="noopener">اطلب الفني الآن ←</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="container">تجربة عدّة (Hero + الخدمات + الخريطة) مبنية على نظام التصميم عبر impeccable — بدّل الوضع من 🌙 / ☀️.</footer>
+
+<script>
+  // كشف العنوان كلمة بكلمة (يحترم بنية aria عبر aria-label على H1)
+  (function(){
+    var words = ["فنّيك","في","حيّك،","تواصل","وأبشر","بالسعد"];
+    var el = document.getElementById("title"), html = "", d = 0.12;
+    words.forEach(function(w,i){
+      var inner = (i === words.length - 1) ? '<span class="grad">'+w+'</span>' : w;
+      html += '<span class="word" style="animation-delay:'+(0.15+i*d)+'s">'+inner+'</span> ';
+    });
+    el.innerHTML = html;
+  })();
+
+  // تبديل الوضع + حفظ + منع وميض
+  (function(){
+    var btn = document.getElementById("themeBtn"), root = document.documentElement;
+    function apply(t){ if(t==="night"){root.setAttribute("data-theme","night");btn.textContent="☀️";}
+      else{root.removeAttribute("data-theme");btn.textContent="🌙";} }
+    try{ apply(localStorage.getItem("eddah-theme")||"day"); }catch(e){}
+    btn.addEventListener("click",function(){
+      var night = root.getAttribute("data-theme")==="night";
+      var next = night ? "day":"night"; apply(next);
+      try{ localStorage.setItem("eddah-theme",next); }catch(e){}
+      if(typeof nebulaRedraw==="function") nebulaRedraw();
+    });
+  })();
+
+  // خلفية «سديم» — Canvas نيبولا متحرك (منقول من NebulaBackground.tsx)
+  var nebulaRedraw = function(){};
+  (function(){
+    var canvas = document.getElementById("nebula");
+    if(!canvas) return;
+    var ctx = canvas.getContext("2d");
+    if(!ctx) return;
+    var DAY = [
+      {rgb:"246,167,0",  r:0.62,peak:0.50,bx:0.80,by:0.10,ax:0.05,ay:0.07,sx:0.00022,sy:0.00017,px:0.0,py:1.2},
+      {rgb:"242,130,12", r:0.46,peak:0.42,bx:0.14,by:0.32,ax:0.07,ay:0.05,sx:0.00018,sy:0.00024,px:2.1,py:0.4},
+      {rgb:"255,199,77", r:0.58,peak:0.46,bx:0.52,by:0.82,ax:0.08,ay:0.05,sx:0.00015,sy:0.00020,px:4.0,py:3.0},
+      {rgb:"221,106,11", r:0.36,peak:0.32,bx:0.92,by:0.72,ax:0.05,ay:0.07,sx:0.00024,sy:0.00019,px:1.0,py:2.0},
+      {rgb:"255,221,150",r:0.50,peak:0.40,bx:0.32,by:0.04,ax:0.06,ay:0.06,sx:0.00020,sy:0.00016,px:5.2,py:4.1}
+    ];
+    var NIGHT = [
+      {rgb:"124,77,255", r:0.60,peak:0.50,bx:0.78,by:0.12,ax:0.05,ay:0.07,sx:0.00022,sy:0.00017,px:0.0,py:1.2},
+      {rgb:"157,108,255",r:0.46,peak:0.45,bx:0.16,by:0.34,ax:0.07,ay:0.05,sx:0.00018,sy:0.00024,px:2.1,py:0.4},
+      {rgb:"190,120,255",r:0.54,peak:0.40,bx:0.52,by:0.82,ax:0.08,ay:0.05,sx:0.00015,sy:0.00020,px:4.0,py:3.0},
+      {rgb:"214,93,177", r:0.34,peak:0.35,bx:0.92,by:0.70,ax:0.05,ay:0.07,sx:0.00024,sy:0.00019,px:1.0,py:2.0},
+      {rgb:"150,110,255",r:0.48,peak:0.42,bx:0.34,by:0.06,ax:0.06,ay:0.06,sx:0.00020,sy:0.00016,px:5.2,py:4.1}
+    ];
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var w=0,h=0,raf=0,running=true;
+    function isNight(){ return document.documentElement.getAttribute("data-theme")==="night"; }
+    function resize(){
+      var longSide = Math.max(window.innerWidth, window.innerHeight);
+      var scale = Math.min(0.28, 460/longSide);
+      w = Math.max(1, Math.round(window.innerWidth*scale));
+      h = Math.max(1, Math.round(window.innerHeight*scale));
+      canvas.width=w; canvas.height=h;
+    }
+    function draw(t){
+      var night=isNight(), clouds=night?NIGHT:DAY, base=Math.min(w,h);
+      ctx.clearRect(0,0,w,h);
+      ctx.globalCompositeOperation = night?"lighter":"source-over";
+      for(var i=0;i<clouds.length;i++){
+        var c=clouds[i];
+        var x=(c.bx+Math.sin(t*c.sx+c.px)*c.ax)*w;
+        var y=(c.by+Math.cos(t*c.sy+c.py)*c.ay)*h;
+        var radius=c.r*base;
+        var g=ctx.createRadialGradient(x,y,0,x,y,radius);
+        g.addColorStop(0,"rgba("+c.rgb+","+c.peak+")");
+        g.addColorStop(0.5,"rgba("+c.rgb+","+(c.peak*0.4)+")");
+        g.addColorStop(1,"rgba("+c.rgb+",0)");
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,radius,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalCompositeOperation="source-over";
+      canvas.style.opacity = night?"0.42":"0.72";
+    }
+    function loop(t){ if(!running) return; draw(t); raf=requestAnimationFrame(loop); }
+    nebulaRedraw = function(){ draw(6000); };
+    resize();
+    window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", function(){
+      if(document.hidden){ running=false; cancelAnimationFrame(raf); }
+      else if(!reduce){ running=true; raf=requestAnimationFrame(loop); }
+    });
+    if(reduce) draw(6000); else raf=requestAnimationFrame(loop);
+  })();
+
+  // كشف الأقسام عند الظهور (الأساس مرئي؛ الحركة تحسين فقط)
+  (function(){
+    if(!("IntersectionObserver" in window)) return;
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
+    },{threshold:.12});
+    document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+  })();
+</script>
+</body>
+</html>
