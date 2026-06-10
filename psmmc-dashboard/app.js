@@ -1,5 +1,7 @@
 /* PSMMC — Pharmacy Stock & Reorder Analytics
-   Client-side only. Medicines only = NUPCO code starts with "5". Bilingual AR/EN. */
+   Client-side only. Medicines only = NUPCO code starts with "5". Bilingual AR/EN.
+   Visual identity matched to the reference card set (soft cards, tinted tiles,
+   capsule dock, glossy pink orb). All chart series come from the real files. */
 (function () {
   "use strict";
 
@@ -12,10 +14,12 @@
   // ---------- i18n ----------
   var T = {
     en: {
+      app_title: "Pharmacy Stock & Reorder Analytics",
+      app_sub: "Prince Sultan Military Medical City · Medical Services",
       tab_planning: "Planning Department", tab_management: "Management & Budget",
       file_wd: "Withdrawals file", file_wd_hint: "NUPCO outbound · .xlsx",
       file_st: "Stock-on-hand file", file_st_hint: "NUPCO stock · .xls",
-      btn_sample: "Load sample data", btn_export: "⬇ Export Excel",
+      btn_sample: "Load sample data",
       upl_hint: "Drop both files to compute coverage &amp; reorder. Only medicines (NUPCO code starting with <b>5</b>) are included; medical supplies are excluded.",
       empty_title: "No data loaded yet",
       empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with real numbers.",
@@ -26,16 +30,21 @@
       showing: "Showing", of: "of", items: "items", no_rows: "No rows match this filter.",
       f_all: "All", f_order_now: "Order now", f_no_movement: "No movement", f_not_in_stock: "Not in stock",
       f_all_instock: "All in stock", f_available: "Available", f_outstock: "Out of stock",
-      k_analysed: "Medicines analysed", k_analysed_sub: "code starts with 5",
-      k_order: "Order now", k_order_sub: "coverage ≤ 6 months",
-      k_watch: "Watch", k_watch_sub: "6–7 months left",
-      k_nomove: "No movement", k_nomove_sub: "no withdrawals in period",
-      k_notstock: "Not in stock", k_notstock_sub: "withdrawn but absent",
-      k_instock: "Medicines in stock", k_instock_sub: "items in stock file",
-      k_units: "Total available units", k_units_sub: "sum of available qty",
-      k_out: "Out of stock", k_out_sub: "available qty = 0",
-      k_reorder: "Need reorder", k_reorder_sub: "coverage ≤ 6 mo",
+      k_order: "Order now",
+      k_watch: "Watch", k_nomove: "No movement", k_notstock: "Not in stock",
+      k_instock: "Medicines in stock", k_units: "Total available units",
+      k_out: "Out of stock", k_reorder: "Need reorder",
       k_value: "Stock value (SAR)", k_value_sub: "add a price list to enable",
+      k_withdrawn: "Total withdrawn", monthly_word: "per month",
+      k_monthly_title: "Monthly consumption", lg_total: "Total",
+      k_median: "Median coverage", of_analysed: "of analysed",
+      w_value: "6–7 months", w_sub: "coverage left",
+      ns_value: "Zero balance", ns_sub: "withdrawn in period",
+      nm_value: "No withdrawals", nm_sub: "during the period",
+      out_sub: "listed in stock file",
+      re_value: "Coverage ≤ 6", re_sub: "months left",
+      mg_avg_item: "avg units per item", meds_word: "medicines",
+      chart_nodates: "No valid dates in the file",
       c_code: "Code", c_desc: "Description", c_uom: "UOM", c_total: "Total Withdrawn",
       c_avg: "Monthly Avg", c_trend: "Trend Δ%", c_stock: "Current Stock", c_cov: "Coverage (mo)",
       c_status: "Status", c_qty9: "Qty (9 mo)", c_sug: "Suggested Order",
@@ -44,13 +53,15 @@
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
-      langBtn: "العربية"
+      langName: "English"
     },
     ar: {
+      app_title: "تحليلات مخزون الصيدلية وإعادة الطلب",
+      app_sub: "مدينة الأمير سلطان الطبية العسكرية · الخدمات الطبية",
       tab_planning: "قسم التخطيط", tab_management: "الإدارة والميزانية",
       file_wd: "ملف السحوبات", file_wd_hint: "صادر نبكو · ‎.xlsx",
       file_st: "ملف المخزون المتاح", file_st_hint: "مخزون نبكو · ‎.xls",
-      btn_sample: "تحميل بيانات تجريبية", btn_export: "⬇ تصدير Excel",
+      btn_sample: "تحميل بيانات تجريبية",
       upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>)؛ وتُستبعد المستلزمات الطبية.",
       empty_title: "لا توجد بيانات محمّلة بعد",
       empty_text: "ارفع ملف السحوبات وملف المخزون، أو اضغط «تحميل بيانات تجريبية» لمعاينة اللوحة بأرقام حقيقية.",
@@ -61,16 +72,21 @@
       showing: "عرض", of: "من", items: "صنف", no_rows: "لا توجد صفوف مطابقة لهذا الفلتر.",
       f_all: "الكل", f_order_now: "اطلب الآن", f_no_movement: "بدون حركة", f_not_in_stock: "غير متوفر بالمخزون",
       f_all_instock: "كل المخزون", f_available: "متوفر", f_outstock: "نفد",
-      k_analysed: "أدوية تم تحليلها", k_analysed_sub: "الكود يبدأ بـ 5",
-      k_order: "اطلب الآن", k_order_sub: "التغطية ≤ ٦ أشهر",
-      k_watch: "للمتابعة", k_watch_sub: "يتبقى ٦–٧ أشهر",
-      k_nomove: "بدون حركة", k_nomove_sub: "لا سحوبات في الفترة",
-      k_notstock: "غير متوفر", k_notstock_sub: "مسحوب وغير موجود بالمخزون",
-      k_instock: "أدوية بالمخزون", k_instock_sub: "أصناف في ملف المخزون",
-      k_units: "إجمالي الوحدات المتاحة", k_units_sub: "مجموع الكمية المتاحة",
-      k_out: "نفد من المخزون", k_out_sub: "الكمية المتاحة = ٠",
-      k_reorder: "يحتاج إعادة طلب", k_reorder_sub: "التغطية ≤ ٦ أشهر",
+      k_order: "اطلب الآن",
+      k_watch: "للمتابعة", k_nomove: "بدون حركة", k_notstock: "غير متوفر",
+      k_instock: "أدوية بالمخزون", k_units: "إجمالي الوحدات المتاحة",
+      k_out: "نفد من المخزون", k_reorder: "يحتاج إعادة طلب",
       k_value: "قيمة المخزون (ر.س)", k_value_sub: "أضف قائمة أسعار للتفعيل",
+      k_withdrawn: "إجمالي المسحوب", monthly_word: "شهريًا",
+      k_monthly_title: "الاستهلاك الشهري", lg_total: "الإجمالي",
+      k_median: "وسيط التغطية", of_analysed: "من المحلل",
+      w_value: "٦–٧ أشهر", w_sub: "تغطية متبقية",
+      ns_value: "رصيد صفر", ns_sub: "مسحوب خلال الفترة",
+      nm_value: "بلا سحوبات", nm_sub: "خلال فترة التحليل",
+      out_sub: "مدرج في ملف المخزون",
+      re_value: "تغطية ≤ ٦", re_sub: "أشهر متبقية",
+      mg_avg_item: "متوسط الوحدات للصنف", meds_word: "دواء",
+      chart_nodates: "لا توجد تواريخ صالحة في الملف",
       c_code: "الكود", c_desc: "الوصف", c_uom: "الوحدة", c_total: "إجمالي المسحوب",
       c_avg: "المتوسط الشهري", c_trend: "الاتجاه Δ٪", c_stock: "المخزون الحالي", c_cov: "التغطية (شهر)",
       c_status: "الحالة", c_qty9: "كمية ٩ أشهر", c_sug: "الطلب المقترح",
@@ -79,7 +95,7 @@
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
-      langBtn: "EN"
+      langName: "عربي"
     }
   };
   var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "ar"; } catch (e) { return "ar"; } })();
@@ -87,7 +103,7 @@
 
   // ---------- state ----------
   var STATE = {
-    view: "planning", rows: [],
+    view: "planning", rows: [], monthly: null,
     meta: { period_start: null, period_end: null, actual_months: null, stock_as_of: null, source: null },
     filter: "all", search: "", sort: { key: "cov", dir: "asc" },
     raw: { withdrawals: null, stock: null },
@@ -101,6 +117,14 @@
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
   function fmtInt(n) { return Math.round(n).toLocaleString("en-US"); }
   function fmt1(n) { return (Math.round(n * 10) / 10).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmtM(n) {
+    n = Math.round(n); var a = Math.abs(n);
+    if (a >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (a >= 1e4) return Math.round(n / 1e3) + "K";
+    if (a >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
+  }
+  function median(arr) { if (!arr.length) return null; var s = arr.slice().sort(function (a, b) { return a - b; }); var m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
   function toast(msg) { var el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(el._t); el._t = setTimeout(function () { el.hidden = true; }, 2800); }
   function norm(s) { return String(s == null ? "" : s).trim().toLowerCase().replace(/\s+/g, " "); }
   function findCol(header, cands) { var hn = header.map(norm); for (var i = 0; i < cands.length; i++) { var idx = hn.indexOf(norm(cands[i])); if (idx !== -1) return idx; } for (var j = 0; j < cands.length; j++) { var cc = norm(cands[j]); for (var k = 0; k < hn.length; k++) if (hn[k].indexOf(cc) !== -1) return k; } return -1; }
@@ -128,19 +152,29 @@
       si = findCol(H, ["Status"]), ui = findCol(H, ["UOM", "Unit"]),
       de = findCol(H, ["Description", "Item Description", "Generic Item description"]);
     if (ci < 0 || qi < 0) throw new Error("cols");
-    var byCode = {}, minD = null, maxD = null;
+    var byCode = {}, monthlyByCode = {}, minD = null, maxD = null;
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
       if (si >= 0) { var st = String(row[si] || "").trim().toUpperCase(); if (!STATUS_OK[st]) continue; }
       var code = normCode(row[ci]); if (!isDrug(code)) continue;
+      var q = num(row[qi]);
       var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, uom: null });
-      rec.qty += num(row[qi]);
+      rec.qty += q;
       if (!rec.desc && de >= 0 && row[de]) rec.desc = String(row[de]).trim();
       if (!rec.uom && ui >= 0 && row[ui]) rec.uom = String(row[ui]).trim();
-      if (di >= 0) { var d = parseDate(row[di]); if (d) { if (!minD || d < minD) minD = d; if (!maxD || d > maxD) maxD = d; } }
+      if (di >= 0) {
+        var d = parseDate(row[di]);
+        if (d) {
+          if (!minD || d < minD) minD = d;
+          if (!maxD || d > maxD) maxD = d;
+          var ym = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
+          var mc = monthlyByCode[code] || (monthlyByCode[code] = {});
+          mc[ym] = (mc[ym] || 0) + q;
+        }
+      }
     }
     var months = (minD && maxD) ? Math.max((maxD - minD) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
-    return { byCode: byCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months };
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months };
   }
   function parseStock(aoa, filename, wb) {
     if (!aoa || !aoa.length) throw new Error("empty");
@@ -178,6 +212,26 @@
     });
     return rows;
   }
+  /* Aggregate the per-code monthly withdrawals into one dashboard series,
+     split by the medicine's computed status (real data; no synthetic series). */
+  function buildMonthly(wd, rows) {
+    if (!wd.monthlyByCode) return null;
+    var statusByCode = {};
+    rows.forEach(function (r) { statusByCode[r.code] = r.status; });
+    var agg = {};
+    Object.keys(wd.monthlyByCode).forEach(function (code) {
+      var mc = wd.monthlyByCode[code], status = statusByCode[code];
+      Object.keys(mc).forEach(function (ym) {
+        var a = agg[ym] || (agg[ym] = { total: 0, order: 0, watch: 0 });
+        a.total += mc[ym];
+        if (status === "order_now") a.order += mc[ym];
+        else if (status === "warning") a.watch += mc[ym];
+      });
+    });
+    var yms = Object.keys(agg).sort();
+    if (yms.length < 2) return null;
+    return yms.map(function (ym) { return { ym: ym, total: agg[ym].total, order: agg[ym].order, watch: agg[ym].watch }; });
+  }
 
   // ---------- trend ----------
   function loadSnaps() { try { return JSON.parse(localStorage.getItem(SNAP_KEY)) || []; } catch (e) { return []; } }
@@ -200,13 +254,15 @@
     var rows = buildRows(wd, st);
     var meta = { period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months, stock_as_of: st.stock_as_of, source: "upload" };
     applyTrend(rows, meta);
-    STATE.rows = rows; STATE.meta = meta; afterData();
+    STATE.rows = rows; STATE.meta = meta; STATE.monthly = buildMonthly(wd, rows);
+    afterData();
     toast(LANG === "ar" ? ("تم تحليل " + fmtInt(rows.length) + " دواء · الفترة " + fmt1(meta.actual_months) + " شهر") : (fmtInt(rows.length) + " medicines analysed · period " + fmt1(meta.actual_months) + " months"));
   }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
     STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null }; });
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
+    STATE.monthly = s.monthly || null;
     STATE.wdName = "sample"; STATE.stName = "sample";
     $("lblWd").classList.add("is-loaded"); $("lblSt").classList.add("is-loaded");
     afterData();
@@ -231,62 +287,198 @@
     return rows;
   }
 
-  // ---------- rendering ----------
+  // ---------- icons ----------
   var ICON = {
     pill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M9.5 8.5l5 7" transform="rotate(-35 12 12)"/></svg>',
     alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>',
+    pulse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3.5l2.5-6 4 12 2.5-6H21"/></svg>',
     clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
     pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg>',
-    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg>',
     box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="M8 15v-3M12 15V8M16 15v-5"/></svg>',
+    gauge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 17.5a8.5 8.5 0 1 1 15 0"/><path d="M12 14.5l3.2-3.4"/></svg>',
     ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
     cash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.6"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>'
   };
-  function kpi(label, value, sub, cls, ico, tile) {
-    return '<div class="kpi ' + (cls || "") + '"><div class="kpi-top"><span class="tile ' + (tile || "tile-gray") + '">' + (ICON[ico] || "") + '</span><span class="kpi-label">' + label + '</span></div><span class="kpi-value num">' + value + '</span><span class="kpi-sub">' + (sub || "") + "</span></div>";
+
+  // ---------- chart primitives (pure SVG strings, data from the files) ----------
+  function rnd(n) { return Math.round(n * 10) / 10; }
+  function smoothPath(pts) {
+    if (pts.length < 2) return "";
+    var d = "M" + rnd(pts[0][0]) + " " + rnd(pts[0][1]);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i === 0 ? 0 : i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+      d += "C" + rnd(p1[0] + (p2[0] - p0[0]) / 6) + " " + rnd(p1[1] + (p2[1] - p0[1]) / 6) + " "
+        + rnd(p2[0] - (p3[0] - p1[0]) / 6) + " " + rnd(p2[1] - (p3[1] - p1[1]) / 6) + " "
+        + rnd(p2[0]) + " " + rnd(p2[1]);
+    }
+    return d;
   }
-  var STATUS_COLOR = { order_now: "var(--red)", warning: "var(--amber)", ok: "var(--green)", no_movement: "var(--muted-2)", not_in_stock: "var(--purple)" };
-  function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--green)") + '"></i></span>'; }
+  function areaSVG(vals) {
+    if (!vals || vals.length < 2) return '<div class="kchart kchart-empty">—</div>';
+    var W = 260, H = 64, p = 6, bottom = H - 3;
+    var max = Math.max.apply(null, vals), min = Math.min.apply(null, vals), span = (max - min) || 1;
+    var pts = vals.map(function (v, i) { return [p + (W - 2 * p) * i / (vals.length - 1), 10 + (H - 28) * (1 - (v - min) / span)]; });
+    var line = smoothPath(pts);
+    var area = line + " L" + rnd(pts[pts.length - 1][0]) + " " + bottom + " L" + rnd(pts[0][0]) + " " + bottom + " Z";
+    var last = pts[pts.length - 1];
+    return '<svg class="kchart" viewBox="0 0 260 64" preserveAspectRatio="none" aria-hidden="true">'
+      + '<defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7d9df"/><stop offset="1" stop-color="#d7d9df" stop-opacity="0"/></linearGradient></defs>'
+      + '<path d="' + area + '" fill="url(#gArea)"/>'
+      + '<path d="' + line + '" fill="none" stroke="#c2c5cc" stroke-width="1.6" vector-effect="non-scaling-stroke"/>'
+      + '<circle cx="' + rnd(last[0]) + '" cy="' + rnd(last[1]) + '" r="6.5" fill="#2456f5" opacity=".16"/>'
+      + '<circle cx="' + rnd(last[0]) + '" cy="' + rnd(last[1]) + '" r="3.4" fill="#2456f5" stroke="#fff" stroke-width="1.6"/>'
+      + '</svg>';
+  }
+  var ECG_SVG = '<svg class="kchart" viewBox="0 0 240 64" preserveAspectRatio="none" aria-hidden="true">'
+    + '<path d="M0 34 H36 L44 34 L50 14 L58 52 L66 24 L72 34 H118 L126 34 L132 12 L140 54 L148 24 L154 34 H204 L212 34 L218 20 L224 34 H240" '
+    + 'fill="none" stroke="#2456f5" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+  function streamSVG(monthly) {
+    var W = 240, H = 96, p = 6, n = monthly.length;
+    var maxT = 0; monthly.forEach(function (m) { if (m.total > maxT) maxT = m.total; });
+    if (!maxT) maxT = 1;
+    var scale = (H - 20) / maxT, cy = H / 2;
+    function xs(i) { return p + (W - 2 * p) * i / (n - 1); }
+    var series = [
+      { key: "order", color: "#9db8ff" },
+      { key: "watch", color: "#f2ce93" },
+      { key: "rest", color: "#e4e6ea" }
+    ];
+    var cum = monthly.map(function (m) { return -m.total / 2; });
+    var paths = "";
+    series.forEach(function (s) {
+      var vals = monthly.map(function (m) { return s.key === "rest" ? Math.max(0, m.total - m.order - m.watch) : m[s.key]; });
+      var lo = cum.slice();
+      var hi = lo.map(function (v, i) { return v + vals[i]; });
+      var hiPts = hi.map(function (v, i) { return [xs(i), cy - v * scale]; });
+      var loPts = lo.map(function (v, i) { return [xs(i), cy - v * scale]; }).reverse();
+      var d = smoothPath(hiPts) + " L" + rnd(loPts[0][0]) + " " + rnd(loPts[0][1])
+        + smoothPath(loPts).replace(/^M[-\d.]+ [-\d.]+/, "") + " Z";
+      paths += '<path d="' + d + '" fill="' + s.color + '" opacity=".95"/>';
+      cum = hi;
+    });
+    return '<svg class="kchart" viewBox="0 0 240 96" preserveAspectRatio="none" aria-hidden="true">' + paths + '</svg>';
+  }
+  function ticksSVG(counts, hiIdx) {
+    var n = counts.length, W = 130, H = 44;
+    var max = Math.max.apply(null, counts) || 1;
+    var out = "";
+    for (var i = 0; i < n; i++) {
+      var h = counts[i] ? (10 + 26 * (counts[i] / max)) : 6;
+      var x = 5 + (W - 10) * (n > 1 ? i / (n - 1) : 0);
+      var hot = i === hiIdx, w = hot ? 4 : 3;
+      out += '<rect x="' + rnd(x - w / 2) + '" y="' + rnd((H - h) / 2) + '" width="' + w + '" height="' + rnd(h) + '" rx="' + (w / 2) + '" fill="' + (hot ? "#2456f5" : "#d3d5db") + '"/>';
+    }
+    return '<svg viewBox="0 0 130 44" preserveAspectRatio="none" aria-hidden="true">' + out + '</svg>';
+  }
+
+  // ---------- card templates (anatomy copied from the reference set) ----------
+  function cardArea(label, value, icon, monthly, insetVal, insetUnit) {
+    var chart = (monthly && monthly.length > 1) ? areaSVG(monthly.map(function (m) { return m.total; })) : '<div class="kchart kchart-empty">' + esc(t("chart_nodates")) + '</div>';
+    return '<div class="kcard"><div class="khead"><span class="tile tile-gray">' + icon + '</span>'
+      + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + value + '</span></span></div>'
+      + '<div class="kbody">' + chart + '<span class="kinset"><b class="num">' + insetVal + '</b><i>' + insetUnit + '</i></span></div></div>';
+  }
+  function cardHero(label, value, icon, pillVal, pillUnit) {
+    return '<div class="kcard"><div class="khead"><span class="tile tile-solid">' + icon + '</span>'
+      + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + value + '</span></span></div>'
+      + '<div class="kbody">' + ECG_SVG + '<span class="kpill"><b class="num">' + pillVal + '</b><i>' + pillUnit + '</i></span></div></div>';
+  }
+  function cardStream(title, monthly) {
+    if (!monthly || monthly.length < 2) {
+      return '<div class="kcard"><div class="ktitle">' + title + '</div>'
+        + '<div class="kbody stream"><div class="kchart-empty">' + esc(t("chart_nodates")) + '</div></div></div>';
+    }
+    var maxT = 0, minT = Infinity;
+    monthly.forEach(function (m) { if (m.total > maxT) maxT = m.total; if (m.total < minT) minT = m.total; });
+    return '<div class="kcard"><div class="ktitle">' + title + '</div>'
+      + '<div class="kbody stream"><span class="axis"><i class="num">' + fmtM(maxT) + '</i><span class="axis-line"></span><i class="num">' + fmtM(minT) + '</i></span>'
+      + streamSVG(monthly) + '</div>'
+      + '<div class="legend"><span><i style="background:#9db8ff"></i>' + t("s_order_now") + '</span>'
+      + '<span><i style="background:#f2ce93"></i>' + t("s_warning") + '</span>'
+      + '<span><i style="background:#e4e6ea"></i>' + t("lg_total") + '</span></div></div>';
+  }
+  function cardTicks(label, icon, valueHtml, counts, hiIdx, tickVal, tickUnit, span) {
+    return '<div class="kcard ' + (span == null ? "span3" : span) + '"><div class="khead"><span class="tile tile-gray">' + icon + '</span>'
+      + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + valueHtml + '</span></span></div>'
+      + '<div class="inset-ticks">' + ticksSVG(counts, hiIdx) + '<span class="tick-val"><b class="num">' + tickVal + '</b><i>' + tickUnit + '</i></span></div></div>';
+  }
+  function cardMini(title, badge, tileCls, icon, bold, sub, span) {
+    return '<div class="kcard ' + (span == null ? "span3" : span) + '"><div class="ktitle-row"><span class="ktitle">' + title + '</span><span class="kbadge num">' + badge + '</span></div>'
+      + '<span class="tile ' + tileCls + '">' + icon + '</span>'
+      + '<div class="kfoot"><b>' + bold + '</b><i>' + sub + '</i></div></div>';
+  }
+
+  // ---------- table pieces ----------
+  var STATUS_COLOR = { order_now: "var(--coral)", warning: "var(--amber)", ok: "var(--blue)", no_movement: "var(--muted-2)", not_in_stock: "var(--indigo)" };
+  function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--blue)") + '"></i></span>'; }
   function trendCell(r) { if (!r.trend) return '<span class="trend flat">—</span>'; if (r.trend.type === "new") return '<span class="trend new">' + t("trend_new") + "</span>"; var p = r.trend.pct, cls = p > 0.001 ? "up" : p < -0.001 ? "down" : "flat", arr = p > 0.001 ? "▲" : p < -0.001 ? "▼" : "▬"; return '<span class="trend ' + cls + '" title="' + t("prev_avg") + " " + fmt1(r.trend.prev) + t("per_mo") + '">' + arr + " " + (p >= 0 ? "+" : "") + (p * 100).toFixed(0) + "%</span>"; }
   function pill(status) { return '<span class="pill ' + status + '">' + t("s_" + status) + "</span>"; }
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
-  function fchip(key, label, count) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
+  function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
   function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
-  function tableCard(head, body, shown, total) { return '<div class="tablecard card"><div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + STATE.sort.key + " (" + STATE.sort.dir + ")</span></div></div>"; }
+  var SORT_LABEL = { code: "c_code", desc: "c_desc", total: "c_total", avg: "c_avg", stock: "c_stock", cov: "c_cov", qty9: "c_qty9", sug: "c_sug" };
+  function tableCard(head, body, shown, total) {
+    var sortKey = SORT_LABEL[STATE.sort.key] ? t(SORT_LABEL[STATE.sort.key]) : STATE.sort.key;
+    return '<div class="tablecard"><div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + sortKey + " " + (STATE.sort.dir === "asc" ? "↑" : "↓") + "</span></div></div>";
+  }
 
+  // ---------- views ----------
   function renderPlanning(base, c) {
-    var kpis = '<div class="kpis">' +
-      kpi(t("k_analysed"), fmtInt(base.length), t("k_analysed_sub"), "", "pill", "tile-blue") +
-      kpi(t("k_order"), fmtInt(c.order_now), t("k_order_sub"), "accent", "alert") +
-      kpi(t("k_watch"), fmtInt(c.warning), t("k_watch_sub"), "", "clock", "tile-amber") +
-      kpi(t("k_nomove"), fmtInt(c.no_movement), t("k_nomove_sub"), "idle", "pause", "tile-gray") +
-      kpi(t("k_notstock"), fmtInt(c.not_in_stock), t("k_notstock_sub"), c.not_in_stock ? "alert" : "idle", "warn", "tile-purple") + "</div>";
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all) + fchip("order_now", t("f_order_now"), c.order_now) + fchip("no_movement", t("f_no_movement"), c.no_movement) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock) + "</div>";
+    var months = STATE.meta.actual_months || 1;
+    var totalWd = 0; base.forEach(function (r) { totalWd += r.total; });
+    var covs = []; base.forEach(function (r) { if (r.inStock && r.moved && r.cov != null) covs.push(r.cov); });
+    var med = median(covs);
+    var buckets = []; for (var i = 0; i < 13; i++) buckets.push(0);
+    covs.forEach(function (v) { buckets[Math.min(12, Math.floor(v))]++; });
+    var hiIdx = med == null ? -1 : Math.min(12, Math.floor(med));
+    var pct = base.length ? Math.round(c.order_now / base.length * 100) : 0;
+    var cards = '<div class="cards">'
+      + cardArea(t("k_withdrawn"), fmtM(totalWd), ICON.chart, STATE.monthly, fmtM(totalWd / months), t("monthly_word"))
+      + cardHero(t("k_order"), fmtInt(c.order_now), ICON.pulse, pct + "%", t("of_analysed"))
+      + cardStream(t("k_monthly_title"), STATE.monthly)
+      + cardTicks(t("k_median"), ICON.gauge, (med == null ? "—" : fmt1(med)) + ' <small>' + t("mo") + '</small>', buckets, hiIdx, med == null ? "—" : fmt1(med), t("mo"))
+      + cardMini(t("k_watch"), fmtInt(c.warning), "tile-lav", ICON.clock, t("w_value"), t("w_sub"))
+      + cardMini(t("k_notstock"), fmtInt(c.not_in_stock), "tile-coral", ICON.ban, t("ns_value"), t("ns_sub"))
+      + cardMini(t("k_nomove"), fmtInt(c.no_movement), "tile-gray", ICON.pause, t("nm_value"), t("nm_sub"))
+      + '</div>';
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
     var body = rows.map(function (r) { return "<tr><td class=\"code\">" + r.code + "</td><td class=\"desc\">" + esc(r.desc) + "</td><td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + "</td></tr>"; }).join("");
-    return kpis + toolbar(filters) + tableCard(head, body, rows.length, base.length);
+    return cards + toolbar(filters) + tableCard(head, body, rows.length, base.length);
   }
   function renderManagement(base, c) {
     var totalUnits = base.reduce(function (s, r) { return s + r.stock; }, 0);
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
-    var kpis = '<div class="kpis">' +
-      kpi(t("k_instock"), fmtInt(base.length), t("k_instock_sub"), "", "box", "tile-blue") +
-      kpi(t("k_units"), fmtInt(totalUnits), t("k_units_sub"), "accent", "chart") +
-      kpi(t("k_out"), fmtInt(c.outstock), t("k_out_sub"), c.outstock ? "alert" : "good", "ban", "tile-red") +
-      kpi(t("k_reorder"), fmtInt(orderNow), t("k_reorder_sub"), orderNow ? "alert" : "good", "alert", "tile-red") +
-      kpi(t("k_value"), "—", t("k_value_sub"), "idle", "cash", "tile-green") + "</div>";
-    var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock) + fchip("instock", t("f_available"), c.instock) + fchip("outstock", t("f_outstock"), c.outstock) + "</div>";
+    var avgPerItem = base.length ? totalUnits / base.length : 0;
+    var buckets = [0, 0, 0, 0, 0, 0, 0, 0];
+    base.forEach(function (r) { buckets[r.stock <= 0 ? 0 : Math.min(7, Math.floor(Math.log(r.stock) / Math.LN10) + 1)]++; });
+    var hiIdx = 0, hiVal = -1;
+    buckets.forEach(function (v, i) { if (v > hiVal) { hiVal = v; hiIdx = i; } });
+    var cards = '<div class="cards">'
+      + cardHero(t("k_units"), fmtM(totalUnits), ICON.box, fmtInt(base.length), t("items"))
+      + cardTicks(t("k_instock"), ICON.box, fmtInt(base.length), buckets, hiIdx, fmtM(avgPerItem), t("mg_avg_item"), "")
+      + cardMini(t("k_out"), fmtInt(c.outstock), "tile-coral", ICON.ban, t("ns_value"), t("out_sub"), "")
+      + cardMini(t("k_reorder"), fmtInt(orderNow), "tile-amber", ICON.alert, t("re_value"), t("re_sub"), "span6")
+      + cardMini(t("k_value"), "—", "tile-gray", ICON.cash, "—", t("k_value_sub"), "span6")
+      + '</div>';
+    var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + '<th class="right">' + t("c_value") + "</th></tr></thead>";
     var body = rows.map(function (r) { return "<tr><td class=\"code\">" + r.code + "</td><td class=\"desc\">" + esc(r.desc) + "</td><td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td class=\"right muted\">—</td></tr>"; }).join("");
-    return kpis + toolbar(filters) + tableCard(head, body, rows.length, base.length);
+    return cards + toolbar(filters) + tableCard(head, body, rows.length, base.length);
   }
 
   function render() {
-    document.querySelectorAll(".tab").forEach(function (tb) { tb.classList.toggle("is-active", tb.dataset.view === STATE.view); });
+    document.querySelectorAll(".tab").forEach(function (tb) {
+      var active = tb.dataset.view === STATE.view;
+      tb.classList.toggle("is-active", active);
+      tb.setAttribute("aria-selected", active ? "true" : "false");
+    });
     if (!STATE.rows.length) return;
     var base = viewBase(), c = filterCounts(base);
     $("content").innerHTML = STATE.view === "planning" ? renderPlanning(base, c) : renderManagement(base, c);
@@ -311,11 +503,15 @@
     $("uplHint").innerHTML = t("upl_hint");
     $("wdName").textContent = STATE.wdName === "sample" ? t("sample_wd") : STATE.wdName ? STATE.wdName : t("file_wd_hint");
     $("stName").textContent = STATE.stName === "sample" ? t("sample_st") : STATE.stName ? STATE.stName : t("file_st_hint");
-    $("langBtn").textContent = t("langBtn");
+    $("langName").textContent = t("langName");
+    $("langBtn").classList.toggle("is-en", LANG === "en");
     if (STATE.meta.period_start) {
       $("metaPeriod").textContent = t("period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")";
       $("metaStock").textContent = t("stock_as_of") + ": " + prettyDate(STATE.meta.stock_as_of);
     } else { $("metaPeriod").textContent = "—"; $("metaStock").textContent = "—"; }
+    var mc = $("metaCount");
+    if (STATE.rows.length) { mc.hidden = false; mc.textContent = fmtInt(STATE.rows.length) + " " + t("meds_word"); }
+    else mc.hidden = true;
   }
 
   // ---------- export ----------
