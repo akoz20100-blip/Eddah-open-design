@@ -232,23 +232,37 @@
   }
 
   // ---------- rendering ----------
-  function kpi(label, value, sub, cls, ico) { return '<div class="kpi ' + (cls || "") + '"><span class="kpi-ico">' + (ico || "") + '</span><span class="kpi-label">' + label + '</span><span class="kpi-value num">' + value + '</span><span class="kpi-sub">' + (sub || "") + "</span></div>"; }
+  var ICON = {
+    pill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M9.5 8.5l5 7" transform="rotate(-35 12 12)"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg>',
+    box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="M8 15v-3M12 15V8M16 15v-5"/></svg>',
+    ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
+    cash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.6"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>'
+  };
+  function kpi(label, value, sub, cls, ico, tile) {
+    return '<div class="kpi ' + (cls || "") + '"><div class="kpi-top"><span class="tile ' + (tile || "tile-gray") + '">' + (ICON[ico] || "") + '</span><span class="kpi-label">' + label + '</span></div><span class="kpi-value num">' + value + '</span><span class="kpi-sub">' + (sub || "") + "</span></div>";
+  }
   var STATUS_COLOR = { order_now: "var(--red)", warning: "var(--amber)", ok: "var(--green)", no_movement: "var(--muted-2)", not_in_stock: "var(--purple)" };
   function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--green)") + '"></i></span>'; }
   function trendCell(r) { if (!r.trend) return '<span class="trend flat">—</span>'; if (r.trend.type === "new") return '<span class="trend new">' + t("trend_new") + "</span>"; var p = r.trend.pct, cls = p > 0.001 ? "up" : p < -0.001 ? "down" : "flat", arr = p > 0.001 ? "▲" : p < -0.001 ? "▼" : "▬"; return '<span class="trend ' + cls + '" title="' + t("prev_avg") + " " + fmt1(r.trend.prev) + t("per_mo") + '">' + arr + " " + (p >= 0 ? "+" : "") + (p * 100).toFixed(0) + "%</span>"; }
   function pill(status) { return '<span class="pill ' + status + '">' + t("s_" + status) + "</span>"; }
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
-  function toolbar(filters) { return '<div class="toolbar"><div class="search">🔍<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
+  function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
   function tableCard(head, body, shown, total) { return '<div class="tablecard card"><div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + STATE.sort.key + " (" + STATE.sort.dir + ")</span></div></div>"; }
 
   function renderPlanning(base, c) {
     var kpis = '<div class="kpis">' +
-      kpi(t("k_analysed"), fmtInt(base.length), t("k_analysed_sub"), "", "💊") +
-      kpi(t("k_order"), fmtInt(c.order_now), t("k_order_sub"), c.order_now ? "alert" : "good", "🔴") +
-      kpi(t("k_watch"), fmtInt(c.warning), t("k_watch_sub"), "", "🟡") +
-      kpi(t("k_nomove"), fmtInt(c.no_movement), t("k_nomove_sub"), "idle", "⏸") +
-      kpi(t("k_notstock"), fmtInt(c.not_in_stock), t("k_notstock_sub"), c.not_in_stock ? "alert" : "idle", "⚠") + "</div>";
+      kpi(t("k_analysed"), fmtInt(base.length), t("k_analysed_sub"), "", "pill", "tile-blue") +
+      kpi(t("k_order"), fmtInt(c.order_now), t("k_order_sub"), "accent", "alert") +
+      kpi(t("k_watch"), fmtInt(c.warning), t("k_watch_sub"), "", "clock", "tile-amber") +
+      kpi(t("k_nomove"), fmtInt(c.no_movement), t("k_nomove_sub"), "idle", "pause", "tile-gray") +
+      kpi(t("k_notstock"), fmtInt(c.not_in_stock), t("k_notstock_sub"), c.not_in_stock ? "alert" : "idle", "warn", "tile-purple") + "</div>";
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all) + fchip("order_now", t("f_order_now"), c.order_now) + fchip("no_movement", t("f_no_movement"), c.no_movement) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
@@ -259,11 +273,11 @@
     var totalUnits = base.reduce(function (s, r) { return s + r.stock; }, 0);
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
     var kpis = '<div class="kpis">' +
-      kpi(t("k_instock"), fmtInt(base.length), t("k_instock_sub"), "", "📦") +
-      kpi(t("k_units"), fmtInt(totalUnits), t("k_units_sub"), "good", "Σ") +
-      kpi(t("k_out"), fmtInt(c.outstock), t("k_out_sub"), c.outstock ? "alert" : "good", "🚫") +
-      kpi(t("k_reorder"), fmtInt(orderNow), t("k_reorder_sub"), orderNow ? "alert" : "good", "🔴") +
-      kpi(t("k_value"), "—", t("k_value_sub"), "idle", "💰") + "</div>";
+      kpi(t("k_instock"), fmtInt(base.length), t("k_instock_sub"), "", "box", "tile-blue") +
+      kpi(t("k_units"), fmtInt(totalUnits), t("k_units_sub"), "accent", "chart") +
+      kpi(t("k_out"), fmtInt(c.outstock), t("k_out_sub"), c.outstock ? "alert" : "good", "ban", "tile-red") +
+      kpi(t("k_reorder"), fmtInt(orderNow), t("k_reorder_sub"), orderNow ? "alert" : "good", "alert", "tile-red") +
+      kpi(t("k_value"), "—", t("k_value_sub"), "idle", "cash", "tile-green") + "</div>";
     var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock) + fchip("instock", t("f_available"), c.instock) + fchip("outstock", t("f_outstock"), c.outstock) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + '<th class="right">' + t("c_value") + "</th></tr></thead>";
