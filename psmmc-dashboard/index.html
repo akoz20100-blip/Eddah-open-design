@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,19 +15,20 @@
         <img src="./assets/psmmc-logo.png" alt="PSMMC" onerror="this.onerror=null;this.src='./assets/psmmc-crest.svg'"/>
       </span>
       <span class="brand-text">
-        <strong>Pharmacy Stock &amp; Reorder Analytics</strong>
-        <small>مدينة الأمير سلطان الطبية العسكرية · الخدمات الطبية — تحليلات المخزون وإعادة الطلب</small>
+        <strong id="tTitle">تحليلات مخزون الصيدلية وإعادة الطلب</strong>
+        <small id="tSub">مدينة الأمير سلطان الطبية العسكرية · الخدمات الطبية</small>
       </span>
     </div>
     <div class="brand-meta" id="brandMeta">
-      <span class="meta-chip" id="metaPeriod">Period: —</span>
-      <span class="meta-chip" id="metaStock">Stock as of: —</span>
+      <span class="meta-chip" id="metaPeriod">—</span>
+      <span class="meta-chip" id="metaStock">—</span>
+      <button class="btn btn-ghost lang" id="langBtn" type="button">EN</button>
     </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" data-view="planning" role="tab">📋 Planning Department</button>
-    <button class="tab" data-view="management" role="tab">🏛️ Management &amp; Budget</button>
+    <button class="tab is-active" data-view="planning" role="tab"><span class="tab-ico">📋</span><span class="tab-lbl" data-i18n="tab_planning"></span></button>
+    <button class="tab" data-view="management" role="tab"><span class="tab-ico">🏛️</span><span class="tab-lbl" data-i18n="tab_management"></span></button>
   </nav>
 
   <section class="uploadbar card">
@@ -35,33 +36,31 @@
       <label class="filebtn" id="lblWd">
         <input type="file" id="fileWithdrawals" accept=".xlsx,.xls" hidden />
         <span class="filebtn-ico">⬆</span>
-        <span class="filebtn-txt"><b>Withdrawals file</b><i id="wdName">NUPCO outbound · .xlsx</i></span>
+        <span class="filebtn-txt"><b data-i18n="file_wd"></b><i id="wdName" data-i18n="file_wd_hint"></i></span>
       </label>
       <label class="filebtn" id="lblSt">
         <input type="file" id="fileStock" accept=".xlsx,.xls" hidden />
         <span class="filebtn-ico">⬆</span>
-        <span class="filebtn-txt"><b>Stock-on-hand file</b><i id="stName">NUPCO stock · .xls</i></span>
+        <span class="filebtn-txt"><b data-i18n="file_st"></b><i id="stName" data-i18n="file_st_hint"></i></span>
       </label>
     </div>
     <div class="upl-actions">
-      <button id="btnSample" class="btn btn-ghost" type="button">Load sample data</button>
-      <button id="btnExport" class="btn btn-primary" type="button" disabled>⬇ Export Excel</button>
+      <button id="btnSample" class="btn btn-ghost" type="button" data-i18n="btn_sample"></button>
+      <button id="btnExport" class="btn btn-primary" type="button" disabled data-i18n="btn_export"></button>
     </div>
-    <p class="upl-hint" id="uplHint">Drop both files to compute coverage &amp; reorder. Only medicines (NUPCO code starting with <b>5</b>) are included; medical supplies are excluded.</p>
+    <p class="upl-hint" id="uplHint"></p>
   </section>
 
   <main id="content" class="content">
     <div class="empty card" id="emptyState">
       <div class="empty-ico">📊</div>
-      <h2>No data loaded yet</h2>
-      <p>Upload the <b>withdrawals</b> and <b>stock-on-hand</b> files, or click <b>Load sample data</b> to preview the dashboard with real anonymised numbers.</p>
-      <button class="btn btn-primary" type="button" onclick="document.getElementById('btnSample').click()">Load sample data</button>
+      <h2 data-i18n="empty_title"></h2>
+      <p data-i18n="empty_text"></p>
+      <button class="btn btn-primary" type="button" data-i18n="empty_btn" onclick="document.getElementById('btnSample').click()"></button>
     </div>
   </main>
 
-  <footer class="foot">
-    Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.
-  </footer>
+  <footer class="foot" id="foot"></footer>
 
   <div class="toast" id="toast" hidden></div>
 

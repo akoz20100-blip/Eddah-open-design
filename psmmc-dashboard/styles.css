@@ -127,6 +127,18 @@ td.code{font-family:ui-monospace,Menlo,Consolas,monospace; color:var(--ink-2)}
 .foot{margin:26px 6px 0; font-size:12px; color:var(--muted); font-weight:600; text-align:center}
 .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff;
   padding:12px 20px; border-radius:999px; font-size:13.5px; font-weight:700; box-shadow:var(--shadow-lg); z-index:50}
+.lang{padding:8px 14px; font-size:12.5px}
+.tab-ico{margin-inline-end:7px}
+.tab-lbl{vertical-align:middle}
+
+/* ---- RTL ---- */
+[dir="rtl"] body{letter-spacing:0}
+[dir="rtl"] thead th{text-align:right}
+[dir="rtl"] .right{text-align:left}
+[dir="rtl"] .brand-meta{margin-left:0; margin-right:auto}
+[dir="rtl"] .covbar{margin-left:0; margin-right:8px}
+[dir="rtl"] td.desc{direction:rtl; unicode-bidi:plaintext}
+
 @media (max-width:720px){
   .brand-meta{margin-left:0; width:100%}
   td.desc{min-width:180px}
