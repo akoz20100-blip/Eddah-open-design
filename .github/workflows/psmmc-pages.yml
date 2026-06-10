@@ -1,0 +1,51 @@
+# Publishes the standalone PSMMC pharmacy dashboard to the gh-pages branch
+# (which is this repository's active GitHub Pages source) under /psmmc/,
+# without touching the existing site at the Pages root.
+# Live URL: https://akoz20100-blip.github.io/Eddah-open-design/psmmc/
+name: Publish PSMMC dashboard to Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "psmmc-dashboard/standalone.html"
+      - ".github/workflows/psmmc-pages.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6.0.2
+        with:
+          path: main
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: gh-pages
+          path: pages
+
+      - name: Copy dashboard to /psmmc/
+        run: |
+          mkdir -p pages/psmmc
+          cp main/psmmc-dashboard/standalone.html pages/psmmc/index.html
+
+      - name: Commit and push if changed
+        working-directory: pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add psmmc/index.html
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
+          git commit -m "Publish PSMMC dashboard to /psmmc/ from ${GITHUB_SHA}"
+          git push origin gh-pages
