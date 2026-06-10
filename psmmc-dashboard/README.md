@@ -1,27 +1,79 @@
-# PSMMC NUPCO Stock Intelligence — لوحة ذكاء المخزون
+# PSMMC — Pharmacy Stock & Reorder Analytics
 
-لوحة تحليل مخزون **نبكو (NUPCO Stock On Hand)** الخاصة بمدينة الأمير سلطان الطبية العسكرية،
-في **ملف HTML واحد مكتفٍ ذاتيًا** — يفتح على الجوال والآيباد والحاسوب، ويعمل **بدون إنترنت** بالكامل.
+A simple, self-contained planning tool for the PSMMC pharmacy. Drop two NUPCO
+Excel files in the browser and instantly see, per medicine: consumption rate,
+stock coverage, reorder status, and a suggested order quantity — no manual math,
+no server, no data leaving the page.
 
-## كيف تستخدمها
+Two dashboards in one page:
 
-1. افتح `index.html` (من الرابط، أو نزّله وافتحه مباشرة — يعمل حتى بدون إنترنت).
-2. تظهر **بيانات تجريبية** فورًا فتشاهد اللوحة كاملة دون رفع أي ملف.
-3. اضغط **«ارفع ملف Excel»** أو اسحب الملف (`.xls/.xlsx/.csv`) لتحليل بياناتك الحقيقية محليًا داخل جهازك — لا يُرفع شيء إلى أي خادم.
+- **📋 Planning Department** — coverage, reorder flags, 9-month order quantities,
+  trend vs the previous upload, and one-click Excel export of the purchase list.
+- **🏛️ Management & Budget** — the actual available stock of every medicine, with
+  out-of-stock and reorder counts. A stock-value (SAR) slot is reserved for when
+  a price list is provided.
 
-## الميزات
+> **Scope:** only **medicines** are included — NUPCO codes **starting with `5`**.
+> Medical supplies (other prefixes) are excluded automatically.
 
-- **بحث جماعي بالأكواد:** الصق عدة أكواد دفعة واحدة (سطر/فاصلة/مسافة) ويُجمّعها لك تلقائيًا، ويعرض **إجمالي المخزون المتاح** لها.
-- **المخزون المتاح** كأهم رقم تنفيذي + مؤشرات: الإجمالي، المحجوز، عدد الأصناف، المستودعات، المنتهي.
-- **قراءة احترافية تلقائية** للملف (أهم ما يجب أن تعرفه: كم لديك، أين، وما المهدّد بالانتهاء).
-- توزيع مخاطر انتهاء الصلاحية، أعلى المستودعات، جدول تفصيلي قابل للبحث، وتصدير CSV.
-- مصمّمة RTL عربية، واجهة بنتو بيضاء ناعمة بلون مرجاني `#fb6340`.
+## Inputs
 
-## الشعار
+| Slot | File | Join key | Read |
+|------|------|----------|------|
+| Withdrawals | NUPCO outbound (`.xlsx`) | `NUPCO Material` | `Order Qty`, `Delivery Date`, rows with `Status` ∈ {DISPATCHED, APPROVED} |
+| Stock on hand | NUPCO stock (`.xls`) | `Generic Item Number` | `Total Available Qty`, aggregated across all batches/lots per item |
 
-استبدل الـ SVG داخل `<div class="logo-badge">` في `index.html` بشعار PSMMC (سطر `<img src="...">`
-أو الصق كود SVG للشعار). كل شيء في ملف واحد بلا تبعيات خارجية.
+Header matching is tolerant (trim / case-insensitive / extra columns ignored).
 
-## ملاحظة تقنية
+## Calculations (per medicine)
 
-محرّك قراءة Excel (SheetJS) **مضمّن داخل الملف** ليعمل دون اتصال. لا حاجة لأي تثبيت أو خادم.
+```
+actual_months   = (max(Delivery Date) − min(Delivery Date)) / 30.44   (min 1.0)
+monthly_avg     = total withdrawn / actual_months
+coverage_months = current stock / monthly_avg
+status          = Order now  (coverage ≤ 6)      ← safety stock = 6 months
+                  Watch      (6 < coverage ≤ 7)
+                  OK         (coverage > 7)
+                  No movement (no withdrawals in period)
+                  Not in stock (withdrawn but absent from stock file)
+qty_9_months    = monthly_avg × 9                ← each order covers 9 months
+suggested_order = max(0, qty_9_months − current stock)
+```
+
+**Trend** — each real upload stores a snapshot (period + per-item average) in the
+browser's `localStorage`; the next upload shows ▲/▼ Δ% vs the previous period.
+
+## Files
+
+```
+index.html        page shell (multi-file dev version)
+styles.css        light soft-card theme, PSMMC green
+app.js            parsing, calculations, rendering, export, trend
+sample-data.js    embedded real anonymised sample (drugs only) for the live demo
+vendor/xlsx…js    SheetJS (Excel read/write, in-browser)
+assets/…crest.svg on-brand emblem (replace assets/psmmc-logo.png with the official logo)
+build.py          inlines everything → standalone.html + docs/index.html
+standalone.html   single-file build — open locally or drag onto any static host
+```
+
+To rebuild the single-file outputs after editing the source:
+
+```bash
+python3 psmmc-dashboard/build.py
+```
+
+## Deploy / share
+
+`docs/index.html` is the single-file build, published by classic GitHub Pages
+(*Settings → Pages → Deploy from a branch → `/docs`*). Live URL:
+
+```
+https://akoz20100-blip.github.io/eddah-open-design/
+```
+
+`standalone.html` is the same build with no external files — open it by
+double-click, email it, or drag it onto Netlify Drop for an instant link.
+
+To use the official hospital logo, drop the PNG at
+`psmmc-dashboard/assets/psmmc-logo.png` and rebuild; the header picks it up
+automatically (falling back to the bundled SVG emblem if absent).
