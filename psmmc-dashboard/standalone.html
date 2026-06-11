@@ -386,6 +386,9 @@ td.code.copyable:hover .copyic{opacity:.6}
   .print-sheet .sign{margin-top:26px;font-size:12px}
 }
 
+/* ---- round 2b: classification tag under the description ---- */
+td.desc .clstag{display:inline-block;background:var(--inset);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--muted);margin-inline-start:6px;vertical-align:1px}
+
 </style>
 </head>
 <body>
@@ -552,7 +555,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
       err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
       mp_linked: "items linked",
-      c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code",
+      c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
+      dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
       upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
@@ -616,7 +620,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       file_mp: "ملف الأسماء والمعرفات", file_mp_hint: "اختياري · أكواد المستشفى وMSD والاسم التجاري",
       err_mp: "تعذّر قراءة ملف المعرفات (يلزم عمود كود نبكو + أعمدة الاسم التجاري / كود المستشفى / MSD)",
       mp_linked: "صنف مرتبط",
-      c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD",
+      c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD", c_agent: "الوكيل / المورد", c_class: "التصنيف",
+      dt_agent: "الوكيل / المورد",
       btn_sample: "تحميل بيانات تجريبية",
       upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).",
       empty_title: "لا توجد بيانات محمّلة بعد",
@@ -1001,13 +1006,16 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function saveMap(map) { try { localStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch (e) {} }
   function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
   function applyMap(rows) {
+    // Identifiers from the mapping file win, but values already read from the
+    // stock file itself (trade name, agent, scientific, MSD) are kept as the
+    // fallback so search works even without an identifiers upload.
     var n = 0;
     rows.forEach(function (r) {
       var m = MAP && MAP.byCode[r.code];
-      r.trade = (m && m.trade) || null;
-      r.sci = (m && m.sci) || null;
+      r.trade = (m && m.trade) || r.trade || null;
+      r.sci = (m && m.sci) || r.sci || null;
       r.hosp = (m && m.hosp) || null;
-      r.msd = (m && m.msd) || null;
+      r.msd = (m && m.msd) || r.msd || null;
       r.cls = (m && m.cls) || null;
       r.prio = (m && m.prio) || null;
       r.packPrice = (m && m.packPrice) || null;
@@ -1019,28 +1027,42 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       // NUPCO quantities are counted in the dispensing UOM (TAB = tablets,
       // BT = bottles), i.e. the same smallest unit the unit price refers to.
       r.stockValue = r.unitPrice ? r.stock * r.unitPrice : null;
-      r.alt = m ? [m.trade, m.sci, m.hosp, m.msd, m.cls].filter(Boolean).join(" ") : "";
+      // Search haystack: trade + scientific + hospital/MSD codes + MODHS
+      // classification + agent, from whichever source provided them.
+      r.alt = [r.trade, r.sci, r.hosp, r.msd, r.cls, r.agent].filter(Boolean).join(" ");
       if (m) n++;
     });
     return n;
   }
   function hasPrices() { return !!(MAP && MAP.priced); }
 
+  /* The NUPCO stock report also carries the trade name, the agent/vendor and
+     sometimes scientific/MSD identifiers per row — read them so planners can
+     search by any of those without needing a separate identifiers file. */
   function parseStock(aoa, filename, wb) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
     var ci = findCol(H, ["Generic Item Number", "NUPCO Material", "Material"]),
       ai = findCol(H, ["Total Available Qty", "Available Qty", "Total Available Quantity"]),
-      de = findCol(H, ["Generic Item description", "Description", "Item Description"]);
+      de = findCol(H, ["Generic Item description", "Description", "Item Description"]),
+      ti = findCol(H, ["Trade Item description", "Trade Item Description", "Trade Description", "Trade Name", "Brand Name", "Brand"]),
+      vi = findCol(H, ["Vendor Name", "Agent Name", "Supplier Name", "اسم الوكيل", "الوكيل", "Vendor", "Agent", "Supplier", "Manufacturer"]),
+      gi = findCol(H, ["Scientific Name", "Scientific"]),
+      mi = findCol(H, ["MSD Code", "MSD"]);
     if (ci < 0) throw new Error("cols");
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
+    function txt(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
       var code = normCode(row[ci]); if (!isDrug(code)) continue;
-      var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null });
+      var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, trade: null, agent: null, sci: null, msd: null });
       rec.qty += num(row[ai]);
       if (!rec.desc && de >= 0 && row[de]) rec.desc = String(row[de]).trim();
+      if (!rec.trade) rec.trade = txt(row, ti);
+      if (!rec.agent) rec.agent = txt(row, vi);
+      if (!rec.sci) rec.sci = txt(row, gi);
+      if (!rec.msd) rec.msd = txt(row, mi);
     }
     var asOf = dateFromFilename(filename);
     if (!asOf && wb && wb.Props && wb.Props.ModifiedDate) asOf = new Date(wb.Props.ModifiedDate);
@@ -1058,7 +1080,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       var total = w ? w.qty : 0, avg = w ? total / months : 0;
       var inStock = !!s, stock = inStock ? s.qty : 0;
       var cov = avg > 0 ? stock / avg : null;
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock), inStock: inStock, moved: avg > 0, trend: null, trendPct: null });
+      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null });
     });
     return rows;
   }
@@ -1413,7 +1435,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   }
   function descCell(r) {
     var extra = r.trade || (r.sci && r.sci !== r.desc ? r.sci : null);
-    return '<td class="desc">' + esc(r.desc) + (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + "</td>";
+    var tags = (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + (r.cls ? '<span class="clstag">' + esc(r.cls) + "</span>" : "");
+    return '<td class="desc">' + esc(r.desc) + tags + "</td>";
   }
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
@@ -1539,8 +1562,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       partial = ser.yms[ser.yms.length - 1] === ymOf(endIso) && endD.getDate() < lastDay;
     }
     var chips = codeChip(r.code) + (r.hosp ? codeChip(r.hosp) : "") + (r.msd ? codeChip(r.msd) : "") + pill(r.status);
-    var clsRow = (r.cls || r.prio)
-      ? '<div class="dt-codes">' + (r.cls ? '<span class="callout lo">' + esc(r.cls) + '<i>' + t("dt_class") + '</i></span>' : "") + (r.prio ? '<span class="callout ' + (/LIFE/i.test(r.prio) ? "hi" : "lo") + '">' + esc(r.prio) + '<i>' + t("dt_priority") + '</i></span>' : "") + '</div>'
+    var clsRow = (r.cls || r.prio || r.agent)
+      ? '<div class="dt-codes">' + (r.cls ? '<span class="callout lo">' + esc(r.cls) + '<i>' + t("dt_class") + '</i></span>' : "") + (r.prio ? '<span class="callout ' + (/LIFE/i.test(r.prio) ? "hi" : "lo") + '">' + esc(r.prio) + '<i>' + t("dt_priority") + '</i></span>' : "") + (r.agent ? '<span class="callout lo">' + esc(r.agent) + '<i>' + t("dt_agent") + '</i></span>' : "") + '</div>'
       : "";
     var stats = '<div class="statgrid">'
       + '<span class="stat"><b class="num">' + fmt1(r.avg) + '</b><i>' + t("dt_avg") + '</i></span>'
@@ -1574,7 +1597,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       chart = '<div class="barchart" style="padding:22px;text-align:center;color:var(--muted);font-size:12.5px;font-weight:700">' + t("dt_no_history") + '</div>';
     }
     return '<div class="dt-head"><span class="tile tile-lav tile-lg">' + ICON.pulse + '</span>'
-      + '<span class="ktxt"><div class="dt-title">' + esc(r.desc) + (r.trade ? ' <i class="tradename">' + esc(r.trade) + '</i>' : '') + '</div>'
+      + '<span class="ktxt"><div class="dt-title">' + esc(r.desc) + (r.trade ? ' <i class="tradename">' + esc(r.trade) + (r.sci && r.sci !== r.desc ? " · " + esc(r.sci) : "") + '</i>' : (r.sci && r.sci !== r.desc ? ' <i class="tradename">' + esc(r.sci) + '</i>' : '')) + '</div>'
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
       + stats + priceBlock + chart + callouts + note;
@@ -1665,8 +1688,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function exportExcel() {
     if (!STATE.rows.length) return;
     var rows = applyFilter(viewBase()), aoa, name, sheet;
-    var mapCols = MAP ? [t("c_trade"), t("c_hosp"), t("c_msd")] : [];
-    function mapVals(r) { return MAP ? [r.trade || "", r.hosp || "", r.msd || ""] : []; }
+    var anyTrade = STATE.rows.some(function (r) { return r.trade; }), anyAgent = STATE.rows.some(function (r) { return r.agent; }), anyCls = STATE.rows.some(function (r) { return r.cls; });
+    var mapCols = (MAP || anyTrade ? [t("c_trade")] : []).concat(MAP ? [t("c_hosp"), t("c_msd")] : []).concat(anyAgent ? [t("c_agent")] : []).concat(anyCls ? [t("c_class")] : []);
+    function mapVals(r) { return (MAP || anyTrade ? [r.trade || ""] : []).concat(MAP ? [r.hosp || "", r.msd || ""] : []).concat(anyAgent ? [r.agent || ""] : []).concat(anyCls ? [r.cls || ""] : []); }
     var priceCols = hasPrices() ? [t("pr_unit_price"), t("c_value")] : [];
     function priceVals(r) { return hasPrices() ? [r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100, r.stockValue == null ? "" : Math.round(r.stockValue)] : []; }
     if (STATE.view === "planning") {
