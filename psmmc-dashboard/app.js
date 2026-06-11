@@ -486,14 +486,17 @@
       r.sci = (m && m.sci) || r.sci || null;
       r.hosp = (m && m.hosp) || r.hosp || null;
       r.msd = (m && m.msd) || r.msd || null;
-      r.cls = (m && m.cls) || null;
-      r.prio = (m && m.prio) || null;
-      r.packPrice = (m && m.packPrice) || null;
-      r.unitsPerPack = (m && m.unitsPerPack) || null;
+      r.cls = (m && m.cls) || r.cls || null;
+      r.prio = (m && m.prio) || r.prio || null;
+      r.packPrice = (m && m.packPrice) || r.packPrice || null;
+      r.unitsPerPack = (m && m.unitsPerPack) || r.unitsPerPack || null;
+      var awardQty = (m && m.awardQty) || r.awardQty || null;
+      var freeQty = (m && m.freeQty != null) ? m.freeQty : (r.freeQty != null ? r.freeQty : null);
+      r.awardQty = awardQty; r.freeQty = freeQty;
       // Government pricing is per smallest unit (pack price ÷ units per pack);
       // the dashboard mirrors the hospital system's unit price exactly.
       r.unitPrice = r.packPrice ? (r.unitsPerPack ? r.packPrice / r.unitsPerPack : r.packPrice) : null;
-      r.effUnitPrice = (r.unitPrice && m.awardQty && m.freeQty != null) ? r.unitPrice * m.awardQty / (m.awardQty + m.freeQty) : null;
+      r.effUnitPrice = (r.unitPrice && awardQty && freeQty != null) ? r.unitPrice * awardQty / (awardQty + freeQty) : null;
       // NUPCO quantities are counted in the dispensing UOM (TAB = tablets,
       // BT = bottles), i.e. the same smallest unit the unit price refers to.
       r.stockValue = r.unitPrice ? r.stock * r.unitPrice : null;
@@ -504,7 +507,7 @@
     });
     return n;
   }
-  function hasPrices() { return !!(MAP && MAP.priced); }
+  function hasPrices() { return !!(MAP && MAP.priced) || STATE.rows.some(function (r) { return r.packPrice; }); }
 
   /* The NUPCO stock report also carries the trade name, the agent/vendor and
      sometimes scientific/MSD identifiers per row — read them so planners can
@@ -605,7 +608,7 @@
   }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null }; });
+    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: r.packPrice || null, unitsPerPack: r.unitsPerPack || null, awardQty: r.awardQty || null, freeQty: r.freeQty == null ? null : r.freeQty }; });
     applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
