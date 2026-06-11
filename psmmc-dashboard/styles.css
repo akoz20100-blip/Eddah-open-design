@@ -376,3 +376,7 @@ td.code.copyable:hover .copyic{opacity:.6}
   .print-sheet th{background:#f0f0f0}
   .print-sheet .sign{margin-top:26px;font-size:12px}
 }
+
+/* ---- round 2c: empty price slot in the item card ---- */
+.priceblock.is-empty .pb-item b{color:var(--muted-2)}
+.priceblock .pb-hint{flex-basis:100%;font-size:11px;color:var(--muted);font-weight:600;line-height:1.5}

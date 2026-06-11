@@ -75,6 +75,7 @@
       av_hist: "Saved history", av_moving: "Moving items", av_rising: "Rising", av_falling: "Falling", av_tap: "Tap any item to open its monthly report",
       em_subject: "PSMMC stock report", em_summary: "Summary", em_below1: "Items below 1 month of coverage:", em_more: "more items", em_full_sheet: "Full sheet: use the Export button in the dashboard.", em_order: "Need ordering", em_critical: "Critical", em_stocku: "Stock units", em_monthly: "Monthly use",
       pr_pack_price: "pack price", pr_units_per_pack: "units/pack", pr_unit_price: "unit price (system)", pr_eff_price: "effective after bonus qty", pr_stock_value: "item stock value", pr_total_value: "Total stock value (SAR)", pr_frozen: "Frozen capital", pr_frozen_sub: "no movement or >12 mo coverage", pr_priced: "priced items",
+      pr_hint: "Prices not loaded yet — add pack price, units per pack, awarded qty and free qty columns to the identifiers file to activate this section.",
       cp_copied: "Copied", cp_copy_all: "Copy all codes", cp_none: "No codes to copy",
       prn_title: "Order sheet", prn_date: "Date", prn_period: "Analysis period", prn_sign: "Approved by — name & signature",
       langName: "English"
@@ -140,6 +141,7 @@
       av_hist: "سجل محفوظ", av_moving: "أصناف متحركة", av_rising: "صاعد", av_falling: "هابط", av_tap: "اضغط أي صنف لفتح تقريره الشهري",
       em_subject: "تقرير مخزون صيدلية PSMMC", em_summary: "الملخص", em_below1: "أصناف تحت شهر تغطية:", em_more: "صنفًا آخر", em_full_sheet: "الورقة الكاملة: زر التصدير داخل اللوحة.", em_order: "يحتاج طلبًا", em_critical: "حرج", em_stocku: "وحدات المخزون", em_monthly: "الاستهلاك الشهري",
       pr_pack_price: "سعر العلبة", pr_units_per_pack: "وحدة/علبة", pr_unit_price: "سعر الوحدة (السيستم)", pr_eff_price: "السعر الفعلي بعد المجانية", pr_stock_value: "قيمة مخزون الصنف", pr_total_value: "قيمة المخزون الكلية (ر.س)", pr_frozen: "رأس المال المجمّد", pr_frozen_sub: "بدون حركة أو تغطية تفوق 12 شهرًا", pr_priced: "صنف مسعّر",
+      pr_hint: "الأسعار غير مرفوعة بعد — أضف أعمدة سعر العلبة وعدد الحبات وكمية الترسية والكمية المجانية في ملف المعرفات لتفعيل هذه الخانة.",
       cp_copied: "نُسخ", cp_copy_all: "نسخ كل الأكواد", cp_none: "لا توجد أكواد للنسخ",
       prn_title: "ورقة الطلب", prn_date: "التاريخ", prn_period: "فترة التحليل", prn_sign: "الاعتماد — الاسم والتوقيع",
       langName: "عربي"
@@ -482,7 +484,7 @@
       var m = MAP && MAP.byCode[r.code];
       r.trade = (m && m.trade) || r.trade || null;
       r.sci = (m && m.sci) || r.sci || null;
-      r.hosp = (m && m.hosp) || null;
+      r.hosp = (m && m.hosp) || r.hosp || null;
       r.msd = (m && m.msd) || r.msd || null;
       r.cls = (m && m.cls) || null;
       r.prio = (m && m.prio) || null;
@@ -603,7 +605,7 @@
   }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null }; });
+    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null }; });
     applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
@@ -1043,7 +1045,10 @@
       + '<span class="stat"><b class="num" style="color:var(--blue)">' + fmtInt(r.sug) + '</b><i>' + t("dt_sug") + '</i></span>'
       + '<span class="stat"><b class="num">' + fmtInt(r.total) + '</b><i>' + t("dt_total_hist") + '</i></span>'
       + '</div>';
-    var priceBlock = "";
+    /* The price slot is always present in the card: real figures when a
+       prices file is loaded, an explicit "add prices to activate" hint
+       otherwise — so planners know where the rial numbers will appear. */
+    var priceBlock;
     if (r.packPrice) {
       priceBlock = '<div class="priceblock">'
         + '<span class="pb-item"><b class="num">' + fmt2(r.packPrice) + '</b><i>' + t("pr_pack_price") + '</i></span>'
@@ -1051,6 +1056,14 @@
         + '<span class="pb-item"><b class="num">' + fmt2(r.unitPrice) + '</b><i>' + t("pr_unit_price") + '</i></span>'
         + (r.effUnitPrice ? '<span class="pb-item"><b class="num" style="color:var(--blue)">' + fmt2(r.effUnitPrice) + '</b><i>' + t("pr_eff_price") + '</i></span>' : "")
         + (r.stockValue != null ? '<span class="pb-item"><b class="num">' + fmtM(r.stockValue) + '</b><i>' + t("pr_stock_value") + '</i></span>' : "")
+        + '</div>';
+    } else {
+      priceBlock = '<div class="priceblock is-empty">'
+        + '<span class="pb-item"><b>—</b><i>' + t("pr_pack_price") + '</i></span>'
+        + '<span class="pb-item"><b>—</b><i>' + t("pr_units_per_pack") + '</i></span>'
+        + '<span class="pb-item"><b>—</b><i>' + t("pr_unit_price") + '</i></span>'
+        + '<span class="pb-item"><b>—</b><i>' + t("pr_stock_value") + '</i></span>'
+        + '<span class="pb-hint">' + t("pr_hint") + '</span>'
         + '</div>';
     }
     var chart, callouts = "", note = "";
