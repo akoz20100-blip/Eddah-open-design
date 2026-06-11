@@ -194,7 +194,9 @@ tbody td{padding:13px 14px; border-bottom:1px solid var(--line); white-space:now
 tbody tr:hover{background:#fafbff}
 tbody tr:last-child td{border-bottom:0}
 td.desc{white-space:normal; min-width:230px; max-width:330px; font-weight:600}
+td.desc .tradename{display:block; font-style:normal; font-size:11px; font-weight:700; color:var(--blue); margin-top:1px}
 td.code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; color:var(--muted)}
+td.code .subcode{display:block; font-size:10px; color:var(--muted-2); margin-top:2px}
 .right{text-align:end}
 .pill{display:inline-flex; align-items:center; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:800}
 .pill.order_now{background:var(--coral-soft); color:var(--coral)}
@@ -325,6 +327,13 @@ td.code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; color
       </span>
       <span class="filebtn-txt"><b data-i18n="file_st">ملف المخزون المتاح</b><i id="stName" data-i18n="file_st_hint">مخزون نبكو · ‎.xls</i></span>
     </label>
+    <label class="filebtn" id="lblMp">
+      <input type="file" id="fileMap" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_mp">ملف الأسماء والمعرفات</b><i id="mpName" data-i18n="file_mp_hint">اختياري · أكواد المستشفى وMSD والاسم التجاري</i></span>
+    </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">تحميل بيانات تجريبية</button>
     <p class="upl-hint" id="uplHint">أرفق الملفين لحساب التغطية وإعادة الطلب. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ 5)؛ وتُستبعد المستلزمات الطبية.</p>
   </section>
@@ -417,7 +426,7 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
   var DAYS_PER_MONTH = 30.44;
   var STATUS_OK = { DISPATCHED: 1, APPROVED: 1 };
   var REORDER_MONTHS = 6, WATCH_MONTHS = 7, ORDER_COVER_MONTHS = 9;
-  var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1";
+  var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
 
   // ---------- i18n ----------
   var T = {
@@ -427,6 +436,10 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
       tab_planning: "Planning Department", tab_management: "Management & Budget",
       file_wd: "Withdrawals file", file_wd_hint: "NUPCO outbound · .xlsx",
       file_st: "Stock-on-hand file", file_st_hint: "NUPCO stock · .xls",
+      file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
+      err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
+      mp_linked: "items linked",
+      c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code",
       btn_sample: "Load sample data",
       upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
@@ -471,6 +484,10 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
       tab_planning: "قسم التخطيط", tab_management: "الإدارة والميزانية",
       file_wd: "ملف السحوبات", file_wd_hint: "صادر نبكو · ‎.xlsx",
       file_st: "ملف المخزون المتاح", file_st_hint: "مخزون نبكو · ‎.xls",
+      file_mp: "ملف الأسماء والمعرفات", file_mp_hint: "اختياري · أكواد المستشفى وMSD والاسم التجاري",
+      err_mp: "تعذّر قراءة ملف المعرفات (يلزم عمود كود نبكو + أعمدة الاسم التجاري / كود المستشفى / MSD)",
+      mp_linked: "صنف مرتبط",
+      c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD",
       btn_sample: "تحميل بيانات تجريبية",
       upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).",
       empty_title: "لا توجد بيانات محمّلة بعد",
@@ -630,6 +647,47 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
     } catch (e) { return null; }
   }
 
+  /* Optional identifiers file: links each NUPCO code to the hospital code,
+     the MOD-wide MSD code, and the trade/scientific names, so planners can
+     search and read items by any of them. Tolerant header mapping; persisted
+     on this device so it only needs to be uploaded once. */
+  var MAP = null;
+  function parseMapping(aoa) {
+    if (!aoa || !aoa.length) throw new Error("empty");
+    var H = aoa[0];
+    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material"]),
+      ti = findCol(H, ["Trade Name", "Brand Name", "Brand", "Commercial Name", "Trade"]),
+      gi = findCol(H, ["Scientific Name", "Generic Name", "Scientific"]),
+      hi = findCol(H, ["Hospital Code", "Hospital Item Number", "Hospital Number", "Local Code", "Hospital"]),
+      mi = findCol(H, ["MSD Code", "MSD Number", "MSD"]);
+    if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0)) throw new Error("cols");
+    var byCode = {}, n = 0;
+    function val(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
+    for (var r = 1; r < aoa.length; r++) {
+      var row = aoa[r]; if (!row) continue;
+      var code = normCode(row[ci]); if (!isDrug(code)) continue;
+      var rec = { trade: val(row, ti), sci: val(row, gi), hosp: val(row, hi), msd: val(row, mi) };
+      if (rec.trade || rec.sci || rec.hosp || rec.msd) { byCode[code] = rec; n++; }
+    }
+    if (!n) throw new Error("empty-map");
+    return { byCode: byCode, count: n };
+  }
+  function saveMap(map) { try { localStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch (e) {} }
+  function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
+  function applyMap(rows) {
+    var n = 0;
+    rows.forEach(function (r) {
+      var m = MAP && MAP.byCode[r.code];
+      r.trade = (m && m.trade) || null;
+      r.sci = (m && m.sci) || null;
+      r.hosp = (m && m.hosp) || null;
+      r.msd = (m && m.msd) || null;
+      r.alt = m ? [m.trade, m.sci, m.hosp, m.msd].filter(Boolean).join(" ") : "";
+      if (m) n++;
+    });
+    return n;
+  }
+
   function parseStock(aoa, filename, wb) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
@@ -706,6 +764,7 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
     if (!STATE.raw.withdrawals || !STATE.raw.stock) return;
     var wd = STATE.raw.withdrawals, st = STATE.raw.stock;
     var rows = buildRows(wd, st);
+    applyMap(rows);
     var meta = { period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months, stock_as_of: st.stock_as_of, source: "upload", baseline: wd.source === "baseline" };
     applyTrend(rows, meta);
     STATE.rows = rows; STATE.meta = meta; STATE.monthly = buildMonthly(wd, rows);
@@ -716,7 +775,8 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
   }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: r.alt || "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null }; });
+    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null }; });
+    applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
     STATE.wdName = "sample"; STATE.stName = "sample";
@@ -881,6 +941,14 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
   function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--blue)") + '"></i></span>'; }
   function trendCell(r) { if (!r.trend) return '<span class="trend flat">—</span>'; if (r.trend.type === "new") return '<span class="trend new">' + t("trend_new") + "</span>"; var p = r.trend.pct, cls = p > 0.001 ? "up" : p < -0.001 ? "down" : "flat", arr = p > 0.001 ? "▲" : p < -0.001 ? "▼" : "▬"; return '<span class="trend ' + cls + '" title="' + t("prev_avg") + " " + fmt1(r.trend.prev) + t("per_mo") + '">' + arr + " " + (p >= 0 ? "+" : "") + (p * 100).toFixed(0) + "%</span>"; }
   function pill(status) { return '<span class="pill ' + status + '">' + t("s_" + status) + "</span>"; }
+  function codeCell(r) {
+    var sub = [r.hosp, r.msd].filter(Boolean).join(" · ");
+    return '<td class="code">' + r.code + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
+  }
+  function descCell(r) {
+    var extra = r.trade || (r.sci && r.sci !== r.desc ? r.sci : null);
+    return '<td class="desc">' + esc(r.desc) + (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + "</td>";
+  }
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
   function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
@@ -912,7 +980,7 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
-    var body = rows.map(function (r) { return "<tr><td class=\"code\">" + r.code + "</td><td class=\"desc\">" + esc(r.desc) + "</td><td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + "</td></tr>"; }).join("");
+    var body = rows.map(function (r) { return "<tr>" + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + "</td></tr>"; }).join("");
     return cards + toolbar(filters) + tableCard(head, body, rows.length, base.length);
   }
   function renderManagement(base, c) {
@@ -933,7 +1001,7 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
     var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + "</div>";
     var rows = applyFilter(base);
     var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + '<th class="right">' + t("c_value") + "</th></tr></thead>";
-    var body = rows.map(function (r) { return "<tr><td class=\"code\">" + r.code + "</td><td class=\"desc\">" + esc(r.desc) + "</td><td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td class=\"right muted\">—</td></tr>"; }).join("");
+    var body = rows.map(function (r) { return "<tr>" + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td class=\"right muted\">—</td></tr>"; }).join("");
     return cards + toolbar(filters) + tableCard(head, body, rows.length, base.length);
   }
 
@@ -978,6 +1046,7 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
     $("uplHint").innerHTML = t("upl_hint");
     $("wdName").textContent = wdLabel();
     $("stName").textContent = STATE.stName === "sample" ? t("sample_st") : STATE.stName ? STATE.stName : t("file_st_hint");
+    $("mpName").textContent = MAP ? ((MAP.name ? MAP.name + " · " : "") + fmtInt(MAP.count) + " " + t("mp_linked")) : t("file_mp_hint");
     $("langName").textContent = t("langName");
     $("langBtn").classList.toggle("is-en", LANG === "en");
     if (STATE.meta.period_start) {
@@ -993,13 +1062,15 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
   function exportExcel() {
     if (!STATE.rows.length) return;
     var rows = applyFilter(viewBase()), aoa, name;
+    var mapCols = MAP ? [t("c_trade"), t("c_hosp"), t("c_msd")] : [];
+    function mapVals(r) { return MAP ? [r.trade || "", r.hosp || "", r.msd || ""] : []; }
     if (STATE.view === "planning") {
-      aoa = [[t("c_code"), t("c_desc"), t("c_uom"), t("c_total"), t("c_avg"), t("c_stock"), t("c_cov"), t("c_status"), t("c_sug")]];
-      rows.forEach(function (r) { aoa.push([r.code, r.desc, r.uom, Math.round(r.total), Math.round(r.avg * 10) / 10, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.sug)]); });
+      aoa = [[t("c_code"), t("c_desc")].concat(mapCols, [t("c_uom"), t("c_total"), t("c_avg"), t("c_stock"), t("c_cov"), t("c_status"), t("c_sug")])];
+      rows.forEach(function (r) { aoa.push([r.code, r.desc].concat(mapVals(r), [r.uom, Math.round(r.total), Math.round(r.avg * 10) / 10, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.sug)])); });
       name = "PSMMC_reorder_" + STATE.filter + "_" + (STATE.meta.period_end || "") + ".xlsx";
     } else {
-      aoa = [[t("c_code"), t("c_desc"), t("c_uom"), t("c_avail"), t("c_cov"), t("c_status"), t("c_use")]];
-      rows.forEach(function (r) { aoa.push([r.code, r.desc, r.uom, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.avg * 10) / 10]); });
+      aoa = [[t("c_code"), t("c_desc")].concat(mapCols, [t("c_uom"), t("c_avail"), t("c_cov"), t("c_status"), t("c_use")])];
+      rows.forEach(function (r) { aoa.push([r.code, r.desc].concat(mapVals(r), [r.uom, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.avg * 10) / 10])); });
       name = "PSMMC_stock_" + STATE.filter + "_" + (STATE.meta.stock_as_of || "") + ".xlsx";
     }
     var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
@@ -1017,6 +1088,8 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
       STATE.raw.withdrawals = saved;
       $("lblWd").classList.add("is-baseline");
     }
+    MAP = loadMap();
+    if (MAP) $("lblMp").classList.add("is-baseline");
     applyStatic();
     $("langBtn").onclick = function () { setLang(LANG === "ar" ? "en" : "ar"); };
     document.querySelectorAll(".tab").forEach(function (tb) { tb.onclick = function () { STATE.view = this.dataset.view; STATE.filter = "all"; STATE.search = ""; STATE.sort = STATE.view === "planning" ? { key: "cov", dir: "asc" } : { key: "stock", dir: "desc" }; render(); }; });
@@ -1048,6 +1121,25 @@ window.PSMMC_SAMPLE.monthly = [{"ym":"2026-01","total":8144517,"order":4600313,"
       });
     };
     $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st")); } }); };
+    $("fileMap").onchange = function (e) {
+      var f = e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      readWorkbook(f, function (err, aoa) {
+        if (err) { toast(t("err_mp")); return; }
+        try {
+          var parsed = parseMapping(aoa);
+          MAP = { byCode: parsed.byCode, count: parsed.count, name: f.name, savedAt: new Date().toISOString() };
+          saveMap(MAP);
+          $("lblMp").classList.remove("is-baseline");
+          $("lblMp").classList.add("is-loaded");
+          var linked = STATE.rows.length ? applyMap(STATE.rows) : parsed.count;
+          applyStatic();
+          render();
+          toast(fmtInt(linked) + " " + t("mp_linked"));
+        } catch (ex) { toast(t("err_mp")); }
+      });
+    };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
