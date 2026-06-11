@@ -49,6 +49,13 @@
       </span>
       <span class="filebtn-txt"><b data-i18n="file_st">ملف المخزون المتاح</b><i id="stName" data-i18n="file_st_hint">مخزون نبكو · ‎.xls</i></span>
     </label>
+    <label class="filebtn" id="lblMp">
+      <input type="file" id="fileMap" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_mp">ملف الأسماء والمعرفات</b><i id="mpName" data-i18n="file_mp_hint">اختياري · أكواد المستشفى وMSD والاسم التجاري</i></span>
+    </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">تحميل بيانات تجريبية</button>
     <p class="upl-hint" id="uplHint">أرفق الملفين لحساب التغطية وإعادة الطلب. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ 5)؛ وتُستبعد المستلزمات الطبية.</p>
   </section>
@@ -85,10 +92,23 @@
       </span>
       <span class="tab-lbl" data-i18n="tab_management">الإدارة والميزانية</span>
     </button>
+    <button class="tab" data-view="averages" role="tab" aria-selected="false">
+      <span class="ic ic-line" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="M8 15v-3M12 15V8M16 15v-5"/></svg>
+      </span>
+      <span class="ic ic-fill" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 3a1 1 0 0 1 1 1v15h15a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm4 8a1.2 1.2 0 0 1 1.2 1.2v3.6a1.2 1.2 0 0 1-2.4 0v-3.6A1.2 1.2 0 0 1 8 11zm4-4a1.2 1.2 0 0 1 1.2 1.2v7.6a1.2 1.2 0 0 1-2.4 0V8.2A1.2 1.2 0 0 1 12 7zm4 2a1.2 1.2 0 0 1 1.2 1.2v5.6a1.2 1.2 0 0 1-2.4 0v-5.6A1.2 1.2 0 0 1 16 9z"/></svg>
+      </span>
+      <span class="tab-lbl" data-i18n="tab_averages">المتوسطات</span>
+    </button>
     <button id="btnExport" class="fab" type="button" disabled aria-label="Export Excel" title="Export Excel">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
     </button>
   </nav>
+
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true"></div>
+  </div>
 
   <div class="toast" id="toast" hidden></div>
 
