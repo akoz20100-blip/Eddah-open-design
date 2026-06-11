@@ -65,6 +65,8 @@
       pc_title: "Confirm withdrawals period", pc_sub: "Period detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the months are right.",
       pc_detected: "detected automatically from the file", pc_use_detected: "Use detected", pc_months_3: "3 mo", pc_months_6: "6 mo", pc_custom_ph: "Custom…", pc_confirm: "Use", manual_mark: "manual",
       hist_quota: "Device storage is full — history trimmed to the last 12 months",
+      dup_skipped: "Duplicate withdrawals file skipped — it was already counted once",
+      save_failed: "Device storage is full — could not save on this device for next time",
       k_need_order: "Needs ordering now", k_need_order_sub: "Total suggested qty <b class=\"num\">{u}</b> units · <b>{n}</b> withdrawn but not in stock",
       k_critical: "Critical — out of stock", k_critical_sub: "Actively withdrawn items at zero balance — top priority",
       k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
@@ -131,6 +133,8 @@
       pc_title: "تأكيد فترة ملف السحوبات", pc_sub: "قرأنا الفترة من تواريخ التسليم داخل الملف. المتوسط الشهري لكل صنف = الكمية ÷ عدد الأشهر، لذا تأكد أن عدد الأشهر صحيح.",
       pc_detected: "مقروءة تلقائيًا من الملف", pc_use_detected: "اعتمد المقروءة", pc_months_3: "3 أشهر", pc_months_6: "6 أشهر", pc_custom_ph: "مخصص…", pc_confirm: "اعتمد", manual_mark: "يدوي",
       hist_quota: "مساحة الجهاز ممتلئة — قُلّص السجل لآخر 12 شهرًا",
+      dup_skipped: "تم تجاهل ملف سحوبات مكرر — سبق احتسابه مرة واحدة",
+      save_failed: "مساحة الجهاز ممتلئة — تعذّر الحفظ على هذا الجهاز للمرة القادمة",
       k_need_order: "يحتاج طلبًا الآن", k_need_order_sub: "إجمالي الكمية المقترحة <b class=\"num\">{u}</b> وحدة · منها <b>{n}</b> صنفًا مسحوبًا وغير متوفر",
       k_critical: "حرج — نفد أو غير متوفر", k_critical_sub: "أصناف مسحوبة فعليًا ورصيدها صفر — أولوية قصوى",
       k_total_units: "إجمالي المخزون المتاح", k_overall_cov: "يغطي <b class=\"num\">{m}</b> شهرًا بمعدل الاستهلاك الحالي",
@@ -218,10 +222,30 @@
   }
   function norm(s) { return String(s == null ? "" : s).trim().toLowerCase().replace(/\s+/g, " "); }
   function findCol(header, cands) { var hn = header.map(norm); for (var i = 0; i < cands.length; i++) { var idx = hn.indexOf(norm(cands[i])); if (idx !== -1) return idx; } for (var j = 0; j < cands.length; j++) { var cc = norm(cands[j]); for (var k = 0; k < hn.length; k++) if (hn[k].indexOf(cc) !== -1) return k; } return -1; }
-  function parseDate(v) { if (v instanceof Date && !isNaN(v)) return v; if (typeof v === "number" && v > 20000 && v < 80000) return new Date(Math.round((v - 25569) * 86400 * 1000)); if (typeof v === "string") { var s = v.trim(), m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return new Date(+m[1], +m[2] - 1, +m[3]); m = s.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})/); if (m) return new Date(+m[3], +m[2] - 1, +m[1]); var d = new Date(s); if (!isNaN(d)) return d; } return null; }
-  function dateFromFilename(name) { var m = String(name || "").match(/(\d{2})(\d{2})(\d{4})/); if (m) { var d = new Date(+m[3], +m[2] - 1, +m[1]); if (!isNaN(d)) return d; } return null; }
-  function isoDate(d) { return d ? d.toISOString().slice(0, 10) : null; }
-  function prettyDate(s) { if (!s) return "—"; var d = s instanceof Date ? s : new Date(s); if (isNaN(d)) return String(s); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  function parseDate(v) { if (v instanceof Date && !isNaN(v)) return v; if (typeof v === "number" && v > 20000 && v < 80000) { var u = new Date(Math.round((v - 25569) * 86400 * 1000)); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); } if (typeof v === "string") { var s = v.trim(), m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return new Date(+m[1], +m[2] - 1, +m[3]); m = s.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})/); if (m) return new Date(+m[3], +m[2] - 1, +m[1]); var d = new Date(s); if (!isNaN(d)) return d; } return null; }
+  /* "Stock as of" from the filename: an 8-digit run is accepted only when it
+     forms a real calendar date — DDMMYYYY (the NUPCO export convention) is
+     preferred, YYYYMMDD is the fallback; anything else returns null so the
+     caller can fall back to the workbook's ModifiedDate. */
+  function dateFromFilename(name) {
+    var m = String(name || "").match(/(\d{8})/);
+    if (!m) return null;
+    var s = m[1];
+    function mk(y, mo, d) {
+      if (y < 2000 || y > 2099 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+      var dt = new Date(y, mo - 1, d);
+      return (dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d) ? dt : null;
+    }
+    return mk(+s.slice(4, 8), +s.slice(2, 4), +s.slice(0, 2)) || mk(+s.slice(0, 4), +s.slice(4, 6), +s.slice(6, 8));
+  }
+  /* Format from LOCAL date parts: every Date in this app is built at local
+     midnight, so serializing through toISOString() (UTC) would shift the
+     calendar day in any non-UTC timezone (Riyadh is UTC+3). */
+  function isoDate(d) { return d ? d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) : null; }
+  /* Parse a YYYY-MM-DD string back into a LOCAL-midnight Date so calendar
+     math (month buckets, last-day checks) agrees with isoDate() everywhere. */
+  function parseIsoLocal(iso) { if (!iso) return null; var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); if (!m) return null; return new Date(+m[1], +m[2] - 1, +m[3]); }
+  function prettyDate(s) { if (!s) return "—"; var d = s instanceof Date ? s : (parseIsoLocal(s) || new Date(s)); if (isNaN(d)) return String(s); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   // ---------- workbook ----------
@@ -285,10 +309,30 @@
       if (p.period_start && (!minS || p.period_start < minS)) minS = p.period_start;
       if (p.period_end && (!maxE || p.period_end > maxE)) maxE = p.period_end;
     });
-    var months = (minS && maxE) ? Math.max((new Date(maxE) - new Date(minS)) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
+    var months = (minS && maxE) ? Math.max((parseIsoLocal(maxE) - parseIsoLocal(minS)) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
     return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, files: parts.map(function (p) { return p.name; }) };
   }
+  /* Renamed copies of the same export must not double-count: two parsed parts
+     with the identical period AND the identical grand-total quantity are the
+     same data, so only the first is kept. Legitimate multi-warehouse files
+     share the period but differ in totals and pass through untouched. */
+  function dedupeParts(parts, alreadyDropped) {
+    var sigs = {}, dropped = alreadyDropped || 0;
+    var out = parts.filter(function (p) {
+      var total = 0;
+      Object.keys(p.byCode).forEach(function (c) { total += p.byCode[c].qty; });
+      var sig = (p.period_start || "") + "|" + (p.period_end || "") + "|" + total;
+      if (sigs[sig]) { dropped++; return false; }
+      sigs[sig] = 1; return true;
+    });
+    if (dropped) toast(t("dup_skipped"));
+    return out;
+  }
 
+  /* A persistence failure must stay visible: the upload flow toasts its own
+     success message right after saving, so the warning waits until that toast
+     has had its time on screen instead of being overwritten instantly. */
+  function warnSaveFailed() { setTimeout(function () { toast(t("save_failed")); }, 3000); }
   /* The latest uploaded consumption aggregate is kept on this device so a
      future session can upload only a fresh stock file and still get coverage
      against the saved monthly averages. */
@@ -299,7 +343,7 @@
         period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months,
         byCode: wd.byCode, monthlyByCode: wd.monthlyByCode
       }));
-    } catch (e) {}
+    } catch (e) { warnSaveFailed(); }
   }
   function loadBaseline() {
     try {
@@ -473,7 +517,7 @@
     if (!n) throw new Error("empty-map");
     return { byCode: byCode, count: n, priced: priced };
   }
-  function saveMap(map) { try { localStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch (e) {} }
+  function saveMap(map) { try { localStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch (e) { warnSaveFailed(); } }
   function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
   function applyMap(rows) {
     // Identifiers from the mapping file win, but values already read from the
@@ -606,9 +650,14 @@
     if (wd.source === "baseline") msg += " · " + t("baseline_meta");
     toast(msg);
   }
+  /* Boundary sanitizers for price-ish fields: uploads already enforce these in
+     parseMapping, and the embedded sample must obey the same invariant — a bad
+     sample regeneration must never surface negative riyals on the demo. */
+  function posOrNull(v) { var n = typeof v === "number" ? v : parseFloat(v); return isFinite(n) && n > 0 ? n : null; }
+  function nonNegOrNull(v) { var n = typeof v === "number" ? v : parseFloat(v); return isFinite(n) && n >= 0 ? n : null; }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: r.packPrice || null, unitsPerPack: r.unitsPerPack || null, awardQty: r.awardQty || null, freeQty: r.freeQty == null ? null : r.freeQty }; });
+    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: posOrNull(r.packPrice), unitsPerPack: posOrNull(r.unitsPerPack), awardQty: posOrNull(r.awardQty), freeQty: nonNegOrNull(r.freeQty) }; });
     applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
@@ -856,9 +905,11 @@
       var endIso = STATE.meta.period_end;
       if (endIso) {
         var last = mon[mon.length - 1];
-        var endD = new Date(endIso);
-        var lastDay = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
-        if (ymOf(endIso) === last.ym && endD.getDate() < lastDay) full = mon.slice(0, -1);
+        var endD = parseIsoLocal(endIso);
+        if (endD) {
+          var lastDay = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
+          if (ymOf(endIso) === last.ym && endD.getDate() < lastDay) full = mon.slice(0, -1);
+        }
       }
       if (full.length >= 2) {
         var a = full[full.length - 1], b = full[full.length - 2];
@@ -904,7 +955,7 @@
   function pill(status) { return '<span class="pill ' + status + '">' + t("s_" + status) + "</span>"; }
   function codeCell(r) {
     var sub = [r.hosp, r.msd].filter(Boolean).join(" · ");
-    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + r.code + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
+    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
   }
   function descCell(r) {
     // Table rows stay lean: description + trade name only. The classification,
@@ -1032,9 +1083,11 @@
     var ser = monthlySeriesFor(code);
     var partial = false;
     if (ser && STATE.meta.period_end) {
-      var endIso = STATE.meta.period_end, endD = new Date(endIso);
-      var lastDay = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
-      partial = ser.yms[ser.yms.length - 1] === ymOf(endIso) && endD.getDate() < lastDay;
+      var endIso = STATE.meta.period_end, endD = parseIsoLocal(endIso);
+      if (endD) {
+        var lastDay = new Date(endD.getFullYear(), endD.getMonth() + 1, 0).getDate();
+        partial = ser.yms[ser.yms.length - 1] === ymOf(endIso) && endD.getDate() < lastDay;
+      }
     }
     var chips = codeChip(r.code) + (r.hosp ? codeChip(r.hosp) : "") + (r.msd ? codeChip(r.msd) : "") + pill(r.status);
     var clsRow = (r.cls || r.prio || r.agent)
@@ -1265,7 +1318,7 @@
     div.dir = LANG === "ar" ? "rtl" : "ltr";
     var rowsHtml = cand.map(function (x, i) {
       var r = x.r;
-      return "<tr><td>" + (i + 1) + "</td><td class=\"num\">" + r.code + "</td><td>" + esc(r.desc) + (r.trade ? " — " + esc(r.trade) : "") + "</td><td>" + esc(r.uom || "") + "</td><td class=\"num\">" + fmt1(r.avg) + "</td><td class=\"num\">" + fmtInt(r.stock) + "</td><td class=\"num\">" + fmt1(x.covEff === Infinity ? 0 : x.covEff) + "</td><td class=\"num\"><b>" + fmtInt(r.sug) + "</b></td>" + (hasPrices() ? "<td class=\"num\">" + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "") + "</tr>";
+      return "<tr><td>" + (i + 1) + "</td><td class=\"num\">" + esc(r.code) + "</td><td>" + esc(r.desc) + (r.trade ? " — " + esc(r.trade) : "") + "</td><td>" + esc(r.uom || "") + "</td><td class=\"num\">" + fmt1(r.avg) + "</td><td class=\"num\">" + fmtInt(r.stock) + "</td><td class=\"num\">" + fmt1(x.covEff === Infinity ? 0 : x.covEff) + "</td><td class=\"num\"><b>" + fmtInt(r.sug) + "</b></td>" + (hasPrices() ? "<td class=\"num\">" + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "") + "</tr>";
     }).join("");
     div.innerHTML = "<h1>" + t("app_sub") + "</h1><h2>" + t("prn_title") + " — " + t("em_order") + " " + fmtInt(s.orderCount + s.notStockCount) + "</h2>"
       + "<p>" + t("prn_date") + ": " + prettyDate(isoDate(new Date())) + " · " + t("prn_period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")</p>"
@@ -1301,8 +1354,12 @@
     $("btnSample").onclick = loadSample;
     $("btnExport").onclick = exportExcel;
     $("fileWithdrawals").onchange = function (e) {
-      var files = Array.prototype.slice.call(e.target.files || []);
+      var picked = Array.prototype.slice.call(e.target.files || []);
       e.target.value = "";
+      // Selecting the same file twice would silently double every quantity and
+      // monthly average; exact duplicates (same name + same size) are read once.
+      var seen = {}, dupFiles = 0;
+      var files = picked.filter(function (f) { var k = f.name + " " + f.size; if (seen[k]) { dupFiles++; return false; } seen[k] = 1; return true; });
       if (!files.length) return;
       var parts = [], pending = files.length, failed = false;
       files.forEach(function (f) {
@@ -1312,6 +1369,7 @@
           try { var p = parseWithdrawals(aoa); p.name = f.name; parts.push(p); }
           catch (ex) { failed = true; toast(t("err_wd")); return; }
           if (--pending === 0) {
+            parts = dedupeParts(parts, dupFiles);
             var wd = combineWithdrawals(parts);
             wd.source = "upload";
             // The chosen month count drives every monthly average, so the
