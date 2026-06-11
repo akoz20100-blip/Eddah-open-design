@@ -902,9 +902,11 @@
     return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + r.code + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
   }
   function descCell(r) {
+    // Table rows stay lean: description + trade name only. The classification,
+    // priority and agent live in the item card (openDetail) — and the search
+    // haystack still matches them.
     var extra = r.trade || (r.sci && r.sci !== r.desc ? r.sci : null);
-    var tags = (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + (r.cls ? '<span class="clstag">' + esc(r.cls) + "</span>" : "");
-    return '<td class="desc">' + esc(r.desc) + tags + "</td>";
+    return '<td class="desc">' + esc(r.desc) + (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + "</td>";
   }
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }

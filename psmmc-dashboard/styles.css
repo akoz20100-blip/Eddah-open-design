@@ -376,6 +376,3 @@ td.code.copyable:hover .copyic{opacity:.6}
   .print-sheet th{background:#f0f0f0}
   .print-sheet .sign{margin-top:26px;font-size:12px}
 }
-
-/* ---- round 2b: classification tag under the description ---- */
-td.desc .clstag{display:inline-block;background:var(--inset);border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--muted);margin-inline-start:6px;vertical-align:1px}
