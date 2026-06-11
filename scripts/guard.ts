@@ -128,6 +128,10 @@ const residualAllowedPathPrefixes = [
   "mocks/lib/",
   "mocks/mock-agent.mjs",
   "mocks/scripts/",
+  // Standalone, dependency-free PSMMC pharmacy dashboard published via the
+  // classic /docs GitHub Pages flow. It is plain browser JavaScript by design
+  // (single self-contained HTML file, no build toolchain) and vendors SheetJS.
+  "psmmc-dashboard/",
   "test-results/",
   "vendor/",
 ];
