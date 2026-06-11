@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ebecef" />
+  <meta name="description" content="PSMMC pharmacy inventory analytics — coverage, reorder and budget planning, computed locally in your browser. تحليلات مخزون صيدلية مدينة الأمير سلطان الطبية العسكرية — التغطية وإعادة الطلب وتخطيط الميزانية، تُحتسب محليًا في متصفحك." />
   <title>PSMMC — تحليلات مخزون الصيدلية</title>
   <link rel="icon" href="./assets/psmmc-crest.svg" />
   <link rel="stylesheet" href="./styles.css" />
@@ -22,7 +23,7 @@
       <span class="lang-name" id="langName">عربي</span>
       <span class="lang-track" aria-hidden="true">
         <span class="lang-knob">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
         </span>
       </span>
     </button>
@@ -38,21 +39,21 @@
     <label class="filebtn" id="lblWd">
       <input type="file" id="fileWithdrawals" accept=".xlsx,.xls" multiple hidden />
       <span class="tile tile-lav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
       </span>
       <span class="filebtn-txt"><b data-i18n="file_wd">ملف السحوبات</b><i id="wdName" data-i18n="file_wd_hint">صادر نبكو · ‎.xlsx</i></span>
     </label>
     <label class="filebtn" id="lblSt">
       <input type="file" id="fileStock" accept=".xlsx,.xls" hidden />
       <span class="tile tile-lav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
       </span>
       <span class="filebtn-txt"><b data-i18n="file_st">ملف المخزون المتاح</b><i id="stName" data-i18n="file_st_hint">مخزون نبكو · ‎.xls</i></span>
     </label>
     <label class="filebtn" id="lblMp">
       <input type="file" id="fileMap" accept=".xlsx,.xls,.csv" hidden />
       <span class="tile tile-lav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
       </span>
       <span class="filebtn-txt"><b data-i18n="file_mp">ملف الأسماء والمعرفات</b><i id="mpName" data-i18n="file_mp_hint">اختياري · أكواد المستشفى وMSD والاسم التجاري</i></span>
     </label>
@@ -63,7 +64,7 @@
   <main id="content" class="content">
     <div class="empty card" id="emptyState">
       <span class="tile tile-lav tile-lg">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><rect x="7" y="11" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="8" rx="1"/><rect x="17" y="5" width="3" height="11" rx="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h16"/><rect x="7" y="11" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="8" rx="1"/><rect x="17" y="5" width="3" height="11" rx="1"/></svg>
       </span>
       <h2 data-i18n="empty_title">لا توجد بيانات محمّلة بعد</h2>
       <p data-i18n="empty_text">ارفع ملف السحوبات وملف المخزون، أو اضغط «تحميل بيانات تجريبية» لمعاينة اللوحة بأرقام حقيقية.</p>
@@ -74,7 +75,7 @@
   <footer class="foot" data-i18n="foot">أُعدّت لقسم التخطيط بمدينة الأمير سلطان الطبية العسكرية · جميع الحسابات تتم محليًا في متصفحك — لا تغادر البيانات هذه الصفحة.</footer>
 
   <nav class="dock" role="tablist" aria-label="Dashboard views">
-    <button class="tab is-active" data-view="planning" role="tab" aria-selected="true">
+    <button class="tab is-active" data-view="planning" role="tab" aria-selected="true" aria-controls="content">
       <span class="ic ic-line" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8.5h6M9 12.5h6M9 16.5h4"/></svg>
       </span>
@@ -83,7 +84,7 @@
       </span>
       <span class="tab-lbl" data-i18n="tab_planning">قسم التخطيط</span>
     </button>
-    <button class="tab" data-view="management" role="tab" aria-selected="false">
+    <button class="tab" data-view="management" role="tab" aria-selected="false" aria-controls="content">
       <span class="ic ic-line" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10M19 21V10M3 10l9-6 9 6M9 21v-6h6v6"/></svg>
       </span>
@@ -92,7 +93,7 @@
       </span>
       <span class="tab-lbl" data-i18n="tab_management">الإدارة والميزانية</span>
     </button>
-    <button class="tab" data-view="averages" role="tab" aria-selected="false">
+    <button class="tab" data-view="averages" role="tab" aria-selected="false" aria-controls="content">
       <span class="ic ic-line" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="M8 15v-3M12 15V8M16 15v-5"/></svg>
       </span>
@@ -102,15 +103,15 @@
       <span class="tab-lbl" data-i18n="tab_averages">المتوسطات</span>
     </button>
     <button id="btnExport" class="fab" type="button" disabled aria-label="Export Excel" title="Export Excel">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
     </button>
   </nav>
 
   <div class="modal-backdrop" id="modal" hidden>
-    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true"></div>
+    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-label="تفاصيل / Details"></div>
   </div>
 
-  <div class="toast" id="toast" hidden></div>
+  <div class="toast" id="toast" role="status" hidden></div>
 
   <script src="./vendor/xlsx.full.min.js"></script>
   <script src="./sample-data.js"></script>
