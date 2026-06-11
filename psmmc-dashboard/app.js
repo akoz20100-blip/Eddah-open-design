@@ -79,7 +79,7 @@
       pr_pack_price: "pack price", pr_units_per_pack: "units/pack", pr_unit_price: "unit price (system)", pr_eff_price: "effective after bonus qty", pr_stock_value: "item stock value", pr_total_value: "Total stock value (SAR)", pr_frozen: "Frozen capital", pr_frozen_sub: "no movement or >12 mo coverage", pr_priced: "priced items",
       pr_hint: "Prices not loaded yet — add pack price, units per pack, awarded qty and free qty columns to the identifiers file to activate this section.",
       cp_copied: "Copied", cp_copy_all: "Copy all codes", cp_none: "No codes to copy",
-      prn_title: "Order sheet", prn_date: "Date", prn_period: "Analysis period", prn_sign: "Approved by — name & signature",
+      prn_title: "Order sheet", prn_date: "Date", prn_period: "Analysis period", prn_sign: "Approved by — name & signature", prn_sign_name: "Name", prn_sign_sig: "Signature",
       bad_dates: "{n} rows had unreadable dates",
       cols_hint: "missing columns",
       av_empty_title: "No averages yet",
@@ -155,7 +155,7 @@
       pr_pack_price: "سعر العلبة", pr_units_per_pack: "وحدة/علبة", pr_unit_price: "سعر الوحدة (السيستم)", pr_eff_price: "السعر الفعلي بعد المجانية", pr_stock_value: "قيمة مخزون الصنف", pr_total_value: "قيمة المخزون الكلية (ر.س)", pr_frozen: "رأس المال المجمّد", pr_frozen_sub: "بدون حركة أو تغطية تفوق 12 شهرًا", pr_priced: "صنف مسعّر",
       pr_hint: "الأسعار غير مرفوعة بعد — أضف أعمدة سعر العلبة وعدد الحبات وكمية الترسية والكمية المجانية في ملف المعرفات لتفعيل هذه الخانة.",
       cp_copied: "نُسخ", cp_copy_all: "نسخ كل الأكواد", cp_none: "لا توجد أكواد للنسخ",
-      prn_title: "ورقة الطلب", prn_date: "التاريخ", prn_period: "فترة التحليل", prn_sign: "الاعتماد — الاسم والتوقيع",
+      prn_title: "ورقة الطلب", prn_date: "التاريخ", prn_period: "فترة التحليل", prn_sign: "الاعتماد — الاسم والتوقيع", prn_sign_name: "الاسم", prn_sign_sig: "التوقيع",
       bad_dates: "{n} صفًا تحتوي تواريخ غير مقروءة",
       cols_hint: "أعمدة ناقصة",
       av_empty_title: "لا توجد متوسطات بعد",
@@ -1491,7 +1491,7 @@
     div.innerHTML = "<h1>" + t("app_sub") + "</h1><h2>" + t("prn_title") + " — " + t("em_order") + " " + fmtInt(s.orderCount + s.notStockCount) + "</h2>"
       + "<p>" + t("prn_date") + ": " + prettyDate(isoDate(new Date())) + " · " + t("prn_period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")</p>"
       + "<table><thead><tr><th>#</th><th>" + t("c_code") + "</th><th>" + t("c_desc") + "</th><th>" + t("c_uom") + "</th><th>" + t("c_avg") + "</th><th>" + t("c_stock") + "</th><th>" + t("c_cov") + "</th><th>" + t("c_sug") + "</th>" + (hasPrices() ? "<th>" + t("pr_unit_price") + "</th>" : "") + "</tr></thead><tbody>" + rowsHtml + "</tbody></table>"
-      + "<p class=\"sign\">" + t("prn_sign") + ": ______________________________</p>";
+      + "<p class=\"sign\"><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_sign_name") + "</span><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_sign_sig") + "</span><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_date") + "</span></p>";
     document.body.appendChild(div);
     window.print();
   }

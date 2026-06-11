@@ -5,13 +5,19 @@ Excel files in the browser and instantly see, per medicine: consumption rate,
 stock coverage, reorder status, and a suggested order quantity — no manual math,
 no server, no data leaving the page.
 
-Two dashboards in one page:
+Three tabs in one page:
 
-- **📋 Planning Department** — coverage, reorder flags, 9-month order quantities,
-  trend vs the previous upload, and one-click Excel export of the purchase list.
-- **🏛️ Management & Budget** — the actual available stock of every medicine, with
-  out-of-stock and reorder counts. A stock-value (SAR) slot is reserved for when
-  a price list is provided.
+- **📋 Planning Department** — decision cards (needs-ordering count, critical
+  zero-balance count, total available + overall coverage, monthly consumption
+  with month-on-month badge); order sheet with one-click Excel export, email,
+  WhatsApp, and print; item-level filters by status.
+- **🏛️ Management & Budget** — actual available stock per medicine with
+  out-of-stock and reorder counts, unit prices, and stock value (SAR). A
+  frozen-capital card activates when prices are loaded (items with no movement
+  or >12 months coverage).
+- **📊 Averages** — per-item monthly average consumption, Δ% vs the previous
+  upload, saved-history sparklines for up to 24 months, rising / falling / new
+  filters, and history export / import buttons.
 
 > **Scope:** only **medicines** are included — NUPCO codes **starting with `5`**.
 > Medical supplies (other prefixes) are excluded automatically.
@@ -20,10 +26,25 @@ Two dashboards in one page:
 
 | Slot | File | Join key | Read |
 |------|------|----------|------|
-| Withdrawals | NUPCO outbound (`.xlsx`) | `NUPCO Material` | `Order Qty`, `Delivery Date`, rows with `Status` ∈ {DISPATCHED, APPROVED} |
+| Withdrawals | NUPCO outbound (`.xlsx`) | `NUPCO Material` | `Order Qty`, `Delivery Date`, rows with `Status` ∈ {DISPATCHED, APPROVED}; multiple files accepted (multiple warehouses) |
 | Stock on hand | NUPCO stock (`.xls`) | `Generic Item Number` | `Total Available Qty`, aggregated across all batches/lots per item |
+| Identifiers / MODHS catalog (optional) | Hospital/MODHS catalog (`.xlsx`, `.xls`, `.csv`) | NUPCO code | NUPCO code ↔ hospital code / MODHS code, trade name, scientific name, classification, priority; optional price columns: pack price, units per pack, awarded qty, free qty — unit price = pack ÷ units; effective price discounts bonus qty; rows are merged per code across uploads |
 
 Header matching is tolerant (trim / case-insensitive / extra columns ignored).
+
+**Period confirmation dialog** — after every withdrawals upload the app detects
+the covered months from delivery dates and presents a 3-month / 6-month /
+custom override dialog, with a manual flag, so analysts can correct edge cases
+before calculations run.
+
+**On-device history** — up to 24 months of per-item monthly averages are stored
+in the browser's `localStorage`; the newest upload is authoritative for the
+months it covers. History survives browser restarts and can be exported /
+imported as JSON from the Averages tab. Duplicate file uploads are
+de-duplicated automatically.
+
+**Bilingual** — full Arabic / English UI with RTL support; switch with the
+toggle in the header.
 
 ## Calculations (per medicine)
 
@@ -40,8 +61,9 @@ qty_9_months    = monthly_avg × 9                ← each order covers 9 months
 suggested_order = max(0, qty_9_months − current stock)
 ```
 
-**Trend** — each real upload stores a snapshot (period + per-item average) in the
-browser's `localStorage`; the next upload shows ▲/▼ Δ% vs the previous period.
+**Trend** — each real upload stores a snapshot (period + per-item average) in
+the browser's `localStorage`; the next upload shows ▲/▼ Δ% vs the previous
+period.
 
 ## Files
 
@@ -54,6 +76,7 @@ vendor/xlsx…js    SheetJS (Excel read/write, in-browser)
 assets/…crest.svg on-brand emblem (replace assets/psmmc-logo.png with the official logo)
 build.py          inlines everything → standalone.html + docs/index.html
 standalone.html   single-file build — open locally or drag onto any static host
+tests/            headless Chromium test suite (see tests/README.md)
 ```
 
 To rebuild the single-file outputs after editing the source:
@@ -61,6 +84,15 @@ To rebuild the single-file outputs after editing the source:
 ```bash
 python3 psmmc-dashboard/build.py
 ```
+
+## Tests
+
+```bash
+node psmmc-dashboard/tests/run.mjs
+```
+
+Runs a headless Chromium smoke suite. See `psmmc-dashboard/tests/README.md` for
+details on what is covered and how to add cases.
 
 ## Deploy / share
 
