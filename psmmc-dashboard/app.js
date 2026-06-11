@@ -9,7 +9,7 @@
   var DAYS_PER_MONTH = 30.44;
   var STATUS_OK = { DISPATCHED: 1, APPROVED: 1 };
   var REORDER_MONTHS = 6, WATCH_MONTHS = 7, ORDER_COVER_MONTHS = 9;
-  var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang";
+  var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1";
 
   // ---------- i18n ----------
   var T = {
@@ -20,12 +20,12 @@
       file_wd: "Withdrawals file", file_wd_hint: "NUPCO outbound · .xlsx",
       file_st: "Stock-on-hand file", file_st_hint: "NUPCO stock · .xls",
       btn_sample: "Load sample data",
-      upl_hint: "Drop both files to compute coverage &amp; reorder. Only medicines (NUPCO code starting with <b>5</b>) are included; medical supplies are excluded.",
+      upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
       empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with real numbers.",
       empty_btn: "Load sample data",
       foot: "Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.",
-      search_ph: "Search by code or drug name…",
+      search_ph: "Search by code or name — separate items with commas…",
       period: "Period", stock_as_of: "Stock as of", mo: "mo", sorted_by: "Sorted by",
       showing: "Showing", of: "of", items: "items", no_rows: "No rows match this filter.",
       f_all: "All", f_order_now: "Order now", f_no_movement: "No movement", f_not_in_stock: "Not in stock",
@@ -53,6 +53,8 @@
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
+      two_files: "2 files", files_word: "files",
+      baseline_meta: "saved baseline", baseline_to: "to",
       langName: "English"
     },
     ar: {
@@ -62,12 +64,12 @@
       file_wd: "ملف السحوبات", file_wd_hint: "صادر نبكو · ‎.xlsx",
       file_st: "ملف المخزون المتاح", file_st_hint: "مخزون نبكو · ‎.xls",
       btn_sample: "تحميل بيانات تجريبية",
-      upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>)؛ وتُستبعد المستلزمات الطبية.",
+      upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).",
       empty_title: "لا توجد بيانات محمّلة بعد",
       empty_text: "ارفع ملف السحوبات وملف المخزون، أو اضغط «تحميل بيانات تجريبية» لمعاينة اللوحة بأرقام حقيقية.",
       empty_btn: "تحميل بيانات تجريبية",
       foot: "أُعدّت لقسم التخطيط بمدينة الأمير سلطان الطبية العسكرية · جميع الحسابات تتم محليًا في متصفحك — لا تغادر البيانات هذه الصفحة.",
-      search_ph: "ابحث بالكود أو اسم الدواء…",
+      search_ph: "ابحث بالكود أو الاسم — افصل بين عدة بنود بفاصلة…",
       period: "الفترة", stock_as_of: "المخزون بتاريخ", mo: "شهر", sorted_by: "مرتّب حسب",
       showing: "عرض", of: "من", items: "صنف", no_rows: "لا توجد صفوف مطابقة لهذا الفلتر.",
       f_all: "الكل", f_order_now: "اطلب الآن", f_no_movement: "بدون حركة", f_not_in_stock: "غير متوفر بالمخزون",
@@ -95,6 +97,8 @@
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
+      two_files: "ملفان", files_word: "ملفات",
+      baseline_meta: "متوسط محفوظ", baseline_to: "حتى",
       langName: "عربي"
     }
   };
@@ -176,6 +180,48 @@
     var months = (minD && maxD) ? Math.max((maxD - minD) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
     return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months };
   }
+  /* Merge several parsed withdrawals files (e.g. one per warehouse) into one
+     aggregate: quantities and monthly buckets sum per code, the analysis
+     period spans the earliest..latest delivery date across all files. */
+  function combineWithdrawals(parts) {
+    var byCode = {}, monthlyByCode = {}, minS = null, maxE = null;
+    parts.forEach(function (p) {
+      Object.keys(p.byCode).forEach(function (c) {
+        var src = p.byCode[c], dst = byCode[c] || (byCode[c] = { qty: 0, desc: null, uom: null });
+        dst.qty += src.qty;
+        if (!dst.desc) dst.desc = src.desc;
+        if (!dst.uom) dst.uom = src.uom;
+      });
+      Object.keys(p.monthlyByCode).forEach(function (c) {
+        var src = p.monthlyByCode[c], dst = monthlyByCode[c] || (monthlyByCode[c] = {});
+        Object.keys(src).forEach(function (ym) { dst[ym] = (dst[ym] || 0) + src[ym]; });
+      });
+      if (p.period_start && (!minS || p.period_start < minS)) minS = p.period_start;
+      if (p.period_end && (!maxE || p.period_end > maxE)) maxE = p.period_end;
+    });
+    var months = (minS && maxE) ? Math.max((new Date(maxE) - new Date(minS)) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, files: parts.map(function (p) { return p.name; }) };
+  }
+
+  /* The latest uploaded consumption aggregate is kept on this device so a
+     future session can upload only a fresh stock file and still get coverage
+     against the saved monthly averages. */
+  function saveBaseline(wd) {
+    try {
+      localStorage.setItem(BASE_KEY, JSON.stringify({
+        savedAt: new Date().toISOString(), files: wd.files,
+        period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months,
+        byCode: wd.byCode, monthlyByCode: wd.monthlyByCode
+      }));
+    } catch (e) {}
+  }
+  function loadBaseline() {
+    try {
+      var b = JSON.parse(localStorage.getItem(BASE_KEY));
+      return (b && b.byCode && b.actual_months) ? b : null;
+    } catch (e) { return null; }
+  }
+
   function parseStock(aoa, filename, wb) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
@@ -208,7 +254,7 @@
       var total = w ? w.qty : 0, avg = w ? total / months : 0;
       var inStock = !!s, stock = inStock ? s.qty : 0;
       var cov = avg > 0 ? stock / avg : null;
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock), inStock: inStock, moved: avg > 0, trend: null });
+      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock), inStock: inStock, moved: avg > 0, trend: null });
     });
     return rows;
   }
@@ -252,15 +298,17 @@
     if (!STATE.raw.withdrawals || !STATE.raw.stock) return;
     var wd = STATE.raw.withdrawals, st = STATE.raw.stock;
     var rows = buildRows(wd, st);
-    var meta = { period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months, stock_as_of: st.stock_as_of, source: "upload" };
+    var meta = { period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months, stock_as_of: st.stock_as_of, source: "upload", baseline: wd.source === "baseline" };
     applyTrend(rows, meta);
     STATE.rows = rows; STATE.meta = meta; STATE.monthly = buildMonthly(wd, rows);
     afterData();
-    toast(LANG === "ar" ? ("تم تحليل " + fmtInt(rows.length) + " دواء · الفترة " + fmt1(meta.actual_months) + " شهر") : (fmtInt(rows.length) + " medicines analysed · period " + fmt1(meta.actual_months) + " months"));
+    var msg = LANG === "ar" ? ("تم تحليل " + fmtInt(rows.length) + " دواء · الفترة " + fmt1(meta.actual_months) + " شهر") : (fmtInt(rows.length) + " medicines analysed · period " + fmt1(meta.actual_months) + " months");
+    if (wd.source === "baseline") msg += " · " + t("baseline_meta");
+    toast(msg);
   }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null }; });
+    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: r.alt || "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null }; });
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
     STATE.wdName = "sample"; STATE.stName = "sample";
@@ -281,7 +329,15 @@
   function applyFilter(base) {
     var f = STATE.filter;
     var rows = base.filter(function (r) { if (STATE.view === "planning") { return f === "all" ? true : r.status === f; } if (f === "instock") return r.stock > 0; if (f === "outstock") return r.stock <= 0; return true; });
-    if (STATE.search) { var q = STATE.search.toLowerCase(); rows = rows.filter(function (r) { return r.code.indexOf(q) !== -1 || r.desc.toLowerCase().indexOf(q) !== -1; }); }
+    if (STATE.search) {
+      // Multi-item search: comma/plus/newline-separated terms, a row matches if ANY term hits
+      // its code, generic description, or alternate identifiers/trade name.
+      var terms = STATE.search.toLowerCase().split(/[,،;؛+\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (terms.length) rows = rows.filter(function (r) {
+        var hay = (r.code + " " + r.desc + " " + (r.alt || "")).toLowerCase();
+        return terms.some(function (q) { return hay.indexOf(q) !== -1; });
+      });
+    }
     var k = STATE.sort.key, dir = STATE.sort.dir === "asc" ? 1 : -1;
     rows.sort(function (a, b) { var va = a[k], vb = b[k]; if (k === "cov") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
     return rows;
@@ -492,6 +548,17 @@
   }
 
   // ---------- static i18n / chrome ----------
+  function wdLabel() {
+    if (STATE.wdName === "sample") return t("sample_wd");
+    var wd = STATE.raw.withdrawals;
+    if (wd && wd.source === "upload" && wd.files) {
+      if (wd.files.length === 1) return wd.files[0];
+      var n = wd.files.length === 2 ? t("two_files") : fmtInt(wd.files.length) + " " + t("files_word");
+      return n + ": " + wd.files.join(" + ");
+    }
+    if (wd && wd.source === "baseline") return t("baseline_meta") + " · " + t("baseline_to") + " " + prettyDate(wd.period_end);
+    return t("file_wd_hint");
+  }
   function applyStatic() {
     document.documentElement.lang = LANG;
     document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
@@ -501,12 +568,12 @@
       el.textContent = t(k);
     });
     $("uplHint").innerHTML = t("upl_hint");
-    $("wdName").textContent = STATE.wdName === "sample" ? t("sample_wd") : STATE.wdName ? STATE.wdName : t("file_wd_hint");
+    $("wdName").textContent = wdLabel();
     $("stName").textContent = STATE.stName === "sample" ? t("sample_st") : STATE.stName ? STATE.stName : t("file_st_hint");
     $("langName").textContent = t("langName");
     $("langBtn").classList.toggle("is-en", LANG === "en");
     if (STATE.meta.period_start) {
-      $("metaPeriod").textContent = t("period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")";
+      $("metaPeriod").textContent = t("period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")" + (STATE.meta.baseline ? " · " + t("baseline_meta") : "");
       $("metaStock").textContent = t("stock_as_of") + ": " + prettyDate(STATE.meta.stock_as_of);
     } else { $("metaPeriod").textContent = "—"; $("metaStock").textContent = "—"; }
     var mc = $("metaCount");
@@ -536,13 +603,43 @@
   // ---------- init ----------
   function setLang(l) { LANG = l; try { localStorage.setItem(LANG_KEY, l); } catch (e) {} applyStatic(); render(); }
   function init() {
+    var saved = loadBaseline();
+    if (saved) {
+      saved.source = "baseline";
+      STATE.raw.withdrawals = saved;
+      $("lblWd").classList.add("is-baseline");
+    }
     applyStatic();
     $("langBtn").onclick = function () { setLang(LANG === "ar" ? "en" : "ar"); };
     document.querySelectorAll(".tab").forEach(function (tb) { tb.onclick = function () { STATE.view = this.dataset.view; STATE.filter = "all"; STATE.search = ""; STATE.sort = STATE.view === "planning" ? { key: "cov", dir: "asc" } : { key: "stock", dir: "desc" }; render(); }; });
     $("btnSample").onclick = loadSample;
     $("btnExport").onclick = exportExcel;
-    $("fileWithdrawals").onchange = function (e) { var f = e.target.files[0]; if (!f) return; STATE.wdName = f.name; $("lblWd").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa) { if (err) { toast(t("err_wd")); return; } try { STATE.raw.withdrawals = parseWithdrawals(aoa); tryCompute(); } catch (ex) { toast(t("err_wd")); } }); };
-    $("fileStock").onchange = function (e) { var f = e.target.files[0]; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st")); } }); };
+    $("fileWithdrawals").onchange = function (e) {
+      var files = Array.prototype.slice.call(e.target.files || []);
+      e.target.value = "";
+      if (!files.length) return;
+      var parts = [], pending = files.length, failed = false;
+      files.forEach(function (f) {
+        readWorkbook(f, function (err, aoa) {
+          if (failed) return;
+          if (err) { failed = true; toast(t("err_wd")); return; }
+          try { var p = parseWithdrawals(aoa); p.name = f.name; parts.push(p); }
+          catch (ex) { failed = true; toast(t("err_wd")); return; }
+          if (--pending === 0) {
+            var wd = combineWithdrawals(parts);
+            wd.source = "upload";
+            STATE.raw.withdrawals = wd;
+            saveBaseline(wd);
+            STATE.wdName = null;
+            $("lblWd").classList.remove("is-baseline");
+            $("lblWd").classList.add("is-loaded");
+            applyStatic();
+            tryCompute();
+          }
+        });
+      });
+    };
+    $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st")); } }); };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
