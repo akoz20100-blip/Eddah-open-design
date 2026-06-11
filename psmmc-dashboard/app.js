@@ -80,6 +80,14 @@
       pr_hint: "Prices not loaded yet — add pack price, units per pack, awarded qty and free qty columns to the identifiers file to activate this section.",
       cp_copied: "Copied", cp_copy_all: "Copy all codes", cp_none: "No codes to copy",
       prn_title: "Order sheet", prn_date: "Date", prn_period: "Analysis period", prn_sign: "Approved by — name & signature",
+      bad_dates: "{n} rows had unreadable dates",
+      cols_hint: "missing columns",
+      av_empty_title: "No averages yet",
+      av_empty_text: "Monthly averages build up from your withdrawals uploads. Upload a withdrawals file with delivery dates, and history will accumulate here across sessions.",
+      av_export: "Export history", av_import: "Import history",
+      hist_export_done: "Exported history",
+      hist_import_done: "Imported {i} items · {m} months",
+      hist_import_bad: "Invalid history file — could not import",
       langName: "English"
     },
     ar: {
@@ -148,6 +156,14 @@
       pr_hint: "الأسعار غير مرفوعة بعد — أضف أعمدة سعر العلبة وعدد الحبات وكمية الترسية والكمية المجانية في ملف المعرفات لتفعيل هذه الخانة.",
       cp_copied: "نُسخ", cp_copy_all: "نسخ كل الأكواد", cp_none: "لا توجد أكواد للنسخ",
       prn_title: "ورقة الطلب", prn_date: "التاريخ", prn_period: "فترة التحليل", prn_sign: "الاعتماد — الاسم والتوقيع",
+      bad_dates: "{n} صفًا تحتوي تواريخ غير مقروءة",
+      cols_hint: "أعمدة ناقصة",
+      av_empty_title: "لا توجد متوسطات بعد",
+      av_empty_text: "تُبنى المتوسطات الشهرية تدريجيًا من رفع ملفات السحوبات. ارفع ملف سحوبات يحتوي تواريخ التسليم، وسيتراكم السجل هنا عبر الجلسات.",
+      av_export: "تصدير السجل", av_import: "استيراد السجل",
+      hist_export_done: "تم تصدير السجل",
+      hist_import_done: "تم استيراد {i} صنف · {m} شهر",
+      hist_import_bad: "ملف سجل غير صالح — تعذّر الاستيراد",
       langName: "عربي"
     }
   };
@@ -198,31 +214,86 @@
   }
 
   // ---------- modal (single overlay container, backdrop + ESC close) ----------
+  /* Opening a second modal while one is already open must not stack a second
+     document keydown listener (which would survive the first close and leak).
+     removeEventListener before add makes add/remove strictly symmetric. Focus
+     management: the previously focused element is remembered so it can be
+     restored on close, and the modal card itself receives focus so keyboard
+     and screen-reader users land inside the dialog. */
   function openModal(html, cls, onClose) {
     var bd = $("modal"), card = $("modalCard");
+    bd._prevFocus = document.activeElement;
     card.className = "modal-card" + (cls ? " " + cls : "");
     card.innerHTML = html;
+    card.setAttribute("tabindex", "-1");
     bd.hidden = false;
     document.body.style.overflow = "hidden";
     bd._onClose = onClose || null;
     bd.onclick = function (ev) { if (ev.target === bd) closeModal(); };
+    document.removeEventListener("keydown", modalEsc);
     document.addEventListener("keydown", modalEsc);
+    try { card.focus(); } catch (e) {}
   }
   function modalEsc(ev) { if (ev.key === "Escape") closeModal(); }
   function closeModal() {
     var bd = $("modal");
     if (bd.hidden) return;
     var cb = bd._onClose; bd._onClose = null;
+    var prev = bd._prevFocus; bd._prevFocus = null;
     bd.hidden = true;
     $("modalCard").innerHTML = "";
     document.body.style.overflow = "";
     document.removeEventListener("keydown", modalEsc);
     STATE.detail = null;
+    if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
     if (cb) cb();
   }
   function norm(s) { return String(s == null ? "" : s).trim().toLowerCase().replace(/\s+/g, " "); }
-  function findCol(header, cands) { var hn = header.map(norm); for (var i = 0; i < cands.length; i++) { var idx = hn.indexOf(norm(cands[i])); if (idx !== -1) return idx; } for (var j = 0; j < cands.length; j++) { var cc = norm(cands[j]); for (var k = 0; k < hn.length; k++) if (hn[k].indexOf(cc) !== -1) return k; } return -1; }
-  function parseDate(v) { if (v instanceof Date && !isNaN(v)) return v; if (typeof v === "number" && v > 20000 && v < 80000) { var u = new Date(Math.round((v - 25569) * 86400 * 1000)); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); } if (typeof v === "string") { var s = v.trim(), m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return new Date(+m[1], +m[2] - 1, +m[3]); m = s.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})/); if (m) return new Date(+m[3], +m[2] - 1, +m[1]); var d = new Date(s); if (!isNaN(d)) return d; } return null; }
+  /* Column resolution. Exact (normalized) header match wins first. The
+     substring fallback is dangerous for short tokens — a bare indexOf would
+     bind "Qty" to "Free Qty" — so candidates of length ≤ 4 must match a whole
+     header word (split on non-alphanumerics) rather than appear anywhere. */
+  function findCol(header, cands) {
+    var hn = header.map(norm);
+    for (var i = 0; i < cands.length; i++) { var idx = hn.indexOf(norm(cands[i])); if (idx !== -1) return idx; }
+    for (var j = 0; j < cands.length; j++) {
+      var cc = norm(cands[j]);
+      if (cc.length <= 4) {
+        for (var k = 0; k < hn.length; k++) {
+          var words = hn[k].split(/[^a-z0-9؀-ۿ]+/);
+          if (words.indexOf(cc) !== -1) return k;
+        }
+      } else {
+        for (var m = 0; m < hn.length; m++) if (hn[m].indexOf(cc) !== -1) return m;
+      }
+    }
+    return -1;
+  }
+  /* String dates are ambiguous; resolve them deterministically instead of
+     trusting the host's locale. ISO (YYYY-MM-DD) is tried first. The
+     DD[-/]MM[-/]YYYY branch assumes day-first (the NUPCO/Saudi convention) but
+     when the second field can only be a day (mm>12) and the first can be a
+     month (dd<=12), the file was actually MM/DD and the parts are swapped; if
+     BOTH exceed 12 the value is rejected. Only strings containing a month name
+     (letters) fall through to the native Date parser; bare numeric strings that
+     matched nothing return null so the caller can flag the row. */
+  function parseDate(v) {
+    if (v instanceof Date && !isNaN(v)) return v;
+    if (typeof v === "number" && v > 20000 && v < 80000) { var u = new Date(Math.round((v - 25569) * 86400 * 1000)); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); }
+    if (typeof v === "string") {
+      var s = v.trim(), m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+      if (m) {
+        var dd = +m[1], mm = +m[2], yyyy = +m[3];
+        if (mm > 12) { if (dd <= 12) { var tmp = dd; dd = mm; mm = tmp; } else return null; }
+        if (mm < 1 || dd < 1 || dd > 31) return null;
+        return new Date(yyyy, mm - 1, dd);
+      }
+      if (/[A-Za-z؀-ۿ]/.test(s)) { var d = new Date(s); if (!isNaN(d)) return d; }
+    }
+    return null;
+  }
   /* "Stock as of" from the filename: an 8-digit run is accepted only when it
      forms a real calendar date — DDMMYYYY (the NUPCO export convention) is
      preferred, YYYYMMDD is the fallback; anything else returns null so the
@@ -257,6 +328,16 @@
   }
 
   // ---------- parsers ----------
+  /* A parser throws Error("cols:<English headers>") when a REQUIRED column is
+     missing; this turns that into a " · missing columns: <headers>" suffix for
+     the failure toast so a planner can see exactly which header their file
+     lacks. Non-column errors (empty, etc.) yield "". The column names stay in
+     English — they are the literal file headers the planner must add. */
+  function colsHint(err) {
+    var msg = err && err.message ? String(err.message) : "";
+    var m = msg.match(/^cols:(.+)$/);
+    return m ? " · " + t("cols_hint") + ": " + m[1] : "";
+  }
   function parseWithdrawals(aoa) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
@@ -265,8 +346,8 @@
       di = findCol(H, ["Delivery Date", "Ordered Date", "Date"]),
       si = findCol(H, ["Status"]), ui = findCol(H, ["UOM", "Unit"]),
       de = findCol(H, ["Description", "Item Description", "Generic Item description"]);
-    if (ci < 0 || qi < 0) throw new Error("cols");
-    var byCode = {}, monthlyByCode = {}, minD = null, maxD = null;
+    if (ci < 0 || qi < 0) throw new Error("cols:NUPCO Material/Order Qty");
+    var byCode = {}, monthlyByCode = {}, minD = null, maxD = null, badDates = 0;
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
       if (si >= 0) { var st = String(row[si] || "").trim().toUpperCase(); if (!STATUS_OK[st]) continue; }
@@ -277,25 +358,31 @@
       if (!rec.desc && de >= 0 && row[de]) rec.desc = String(row[de]).trim();
       if (!rec.uom && ui >= 0 && row[ui]) rec.uom = String(row[ui]).trim();
       if (di >= 0) {
-        var d = parseDate(row[di]);
+        var cell = row[di];
+        var d = parseDate(cell);
         if (d) {
           if (!minD || d < minD) minD = d;
           if (!maxD || d > maxD) maxD = d;
           var ym = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
           var mc = monthlyByCode[code] || (monthlyByCode[code] = {});
           mc[ym] = (mc[ym] || 0) + q;
+        } else if (cell != null && String(cell).trim() !== "") {
+          // A non-empty cell we could not read: surfaced to the user so a
+          // mistyped/locale-mangled date is not silently dropped from the period.
+          badDates++;
         }
       }
     }
     var months = (minD && maxD) ? Math.max((maxD - minD) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months };
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months, badDates: badDates };
   }
   /* Merge several parsed withdrawals files (e.g. one per warehouse) into one
      aggregate: quantities and monthly buckets sum per code, the analysis
      period spans the earliest..latest delivery date across all files. */
   function combineWithdrawals(parts) {
-    var byCode = {}, monthlyByCode = {}, minS = null, maxE = null;
+    var byCode = {}, monthlyByCode = {}, minS = null, maxE = null, badDates = 0;
     parts.forEach(function (p) {
+      badDates += p.badDates || 0;
       Object.keys(p.byCode).forEach(function (c) {
         var src = p.byCode[c], dst = byCode[c] || (byCode[c] = { qty: 0, desc: null, uom: null });
         dst.qty += src.qty;
@@ -310,7 +397,7 @@
       if (p.period_end && (!maxE || p.period_end > maxE)) maxE = p.period_end;
     });
     var months = (minS && maxE) ? Math.max((parseIsoLocal(maxE) - parseIsoLocal(minS)) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, files: parts.map(function (p) { return p.name; }) };
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, badDates: badDates, files: parts.map(function (p) { return p.name; }) };
   }
   /* Renamed copies of the same export must not double-count: two parsed parts
      with the identical period AND the identical grand-total quantity are the
@@ -333,17 +420,40 @@
      success message right after saving, so the warning waits until that toast
      has had its time on screen instead of being overwritten instantly. */
   function warnSaveFailed() { setTimeout(function () { toast(t("save_failed")); }, 3000); }
+  /* Single localStorage writer for every persisted blob (snapshots, baseline,
+     map, history). JSON.stringify once, then setItem. On a quota error the
+     history blob alone has a recovery path — prune to 12 months and retry,
+     toasting hist_quota on success — while every other key fails outright. ANY
+     final failure surfaces through the save_failed warning so a silent loss of
+     "remembered on this device" state never goes unnoticed.
+     opts: { prune: fn(obj) used on quota for history, quotaToast: i18n key }. */
+  function persist(key, obj, opts) {
+    opts = opts || {};
+    var json;
+    try { json = JSON.stringify(obj); } catch (e) { warnSaveFailed(); return false; }
+    try { localStorage.setItem(key, json); return true; }
+    catch (e) {
+      if (opts.prune) {
+        try {
+          opts.prune(obj);
+          localStorage.setItem(key, JSON.stringify(obj));
+          if (opts.quotaToast) toast(t(opts.quotaToast));
+          return true;
+        } catch (e2) { warnSaveFailed(); return false; }
+      }
+      warnSaveFailed();
+      return false;
+    }
+  }
   /* The latest uploaded consumption aggregate is kept on this device so a
      future session can upload only a fresh stock file and still get coverage
      against the saved monthly averages. */
   function saveBaseline(wd) {
-    try {
-      localStorage.setItem(BASE_KEY, JSON.stringify({
-        savedAt: new Date().toISOString(), files: wd.files,
-        period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months,
-        byCode: wd.byCode, monthlyByCode: wd.monthlyByCode
-      }));
-    } catch (e) { warnSaveFailed(); }
+    persist(BASE_KEY, {
+      savedAt: new Date().toISOString(), files: wd.files,
+      period_start: wd.period_start, period_end: wd.period_end, actual_months: wd.actual_months,
+      byCode: wd.byCode, monthlyByCode: wd.monthlyByCode
+    });
   }
   function loadBaseline() {
     try {
@@ -362,11 +472,7 @@
   var HIST = null;
   function loadHistory() { try { var h = JSON.parse(localStorage.getItem(HIST_KEY)); return h && h.items ? h : null; } catch (e) { return null; } }
   function saveHistory(h) {
-    try { localStorage.setItem(HIST_KEY, JSON.stringify(h)); }
-    catch (e) {
-      pruneHistory(h, 12);
-      try { localStorage.setItem(HIST_KEY, JSON.stringify(h)); toast(t("hist_quota")); } catch (e2) {}
-    }
+    persist(HIST_KEY, h, { prune: function (obj) { pruneHistory(obj, 12); }, quotaToast: "hist_quota" });
   }
   function ymOf(iso) { return iso ? iso.slice(0, 7) : null; }
   function ymRange(startIso, endIso) {
@@ -497,7 +603,7 @@
       up = findCol(H, ["Units per Pack", "Pack Size", "Units/Pack", "عدد الحبات", "عدد الوحدات"]),
       aq = findCol(H, ["Awarded Qty", "Award Quantity", "Tender Qty", "كمية الترسية"]),
       fq = findCol(H, ["Free Qty", "Free Quantity", "Bonus Qty", "Bonus", "الكمية المجانية"]);
-    if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0 && cl < 0 && pp < 0)) throw new Error("cols");
+    if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0 && cl < 0 && pp < 0)) throw new Error("cols:NUPCO Material");
     var byCode = {}, n = 0, priced = 0;
     function val(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
     function numVal(row, idx) { if (idx < 0) return null; var v = parseFloat(row[idx]); return isFinite(v) && v > 0 ? v : null; }
@@ -517,7 +623,7 @@
     if (!n) throw new Error("empty-map");
     return { byCode: byCode, count: n, priced: priced };
   }
-  function saveMap(map) { try { localStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch (e) { warnSaveFailed(); } }
+  function saveMap(map) { persist(MAP_KEY, map); }
   function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
   function applyMap(rows) {
     // Identifiers from the mapping file win, but values already read from the
@@ -566,7 +672,7 @@
       vi = findCol(H, ["Vendor Name", "Agent Name", "Supplier Name", "اسم الوكيل", "الوكيل", "Vendor", "Agent", "Supplier", "Manufacturer"]),
       gi = findCol(H, ["Scientific Name", "Scientific"]),
       mi = findCol(H, ["MSD Code", "MSD"]);
-    if (ci < 0) throw new Error("cols");
+    if (ci < 0) throw new Error("cols:Generic Item Number");
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
     function txt(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
@@ -624,7 +730,7 @@
 
   // ---------- trend ----------
   function loadSnaps() { try { return JSON.parse(localStorage.getItem(SNAP_KEY)) || []; } catch (e) { return []; } }
-  function saveSnaps(s) { try { localStorage.setItem(SNAP_KEY, JSON.stringify(s.slice(-12))); } catch (e) {} }
+  function saveSnaps(s) { persist(SNAP_KEY, s.slice(-12)); }
   function applyTrend(rows, meta) {
     if (meta.source === "sample") return;
     var snaps = loadSnaps(), prev = null;
@@ -964,7 +1070,7 @@
     var extra = r.trade || (r.sci && r.sci !== r.desc ? r.sci : null);
     return '<td class="desc">' + esc(r.desc) + (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + "</td>";
   }
-  function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '">' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
+  function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; var ariaSort = on ? ' aria-sort="' + (s.dir === "asc" ? "ascending" : "descending") + '"' : ""; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '"' + ariaSort + '>' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
   function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
   var SORT_LABEL = { code: "c_code", desc: "c_desc", total: "c_total", avg: "c_avg", stock: "c_stock", cov: "c_cov", qty9: "c_qty9", sug: "c_sug", trendPct: "c_delta", unitPrice: "pr_unit_price", stockValue: "c_value" };
@@ -979,6 +1085,31 @@
   }
 
   // ---------- views ----------
+  /* The table head + body for a view, built from the CURRENT filter/search/sort
+     state. Shared by the full view render and renderTableOnly(), so a keystroke
+     in the search box can rebuild ONLY the table card with identical markup. */
+  function buildTableHTML(view, base) {
+    var rows = applyFilter(base), head, body;
+    if (view === "management") {
+      var priceTh = hasPrices() ? th("unitPrice", t("pr_unit_price"), true) : "";
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + priceTh + th("stockValue", t("c_value"), true) + "</tr></thead>";
+      body = rows.map(function (r) {
+        var priceTd = hasPrices() ? '<td class="right num">' + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "";
+        var valTd = '<td class="right ' + (r.stockValue == null ? "muted" : "num") + '">' + (r.stockValue == null ? "—" : fmtInt(r.stockValue)) + "</td>";
+        return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td>" + priceTd + valTd + "</tr>";
+      }).join("");
+    } else if (view === "averages") {
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_spark") + "</th>" + th("avg", t("c_avg"), true) + th("trendPct", t("c_delta")) + th("stock", t("c_stock"), true) + "<th>" + t("c_status") + "</th></tr></thead>";
+      body = rows.map(function (r) {
+        var ser = monthlySeriesFor(r.code);
+        return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + pill(r.status) + "</td></tr>";
+      }).join("");
+    } else {
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
+      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + "</td></tr>"; }).join("");
+    }
+    return tableCard(head, body, rows.length, base.length);
+  }
   function renderPlanning(base, c) {
     var s = decisionStats(base);
     var deltaBadge = s.momPct == null ? "" : '<span class="kdelta ' + (s.momPct >= 0 ? "up" : "down") + ' num">' + (s.momPct >= 0 ? "▲ +" : "▼ ") + (s.momPct * 100).toFixed(0) + "%</span>";
@@ -995,10 +1126,7 @@
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
-    var rows = applyFilter(base);
-    var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
-    var body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + "</td></tr>"; }).join("");
-    return cards + secline + toolbar(filters) + tableCard(head, body, rows.length, base.length);
+    return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
     return '<button type="button" class="fchip" id="copyAllCodes"><span class="fic">' + ICON.copy + '</span>' + t("cp_copy_all") + '</button>';
@@ -1033,15 +1161,7 @@
       + valueCard
       + '</div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + copyAllChip() + "</div>";
-    var rows = applyFilter(base);
-    var priceTh = hasPrices() ? th("unitPrice", t("pr_unit_price"), true) : "";
-    var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + priceTh + th("stockValue", t("c_value"), true) + "</tr></thead>";
-    var body = rows.map(function (r) {
-      var priceTd = hasPrices() ? '<td class="right num">' + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "";
-      var valTd = '<td class="right ' + (r.stockValue == null ? "muted" : "num") + '">' + (r.stockValue == null ? "—" : fmtInt(r.stockValue)) + "</td>";
-      return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + pill(r.status) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td>" + priceTd + valTd + "</tr>";
-    }).join("");
-    return cards + toolbar(filters) + tableCard(head, body, rows.length, base.length);
+    return cards + toolbar(filters) + buildTableHTML("management", base);
   }
   function medianBuckets(base) {
     var covs = []; base.forEach(function (r) { if (r.inStock && r.moved && r.cov != null) covs.push(r.cov); });
@@ -1056,6 +1176,15 @@
   /* Averages view: every moving item with its saved-history sparkline,
      monthly average and Δ% vs the previous upload. */
   function renderAverages(base, c) {
+    // Guided empty state: rows exist (so render() did not early-return) but no
+    // moving items and no saved history means there is nothing to average yet.
+    // Tell the user history accrues from withdrawals uploads instead of showing
+    // a bare empty table.
+    if (!base.length && !histMonths()) {
+      return '<div class="empty card"><span class="tile tile-lav">' + ICON.chart + '</span>'
+        + '<h3>' + t("av_empty_title") + '</h3>'
+        + '<p>' + t("av_empty_text") + '</p></div>';
+    }
     var rising = 0, falling = 0;
     base.forEach(function (r) { if (r.trendPct != null) { if (r.trendPct > 0.10) rising++; else if (r.trendPct < -0.10) falling++; } });
     var hm = histMonths();
@@ -1063,15 +1192,11 @@
       + (hm ? '<span class="secbadge">' + t("av_hist") + ' <b class="num">' + fmtInt(hm) + " " + t("mo") + '</b></span>' : "")
       + '<span class="secbadge">' + t("av_moving") + ' <b class="num">' + fmtInt(base.length) + '</b></span>'
       + '<span class="secbadge" style="color:var(--coral)">▲ ' + t("av_rising") + ' <b class="num">' + fmtInt(rising) + '</b></span>'
-      + '<span class="secbadge" style="color:var(--blue)">▼ ' + t("av_falling") + ' <b class="num">' + fmtInt(falling) + '</b></span></div>';
+      + '<span class="secbadge" style="color:var(--blue)">▼ ' + t("av_falling") + ' <b class="num">' + fmtInt(falling) + '</b></span>'
+      + '<button type="button" class="btn-soft" id="histExport">' + ICON.download + t("av_export") + '</button>'
+      + '<button type="button" class="btn-soft" id="histImport">' + ICON.list + t("av_import") + '</button></div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("rising", "▲ " + t("f_rising"), rising) + fchip("falling", "▼ " + t("f_falling"), falling) + fchip("newitem", t("f_new"), c.newitem) + copyAllChip() + "</div>";
-    var rows = applyFilter(base);
-    var head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_spark") + "</th>" + th("avg", t("c_avg"), true) + th("trendPct", t("c_delta")) + th("stock", t("c_stock"), true) + "<th>" + t("c_status") + "</th></tr></thead>";
-    var body = rows.map(function (r) {
-      var ser = monthlySeriesFor(r.code);
-      return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + pill(r.status) + "</td></tr>";
-    }).join("");
-    return secline + toolbar(filters) + tableCard(head, body, rows.length, base.length) + '<p class="dt-note" style="margin:10px 4px">' + t("av_tap") + '</p>';
+    return secline + toolbar(filters) + buildTableHTML("averages", base) + '<p class="dt-note" style="margin:10px 4px">' + t("av_tap") + '</p>';
   }
 
   /* Item drill-down: full monthly bar history (seasonality), stats, prices
@@ -1164,28 +1289,71 @@
   }
   function wireCopyChips(root) {
     (root || document).querySelectorAll("[data-copy]").forEach(function (el) {
+      // Keyboard-actionable: copy chips and code cells become focusable buttons
+      // so a planner can Tab to a code and press Enter/Space to copy it.
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("role", "button");
       el.onclick = function (ev) { ev.stopPropagation(); copyText(this.getAttribute("data-copy")); };
+      el.onkeydown = function (ev) {
+        if (ev.key === "Enter" || ev.key === " " || ev.key === "Spacebar") {
+          ev.preventDefault(); ev.stopPropagation();
+          copyText(this.getAttribute("data-copy"));
+        }
+      };
     });
   }
-  function wireDynamic() {
-    var si = $("searchInput");
-    if (si) si.oninput = function () { STATE.search = this.value.trim(); var pos = this.selectionStart; render(); var s2 = $("searchInput"); if (s2) { s2.focus(); try { s2.setSelectionRange(pos, pos); } catch (e) {} } };
-    document.querySelectorAll(".fchip[data-filter]").forEach(function (b) { b.onclick = function () { STATE.filter = this.dataset.filter; render(); }; });
-    document.querySelectorAll("th.sortable").forEach(function (h) { h.onclick = function () { var k = this.dataset.sort; if (STATE.sort.key === k) STATE.sort.dir = STATE.sort.dir === "asc" ? "desc" : "asc"; else STATE.sort = { key: k, dir: (k === "desc" || k === "code") ? "asc" : "desc" }; render(); }; });
-    wireCopyChips($("content"));
-    document.querySelectorAll("#content [data-code]").forEach(function (el) {
+  /* Handlers that live INSIDE the table card (sort headers, row drill-down,
+     copy chips). Re-bound by both the full render and renderTableOnly() so a
+     table-only refresh keeps the table interactive without rebuilding the rest
+     of the view. Scoped to a root element so renderTableOnly can pass just the
+     freshly replaced .tablecard. */
+  function wireTable(root) {
+    root = root || document;
+    root.querySelectorAll("th.sortable").forEach(function (h) { h.onclick = function () { var k = this.dataset.sort; if (STATE.sort.key === k) STATE.sort.dir = STATE.sort.dir === "asc" ? "desc" : "asc"; else STATE.sort = { key: k, dir: (k === "desc" || k === "code") ? "asc" : "desc" }; renderTableOnly(); }; });
+    wireCopyChips(root);
+    root.querySelectorAll("[data-code]").forEach(function (el) {
       el.onclick = function (ev) {
         // A click on a copy target inside the row is handled above.
         if (ev.target.closest && ev.target.closest("[data-copy]")) return;
         openDetail(this.getAttribute("data-code"));
       };
     });
+  }
+  var _searchT = null;
+  function wireDynamic() {
+    var si = $("searchInput");
+    if (si) si.oninput = function () {
+      // Debounce: a fast typist should not trigger a re-render per keystroke.
+      // After the pause we re-render ONLY the table card, leaving the search
+      // input element itself untouched so the caret stays put with no hack.
+      var v = this.value.trim();
+      clearTimeout(_searchT);
+      _searchT = setTimeout(function () { STATE.search = v; renderTableOnly(); }, 150);
+    };
+    document.querySelectorAll(".fchip[data-filter]").forEach(function (b) { b.onclick = function () { STATE.filter = this.dataset.filter; render(); }; });
+    wireTable($("content"));
     var va = $("osViewAll"); if (va) va.onclick = function () { STATE.filter = "order_now"; render(); var tb = document.querySelector(".toolbar"); if (tb) tb.scrollIntoView({ behavior: "smooth", block: "start" }); };
     var oe = $("osExport"); if (oe) oe.onclick = exportOrderSheet;
     var om = $("osEmail"); if (om) om.onclick = emailReport;
     var ow = $("osWa"); if (ow) ow.onclick = waReport;
     var op = $("osPrint"); if (op) op.onclick = printOrderSheet;
     var ca = $("copyAllCodes"); if (ca) ca.onclick = copyAllCodes;
+    var he = $("histExport"); if (he) he.onclick = exportHistory;
+    var hi = $("histImport"); if (hi) hi.onclick = importHistory;
+  }
+  /* Re-render ONLY the table card in place: search/filter/sort change the rows
+     shown but never the card counts (filterCounts reads the unsearched base),
+     so the cards, secline, filters and search input are left untouched. The new
+     .tablecard replaces the old one's outerHTML and its handlers are rewired. */
+  function renderTableOnly() {
+    var old = document.querySelector("#content .tablecard");
+    if (!old) { render(); return; }
+    var base = viewBase();
+    var tmp = document.createElement("div");
+    tmp.innerHTML = buildTableHTML(STATE.view, base);
+    var fresh = tmp.firstChild;
+    old.parentNode.replaceChild(fresh, old);
+    wireTable(fresh);
   }
 
   // ---------- static i18n / chrome ----------
@@ -1327,6 +1495,77 @@
     document.body.appendChild(div);
     window.print();
   }
+  /* ---------- history export / import ----------
+     The accumulated ledger (history + baseline + map) is the only state that
+     makes a returning device useful; a lost or replaced device would otherwise
+     start from zero. EXPORT writes a single JSON file (no clipboard) the user
+     can keep; IMPORT replaces that state via the persist helper and re-runs the
+     same init-time hydration so the dashboard behaves as if the data had been
+     uploaded here. */
+  function exportHistory() {
+    var payload = {
+      v: 1,
+      history: HIST || loadHistory() || { v: 1, items: {}, uploads: [] },
+      baseline: loadBaseline(),
+      map: MAP || loadMap(),
+      exportedAt: new Date().toISOString()
+    };
+    var blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "psmmc_history_" + isoDate(new Date()) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast(t("hist_export_done"));
+  }
+  function importHistory() {
+    var inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "application/json";
+    inp.style.display = "none";
+    inp.onchange = function () {
+      var f = inp.files && inp.files[0];
+      if (!f) { cleanup(); return; }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          if (!data || data.v !== 1 || !data.history || typeof data.history.items !== "object" || data.history.items === null) {
+            throw new Error("bad");
+          }
+          // Replace persisted state, then re-run the same hydration init() does.
+          persist(HIST_KEY, data.history);
+          HIST = data.history;
+          if (data.baseline && data.baseline.byCode) {
+            persist(BASE_KEY, data.baseline);
+            STATE.raw.withdrawals = (function () { var b = loadBaseline(); if (b) b.source = "baseline"; return b; })();
+            $("lblWd").classList.add("is-baseline");
+          }
+          if (data.map && data.map.byCode) {
+            persist(MAP_KEY, data.map);
+            MAP = loadMap();
+            $("lblMp").classList.add("is-baseline");
+            if (STATE.rows.length) applyMap(STATE.rows);
+          }
+          applyStatic();
+          if (STATE.rows.length) render();
+          var items = Object.keys(data.history.items).length;
+          toast(tFmt("hist_import_done", { i: fmtInt(items), m: fmtInt(histMonths()) }));
+        } catch (ex) {
+          toast(t("hist_import_bad"));
+        }
+        cleanup();
+      };
+      reader.onerror = function () { toast(t("hist_import_bad")); cleanup(); };
+      reader.readAsText(f);
+    };
+    function cleanup() { if (inp.parentNode) inp.parentNode.removeChild(inp); }
+    document.body.appendChild(inp);
+    inp.click();
+  }
   function copyAllCodes() {
     var rows = applyFilter(viewBase());
     if (!rows.length) { toast(t("cp_none")); return; }
@@ -1339,6 +1578,11 @@
   // ---------- init ----------
   function setLang(l) { LANG = l; try { localStorage.setItem(LANG_KEY, l); } catch (e) {} applyStatic(); render(); }
   function init() {
+    // The toast is a polite live region so screen readers announce save
+    // warnings, copy confirmations and import results (the HTML markup is owned
+    // by another surface, so this attribute is set from JS).
+    var toastEl = $("toast");
+    if (toastEl) { toastEl.setAttribute("aria-live", "polite"); toastEl.setAttribute("role", "status"); }
     var saved = loadBaseline();
     if (saved) {
       saved.source = "baseline";
@@ -1365,9 +1609,12 @@
       files.forEach(function (f) {
         readWorkbook(f, function (err, aoa) {
           if (failed) return;
-          if (err) { failed = true; toast(t("err_wd")); return; }
+          // Abort-all on the first bad file, but NAME it so the user knows
+          // which of several selected files to fix. A missing required column
+          // appends its English header hint after the generic message.
+          if (err) { failed = true; toast(t("err_wd") + ": " + f.name); return; }
           try { var p = parseWithdrawals(aoa); p.name = f.name; parts.push(p); }
-          catch (ex) { failed = true; toast(t("err_wd")); return; }
+          catch (ex) { failed = true; toast(t("err_wd") + ": " + f.name + colsHint(ex)); return; }
           if (--pending === 0) {
             parts = dedupeParts(parts, dupFiles);
             var wd = combineWithdrawals(parts);
@@ -1386,12 +1633,15 @@
               $("lblWd").classList.add("is-loaded");
               applyStatic();
               tryCompute();
+              // Surface rows whose date cell was non-empty but unreadable, so a
+              // locale-mangled column is not silently dropped from the period.
+              if (wd.badDates > 0) toast(tFmt("bad_dates", { n: fmtInt(wd.badDates) }));
             });
           }
         });
       });
     };
-    $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st")); } }); };
+    $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st") + colsHint(ex)); } }); };
     $("fileMap").onchange = function (e) {
       var f = e.target.files[0];
       e.target.value = "";
@@ -1418,7 +1668,7 @@
           applyStatic();
           render();
           toast(fmtInt(linked) + " " + t("mp_linked"));
-        } catch (ex) { toast(t("err_mp")); }
+        } catch (ex) { toast(t("err_mp") + colsHint(ex)); }
       });
     };
   }
