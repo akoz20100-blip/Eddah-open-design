@@ -5,6 +5,50 @@ build pipeline, sample data, publish workflow). The surrounding Open Design mono
 fork is out of scope except where it touches the dashboard (`docs/index.html`,
 `.github/workflows/psmmc-pages.yml`).
 
+## Inventory-intelligence round (2026-06-12) — owner feature spec
+
+New owner spec: stockout/reorder projection, expired & expiry-risk handling,
+budget forecast, planner scorecard, styled xlsx export. Scoped this round to
+the **price-independent** features (owner decision); Features 5 (budget page)
+and 6 (planner scorecard money) deferred until a price file + planner file are
+supplied — only the join slots are built now.
+
+**Methods & assumptions chosen this round (spec requires documenting):**
+
+- **Daily burn rate** = monthly average ÷ 30.44, where monthly average = total
+  DISPATCHED/APPROVED withdrawal qty ÷ the rounded detected period months. There
+  is *no separate AMU/consumption file* in the project; the NUPCO outbound
+  (withdrawals) file is the consumption source, so burn is derived from it. The
+  rounded months are used because the period-confirm modal applies the
+  display-rounded value.
+- **Available stock** = `Total Available Qty` (already excludes Hold/Allocated/
+  Picked). Verified against the real file: **0 expired units carry available
+  qty** — NUPCO routes expired stock to Hold (`Total Qty`/`Total Hold Qty`),
+  so excluding expired from "available/coverage" is a no-op on the headline
+  figures, and the future Expired view must read `Total Qty` (190 expired drug
+  batches / 121 products / ~2.7M units), not Available.
+- **Stockout Date** = stock-as-of + (available ÷ daily burn) days, anchored on
+  the file's own as-of date (traceable to the data) rather than wall-clock
+  today; production files are 1-2 days old so the two coincide. (Spec said
+  "today + days_to_zero"; documented deviation for traceability with stale dev
+  files.)
+- **Reorder-By Date** = stock-as-of + (coverage − 6) months; **ORDER NOW** when
+  that date ≤ today. The 6-month line reuses the existing `REORDER_MONTHS`
+  (= 180-day-equivalent), so ORDER NOW ⟺ the existing `order_now` status.
+- **Planner join** = by `Generic Item Number`, with `Item Family Group` as
+  fallback; "Unassigned" until a planner-mapping file is dropped into the new
+  optional upload slot. No re-architecting needed when the file arrives.
+- **Prices**: none in the project → all SAR-value outputs (expired value,
+  at-risk value, budget totals, inventory value per planner) remain deferred and
+  flagged, per the spec's degrade-gracefully rule.
+
+PR-A (Features 1+2) shipped: Planner + Stockout/Reorder columns on the planning
+table, ORDER NOW flag, projection block + daily burn in the item card, planner
+upload slot. `spec-projection` (red-first) asserts the rendered dates against an
+independent mirror on the real files (LINAGLIPTIN 5MG cov 3.7 → stockout 28 May
+2026 / ORDER NOW; LEVETIRACETAM 500MG cov 11.2 → 10 Jan 2027 / healthy) and
+proves the planner join with a synthetic mapping. Suite 23 → 24 specs.
+
 ## Routine v2 — Round 1 (2026-06-12)
 
 Project moved to `projects/psmmc-dashboard/` (Phase 0.2). English is the

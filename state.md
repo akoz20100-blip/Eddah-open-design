@@ -1,5 +1,21 @@
 # state.md — Dash project loop state
 
+## Inventory-intelligence round (2026-06-12) — owner feature spec (in progress)
+
+Owner dropped a 6-feature spec (stockout/reorder projection, expired handling,
+expiry-risk, budget forecast, planner scorecard, styled xlsx export). Decisions:
+**extend the live dashboard** (not a separate tool), **price-independent features
+first** (F1-F4 + export; F5/F6 deferred until price+planner files arrive — only
+join slots built now). Methods documented in AUDIT.md. Branch
+`claude/beautiful-wright-0zzwws`, sequential PRs.
+
+| PR | Item | Proof |
+|----|------|-------|
+| PR-A | Features 1+2 — Planner column + Stockout/Reorder-By dates + ORDER NOW on the planning table; projection block + daily burn in the item card; new optional planner-mapping upload slot with by-code/by-family join (Unassigned until file dropped). Daily burn = avg ÷ 30.44; stockout anchored on stock-as-of. | `spec-projection` red-first → green vs independent mirror on real files (LINAGLIPTIN cov 3.7 → 28 May 2026 ORDER NOW; LEVETIRACETAM cov 11.2 → 10 Jan 2027 healthy) + planner join proven via synthetic file; suite 23→24. Fixed 2 index/debounce-brittle specs (spec-dedup col shift, spec-realdata → setSearch). |
+
+Remaining this round: PR-B (F3 expired view + F4 at-risk view), PR-C (styled xlsx export). Then stop for owner's next-round decision.
+
+
 ## Routine v2 — Round 2 (2026-06-12) — owner bug + ROADMAP steps 1–3
 
 - Baseline HEAD: `b78b8e6` (merge of PR #12) · suite 19/19 green before changes.

@@ -12,7 +12,7 @@
   var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
-  var WATCH_KEY = "psmmc_watch_v1";
+  var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1";
 
   // ---------- i18n ----------
   var T = {
@@ -151,6 +151,14 @@
       qs_award: "awarded qty",
       qs_free: "free qty",
       c_expiry: "Expiry (mo)",
+      c_planner: "Planner", c_stockout: "Stockout / Reorder",
+      planner_unassigned: "Unassigned",
+      proj_reorder: "reorder by",
+      order_now_flag: "ORDER NOW",
+      dt_stockout: "projected stockout", dt_reorder: "reorder by", dt_burn: "daily burn (units)",
+      file_pl: "Planner mapping file", file_pl_hint: "optional · NUPCO code + planner name + email",
+      err_pl: "Could not read the planner file (needs a NUPCO code or item-family column plus a planner-name column)",
+      pl_loaded: "{n} planner links saved",
       exp_risk_tip: "≈ {u} units may expire before they can be used at the current rate · effective coverage {m} mo",
       exp_expired: "expired",
       exp_approx_tip: "approximate — from the latest dispatch batch in the withdrawals file",
@@ -301,6 +309,14 @@
       qs_award: "كمية الترسية",
       qs_free: "الكمية المجانية",
       c_expiry: "الصلاحية (شهر)",
+      c_planner: "المخطط", c_stockout: "النفاد / إعادة الطلب",
+      planner_unassigned: "غير معيّن",
+      proj_reorder: "أعد الطلب قبل",
+      order_now_flag: "اطلب الآن",
+      dt_stockout: "تاريخ النفاد المتوقع", dt_reorder: "أعد الطلب قبل", dt_burn: "الاستهلاك اليومي (وحدة)",
+      file_pl: "ملف ربط المخططين", file_pl_hint: "اختياري · كود نبكو + اسم المخطط + الإيميل",
+      err_pl: "تعذّر قراءة ملف المخططين (يلزم عمود كود نبكو أو مجموعة الصنف + عمود اسم المخطط)",
+      pl_loaded: "تم حفظ {n} ربطًا للمخططين",
       exp_risk_tip: "≈ {u} وحدة قد تنتهي صلاحيتها قبل صرفها بالمعدل الحالي · التغطية الفعلية {m} شهر",
       exp_expired: "منتهية الصلاحية",
       exp_approx_tip: "تقريبي — من آخر دفعة صرف في ملف السحوبات",
@@ -506,6 +522,9 @@
      math (month buckets, last-day checks) agrees with isoDate() everywhere. */
   function parseIsoLocal(iso) { if (!iso) return null; var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/); if (!m) return null; return new Date(+m[1], +m[2] - 1, +m[3]); }
   function prettyDate(s) { if (!s) return "—"; var d = s instanceof Date ? s : (parseIsoLocal(s) || new Date(s)); if (isNaN(d)) return String(s); return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  /* Calendar-date addition that agrees with isoDate/parseIsoLocal everywhere
+     (local-midnight parts, no UTC drift). Used for stockout/reorder projection. */
+  function addDaysIso(baseIso, n) { var d = parseIsoLocal(baseIso); if (!d || !isFinite(n)) return null; return isoDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.round(n))); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   // ---------- workbook ----------
@@ -1361,6 +1380,44 @@
      repeated search. */
   var WATCH = null;
   function loadWatch() { return loadJson(WATCH_KEY, function (v) { return v.byCode; }); }
+  /* ---------- planner-mapping join slot (FEATURE 1/6 infrastructure) ----------
+     Built now even though the real planner file is not yet provided: maps each
+     product to a responsible planner {name,email} by `Generic Item Number`,
+     with `Item Family Group` as a fallback. Until a file is uploaded every
+     product reads "Unassigned"; when the owner drops the file into this slot it
+     populates with no re-architecting. Persisted on-device like the rest. */
+  var PLANNERS = null;
+  function loadPlanners() { return loadJson(PLANNER_KEY, function (v) { return v.byCode || v.byFamily; }); }
+  function parsePlannerMap(aoa) {
+    if (!aoa || !aoa.length) throw new Error("empty");
+    var H = aoa[0];
+    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
+      ni = findCol(H, ["Planner Name", "Planner", "Responsible Planner", "Buyer", "Owner", "اسم المخطط", "المخطط", "المسؤول"]),
+      ei = findCol(H, ["Planner Email", "Planner E-mail", "Email", "E-mail", "البريد الإلكتروني", "الإيميل", "البريد"]),
+      fi = findCol(H, ["Item Family Group", "Item Family Short Key", "Family", "المجموعة", "مجموعة الصنف"]);
+    if ((ci < 0 && fi < 0) || ni < 0) throw new Error("cols:NUPCO Code/Planner Name");
+    var byCode = {}, byFamily = {}, n = 0;
+    for (var r = 1; r < aoa.length; r++) {
+      var row = aoa[r]; if (!row) continue;
+      var name = ni >= 0 && row[ni] != null ? String(row[ni]).trim() : ""; if (!name) continue;
+      var email = ei >= 0 && row[ei] != null && String(row[ei]).trim() !== "" ? String(row[ei]).trim() : null;
+      var rec = { name: name, email: email };
+      var code = ci >= 0 ? normCode(row[ci]) : null;
+      if (code && isDrug(code)) { byCode[code] = rec; n++; }
+      else if (fi >= 0 && row[fi] != null && String(row[fi]).trim() !== "") { byFamily[String(row[fi]).trim().toUpperCase()] = rec; n++; }
+    }
+    if (!n) throw new Error("empty-planner");
+    return { byCode: byCode, byFamily: byFamily, count: n };
+  }
+  function plannerFor(r) {
+    if (!PLANNERS) return null;
+    var p = PLANNERS.byCode && PLANNERS.byCode[r.code];
+    if (!p && PLANNERS.byFamily && r.family) p = PLANNERS.byFamily[String(r.family).toUpperCase()];
+    return p || null;
+  }
+  function plannerName(r) { var p = plannerFor(r); return p ? p.name : null; }
+  /* ORDER NOW (FEATURE 2): the reorder-by date is today or already past. */
+  function orderNowFlag(r) { return !!(r.reorderIso && r.reorderIso <= isoDate(new Date())); }
   function isPinned(code) { return !!(WATCH && WATCH.byCode[code]); }
   function togglePin(code) {
     WATCH = WATCH || { byCode: {} };
@@ -1498,7 +1555,8 @@
       gi = findCol(H, ["Scientific Name", "Scientific"]),
       mi = findCol(H, ["MSD Code", "MSD"]),
       xi = findCol(H, ["Expiry Date", "Expiry", "تاريخ الصلاحية"]),
-      bi = findCol(H, ["Lot No/Batch", "Batch No", "Lot No", "Batch", "Lot"]);
+      bi = findCol(H, ["Lot No/Batch", "Batch No", "Lot No", "Batch", "Lot"]),
+      fmi = findCol(H, ["Item Family Group", "Item Family Short Key"]);
     if (ci < 0) throw new Error("cols:Generic Item Number");
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
@@ -1510,10 +1568,11 @@
       var code = normCode(row[ci]);
       if (code == null) { qCode++; continue; }
       if (!isDrug(code)) { qNonDrug++; continue; }
-      var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, trade: null, agent: null, sci: null, msd: null });
+      var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, trade: null, agent: null, sci: null, msd: null, family: null });
       var q = num(row[ai]);
       rec.qty += q;
       if (!rec.desc && de >= 0 && row[de]) rec.desc = String(row[de]).trim();
+      if (!rec.family && fmi >= 0 && row[fmi]) rec.family = String(row[fmi]).trim();
       if (!rec.trade) rec.trade = txt(row, ti);
       if (!rec.agent) rec.agent = txt(row, vi);
       if (!rec.sci) rec.sci = txt(row, gi);
@@ -1618,7 +1677,12 @@
       var es = null;
       if (s && s.batches) es = expiryStats(s.batches, avg, stock, st.stock_as_of, false);
       else if (inStock && stock > 0 && w && w.lastExp) es = expiryStats([{ e: w.lastExp, q: stock, b: w.lastBatch || null }], avg, stock, st.stock_as_of, true);
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null });
+      // FEATURE 1/2 — project stockout + reorder-by from the stock-as-of date
+      // at the current daily burn (avg ÷ 30.44). Available already excludes
+      // expired (NUPCO routes expired to Hold), so coverage is the usable run.
+      var stockoutIso = (avg > 0 && stock > 0) ? addDaysIso(st.stock_as_of, cov * DAYS_PER_MONTH) : (avg > 0 ? st.stock_as_of : null);
+      var reorderIso = avg > 0 ? addDaysIso(st.stock_as_of, ((cov == null ? 0 : cov) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
+      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, family: (s && s.family) || null, stockoutIso: stockoutIso, reorderIso: reorderIso, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null });
     });
     return rows;
   }
@@ -1709,11 +1773,14 @@
     // Sample rows carry raw facts only (total/stock/inStock + identity);
     // every derived figure goes through the SAME formulas as a real upload,
     // so the demo can never drift from production math.
+    var sAsOf = "2026-06-02";
     STATE.rows = s.rows.map(function (r) {
       var avg = s.actual_months > 0 ? r.total / s.actual_months : 0;
       var cov = avg > 0 ? r.stock / avg : null;
       var qty9 = avg * ORDER_COVER_MONTHS;
-      return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: avg, stock: r.stock, cov: cov, qty9: qty9, sug: Math.max(0, qty9 - r.stock), status: statusOf(cov == null ? 0 : cov, avg, r.inStock, r.code), inStock: r.inStock, moved: avg > 0, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: posOrNull(r.packPrice), unitsPerPack: posOrNull(r.unitsPerPack), awardQty: posOrNull(r.awardQty), freeQty: nonNegOrNull(r.freeQty) };
+      var stockoutIso = (avg > 0 && r.stock > 0) ? addDaysIso(sAsOf, cov * DAYS_PER_MONTH) : (avg > 0 ? sAsOf : null);
+      var reorderIso = avg > 0 ? addDaysIso(sAsOf, ((cov == null ? 0 : cov) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
+      return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: avg, stock: r.stock, cov: cov, qty9: qty9, sug: Math.max(0, qty9 - r.stock), status: statusOf(cov == null ? 0 : cov, avg, r.inStock, r.code), inStock: r.inStock, moved: avg > 0, trend: null, trendPct: null, stockoutIso: stockoutIso, reorderIso: reorderIso, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: posOrNull(r.packPrice), unitsPerPack: posOrNull(r.unitsPerPack), awardQty: posOrNull(r.awardQty), freeQty: nonNegOrNull(r.freeQty) };
     });
     applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
@@ -2048,6 +2115,22 @@
     var sub = [r.hosp, r.msd].filter(Boolean).join(" · ");
     return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
   }
+  /* Planner column (FEATURE 1): responsible planner from the join slot, or
+     "Unassigned" until a planner-mapping file is provided. */
+  function plannerCell(r) {
+    var name = plannerName(r);
+    return '<td class="plancell">' + (name ? esc(name) : '<span class="muted">' + t("planner_unassigned") + "</span>") + "</td>";
+  }
+  /* Projection column (FEATURE 1/2): stockout date, reorder-by sub-line, and
+     the ORDER NOW flag when the reorder date is today or past. */
+  function projCell(r) {
+    if (!r.stockoutIso && !r.reorderIso) return '<td class="projcell"><span class="muted">—</span></td>';
+    var on = orderNowFlag(r);
+    var html = '<span class="num proj-stockout' + (on ? " is-now" : "") + '">' + (r.stockoutIso ? prettyDate(r.stockoutIso) : "—") + "</span>";
+    if (r.reorderIso) html += '<span class="subcode num">' + t("proj_reorder") + " " + prettyDate(r.reorderIso) + "</span>";
+    if (on) html += ' <span class="ordernow-tag">' + t("order_now_flag") + "</span>";
+    return '<td class="projcell">' + html + "</td>";
+  }
   function descCell(r) {
     // Table rows stay lean: description + trade name only. The classification,
     // priority and agent live in the item card (openDetail) — and the search
@@ -2099,8 +2182,8 @@
         return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + statusCell(r) + "</td></tr>";
       }).join("");
     } else {
-      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + th("expMonths", t("c_expiry")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
-      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_planner") + "</th><th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + th("expMonths", t("c_expiry")) + "<th>" + t("c_stockout") + "</th><th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
+      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + plannerCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + projCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
     }
     var shown = rows.length;
     // Catalog fallback: a search that misses every loaded row also scans the
@@ -2114,7 +2197,7 @@
           body = catCodes.map(function (code) {
             var m = MAP.byCode[code];
             var name = [m.trade, m.sci].filter(Boolean).join(" · ") || code;
-            return '<tr class="cat-row" data-code="' + esc(code) + '"><td class="code num">' + esc(code) + '</td><td class="desc">' + esc(name) + '</td><td colspan="9" class="cat-note"><span class="pill no_movement">' + t("cat_badge") + "</span> " + esc(t("cat_note")) + "</td></tr>";
+            return '<tr class="cat-row" data-code="' + esc(code) + '"><td class="code num">' + esc(code) + '</td><td class="desc">' + esc(name) + '</td><td colspan="12" class="cat-note"><span class="pill no_movement">' + t("cat_badge") + "</span> " + esc(t("cat_note")) + "</td></tr>";
           }).join("");
           shown = catCodes.length;
         }
@@ -2348,6 +2431,17 @@
       + '<span class="stat"><b class="num" style="color:var(--blue)">' + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag">' + t("ss_tag") + "</i>" : "") + '</b><i>' + t("dt_sug") + '</i></span>'
       + '<span class="stat"><b class="num">' + fmtInt(r.total) + '</b><i>' + t("dt_total_hist") + '</i></span>'
       + '</div>';
+    // FEATURE 1/2 — projection block: stockout, reorder-by, daily burn, planner.
+    var projStats = "";
+    if (r.avg > 0) {
+      var pl = plannerFor(r), on = orderNowFlag(r);
+      projStats = '<div class="statgrid proj-stats">'
+        + '<span class="stat"><b class="num' + (on ? " danger" : "") + '">' + prettyDate(r.stockoutIso) + '</b><i>' + t("dt_stockout") + (on ? " · " + t("order_now_flag") : "") + "</i></span>"
+        + '<span class="stat"><b class="num">' + prettyDate(r.reorderIso) + '</b><i>' + t("dt_reorder") + "</i></span>"
+        + '<span class="stat"><b class="num">' + fmt1(r.avg / DAYS_PER_MONTH) + '</b><i>' + t("dt_burn") + "</i></span>"
+        + '<span class="stat"><b>' + (pl ? esc(pl.name) : '<span class="muted">' + t("planner_unassigned") + "</span>") + '</b><i>' + t("c_planner") + "</i></span>"
+        + "</div>";
+    }
     /* The price slot is always present in the card: real figures when a
        prices file is loaded, an explicit "add prices to activate" hint
        otherwise — so planners know where the rial numbers will appear. */
@@ -2447,7 +2541,7 @@
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + ooBlock + poBlock + expBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote + stats + projStats + ooBlock + poBlock + expBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;
@@ -2620,6 +2714,8 @@
     $("mpName").textContent = MAP ? ((MAP.name ? MAP.name + " · " : "") + fmtInt(MAP.count) + " " + t("mp_linked")) : t("file_mp_hint");
     var pn = $("poName");
     if (pn) pn.textContent = PO ? ((PO.name ? PO.name + " · " : "") + fmtInt(Object.keys(PO.byCode).length) + " " + t("items_word")) : t("file_po_hint");
+    var pln = $("plName");
+    if (pln) pln.textContent = PLANNERS ? ((PLANNERS.name ? PLANNERS.name + " · " : "") + fmtInt(PLANNERS.count) + " " + t("mp_linked")) : t("file_pl_hint");
     $("langName").textContent = t("langName");
     $("langBtn").classList.toggle("is-en", LANG === "en");
     if (STATE.meta.period_start) {
@@ -2845,6 +2941,8 @@
     ORDERS = loadOrders();
     THRESH = loadThresh();
     WATCH = loadWatch();
+    PLANNERS = loadPlanners();
+    if (PLANNERS && $("lblPl")) $("lblPl").classList.add("is-baseline");
     if (PO && $("lblPo")) $("lblPo").classList.add("is-baseline");
     // PWA: register the cache-first service worker (https only — file:// and
     // the double-clicked standalone build skip it safely).
@@ -2972,6 +3070,30 @@
           if (STATE.rows.length) render();
           toast(tFmt("po_loaded", { n: fmtInt(parsed.count) }));
         } catch (ex) { toast(t("err_po") + colsHint(ex)); }
+      });
+    };
+    var fpl = $("filePlanner");
+    if (fpl) fpl.onchange = function (e) {
+      var f = e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      readWorkbook(f, function (err, aoa) {
+        if (err) { toast(t("err_pl")); return; }
+        try {
+          var parsed = parsePlannerMap(aoa);
+          // Merge into the saved planner map (per code / per family) so a
+          // dropped-in file extends rather than replaces.
+          var byCode = (PLANNERS && PLANNERS.byCode) || {}, byFamily = (PLANNERS && PLANNERS.byFamily) || {};
+          Object.keys(parsed.byCode).forEach(function (c) { byCode[c] = parsed.byCode[c]; });
+          Object.keys(parsed.byFamily).forEach(function (fk) { byFamily[fk] = parsed.byFamily[fk]; });
+          PLANNERS = { byCode: byCode, byFamily: byFamily, count: Object.keys(byCode).length + Object.keys(byFamily).length, name: f.name, savedAt: new Date().toISOString() };
+          persist(PLANNER_KEY, PLANNERS);
+          $("lblPl").classList.remove("is-baseline");
+          $("lblPl").classList.add("is-loaded");
+          applyStatic();
+          if (STATE.rows.length) render();
+          toast(tFmt("pl_loaded", { n: fmtInt(parsed.count) }));
+        } catch (ex) { toast(t("err_pl") + colsHint(ex)); }
       });
     };
   }

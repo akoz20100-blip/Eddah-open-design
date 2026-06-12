@@ -70,6 +70,13 @@
       </span>
       <span class="filebtn-txt"><b data-i18n="file_po">Previous orders file</b><i id="poName" data-i18n="file_po_hint">optional · purchase orders · code + date + qty</i></span>
     </label>
+    <label class="filebtn" id="lblPl">
+      <input type="file" id="filePlanner" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_pl">Planner mapping file</b><i id="plName" data-i18n="file_pl_hint">optional · NUPCO code + planner name + email</i></span>
+    </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">Load sample data</button>
     <p class="upl-hint" id="uplHint">Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.</p>
   </section>

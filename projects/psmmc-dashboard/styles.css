@@ -191,6 +191,16 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 /* ---- table ---- */
 .tablecard{overflow:hidden; margin:0 2px; border-radius:var(--r-xl); background:var(--card);
   border:1px solid var(--card-edge); box-shadow:var(--shadow)}
+/* ---- projection: stockout / reorder / planner (FEATURE 1+2) ---- */
+.plancell{font-size:12px; font-weight:600; color:var(--ink-2); max-width:120px}
+.projcell{white-space:nowrap; font-size:12.5px}
+.projcell .proj-stockout{font-weight:700}
+.projcell .proj-stockout.is-now{color:var(--coral)}
+.projcell .subcode{display:block; font-size:10.5px; color:var(--muted); font-weight:600}
+.ordernow-tag{display:inline-block; margin-top:2px; padding:1px 7px; border-radius:999px;
+  background:var(--coral); color:#fff; font-size:10px; font-weight:800; letter-spacing:.03em}
+.proj-stats .num.danger{color:var(--coral)}
+
 /* ---- watchlist pins (ROADMAP step 3) ---- */
 .pin-btn{appearance:none; border:0; background:none; padding:0 2px; margin-inline-end:4px;
   font-size:14px; line-height:1; color:var(--muted-2); cursor:pointer; vertical-align:-1px;

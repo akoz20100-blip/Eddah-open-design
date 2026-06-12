@@ -148,6 +148,75 @@ function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+/* ---------- projection mirror (FEATURE 1 + 2) ----------
+   Independently mirrors the documented projection rules so spec-projection
+   can assert the rendered Stockout Date / Reorder-By Date / ORDER NOW flag:
+     - daily burn = monthly average ÷ 30.44 (monthly avg = total withdrawn ÷
+       ROUNDED detected months — the period modal applies the display-rounded
+       value)
+     - available excludes expired (NUPCO already routes expired stock to Hold,
+       so Total Available Qty is the non-expired figure)
+     - Stockout Date = stock-as-of + (available ÷ daily burn) days — anchored
+       on the file's own as-of date so the projection is traceable to the data
+       (in production the file is 1-2 days old, so as-of ≈ today)
+     - Reorder-By Date = the date coverage drops below 6 months =
+       stock-as-of + (coverage − 6) months of consumption
+     - ORDER NOW when Reorder-By Date ≤ today (≡ coverage ≤ 6 at as-of) */
+export function expectedProjectionFromRealFiles() {
+  const REORDER_MONTHS = 6;
+  const base = expectedFromRealFiles();
+  const months = base.monthsRounded1;
+
+  const wd = aoaOf(REAL_WD);
+  let H = wd[0];
+  let ci = findCol(H, ["NUPCO Material"]);
+  const qi = findCol(H, ["Order Qty"]);
+  const si = findCol(H, ["Status"]);
+  const tot = new Map();
+  for (let r = 1; r < wd.length; r++) {
+    const row = wd[r];
+    if (!row) continue;
+    if (!STATUS_OK[String(row[si] || "").trim().toUpperCase()]) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    tot.set(code, (tot.get(code) || 0) + num(row[qi]));
+  }
+
+  const st = aoaOf(REAL_ST);
+  H = st[0];
+  ci = findCol(H, ["Generic Item Number"]);
+  const ai = findCol(H, ["Total Available Qty"]);
+  const stk = new Map();
+  for (let r = 1; r < st.length; r++) {
+    const row = st[r];
+    if (!row) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    stk.set(code, (stk.get(code) || 0) + num(row[ai]));
+  }
+
+  const asOf = new Date(2026, 1, 4); // 04-02-2026 from the filename
+  const todayIso = isoFromDate(new Date());
+  const addDays = (d, n) => isoFromDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.round(n)));
+  const perCode = new Map();
+  for (const [code, stock] of stk) {
+    const avg = (tot.get(code) || 0) / months;
+    if (avg <= 0 || stock <= 0) {
+      perCode.set(code, { avg, stock, cov: avg > 0 ? stock / avg : null, stockoutIso: null, reorderIso: null, orderNow: avg > 0 });
+      continue;
+    }
+    const cov = stock / avg;
+    const stockoutIso = addDays(asOf, cov * DAYS_PER_MONTH);
+    const reorderIso = addDays(asOf, (cov - REORDER_MONTHS) * DAYS_PER_MONTH);
+    perCode.set(code, { avg, stock, cov, stockoutIso, reorderIso, orderNow: reorderIso <= todayIso });
+  }
+  return { months, asOfIso: iso(asOf), todayIso, perCode };
+}
+
+function isoFromDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
 /* ---------- data-quality mirror (ROADMAP step 2) ----------
    Independently mirrors the parsers' accept/reject taxonomy so spec-quality
    can assert the per-upload quality card against it:
