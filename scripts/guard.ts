@@ -73,6 +73,11 @@ const residualAllowedExactPaths = new Set([
   "apps/packaged/esbuild.config.mjs",
   // Browser service workers must be served as JavaScript files.
   "apps/web/public/od-notifications-sw.js",
+  // Generated copy of the PSMMC dashboard's service worker emitted by
+  // psmmc-dashboard/build.py next to docs/index.html (PWA offline support
+  // for the published copy). Source of truth: psmmc-dashboard/sw.js
+  // (already covered by the psmmc-dashboard/ prefix below).
+  "docs/sw.js",
   // PostCSS loads Tailwind through a web-local .mjs compatibility config entry.
   "apps/web/postcss.config.mjs",
   "scripts/bake-html-ppt-examples.mjs",
