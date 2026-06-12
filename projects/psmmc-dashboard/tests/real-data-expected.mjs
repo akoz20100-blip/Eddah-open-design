@@ -148,6 +148,99 @@ function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+/* ---------- expiry intelligence mirror (ROADMAP step 1) ----------
+   Independently mirrors the documented expiry rules so spec-expiry can
+   assert the UI figures against them:
+     - stock rows with available qty > 0 and a parseable Expiry Date form
+       per-code batches; same-date batches merge (qty sums)
+     - months-to-expiry are measured from the stock-as-of date with the
+       30.44 days/month constant
+     - FEFO simulation: batches are consumed earliest-expiry-first at the
+       item's monthly average; whatever a batch cannot contribute before
+       its own expiry is waste ("units at risk")
+     - effective coverage = (stock − waste) ÷ avg
+     - the monthly average uses the ROUNDED detected months — the period
+       modal's "Use detected" button applies the display-rounded value
+       (documented lesson in tests/make-fixtures.mjs)
+   An item is "expiry-risk" when waste ≥ 1 unit AND the flat coverage
+   exceeds the effective coverage by ≥ 1 month. */
+export function expectedExpiryFromRealFiles() {
+  const base = expectedFromRealFiles();
+  const months = base.monthsRounded1;
+
+  const wd = aoaOf(REAL_WD);
+  const H = wd[0];
+  const ci = findCol(H, ["NUPCO Material"]);
+  const qi = findCol(H, ["Order Qty"]);
+  const si = findCol(H, ["Status"]);
+  const totals = new Map();
+  for (let r = 1; r < wd.length; r++) {
+    const row = wd[r];
+    if (!row) continue;
+    const st = String(row[si] || "").trim().toUpperCase();
+    if (!STATUS_OK[st]) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    totals.set(code, (totals.get(code) || 0) + num(row[qi]));
+  }
+
+  const st = aoaOf(REAL_ST);
+  const HS = st[0];
+  const sci = findCol(HS, ["Generic Item Number"]);
+  const sai = findCol(HS, ["Total Available Qty"]);
+  const sei = findCol(HS, ["Expiry Date"]);
+  const stockBy = new Map();
+  const batchesBy = new Map();
+  for (let r = 1; r < st.length; r++) {
+    const row = st[r];
+    if (!row) continue;
+    const code = normCode(row[sci]);
+    if (!isDrug(code)) continue;
+    const q = num(row[sai]);
+    stockBy.set(code, (stockBy.get(code) || 0) + q);
+    const d = parseDateLikeApp(row[sei]);
+    if (d && q > 0) {
+      const key = iso(d);
+      const m = batchesBy.get(code) || new Map();
+      m.set(key, (m.get(key) || 0) + q);
+      batchesBy.set(code, m);
+    }
+  }
+
+  // stock-as-of comes from the filename (04022026 → 2026-02-04), mirroring
+  // the app's dateFromFilename rule.
+  const asOf = new Date(2026, 1, 4);
+  const perCode = new Map();
+  let riskCount = 0;
+  for (const [code, byDate] of batchesBy) {
+    const avg = (totals.get(code) || 0) / months;
+    const stock = stockBy.get(code) || 0;
+    const batches = [...byDate.entries()]
+      .map(([e, q]) => ({ e, q }))
+      .sort((a, b) => (a.e < b.e ? -1 : a.e > b.e ? 1 : 0));
+    let consumed = 0;
+    let waste = 0;
+    for (const b of batches) {
+      const d = new Date(+b.e.slice(0, 4), +b.e.slice(5, 7) - 1, +b.e.slice(8, 10));
+      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH);
+      if (avg > 0) {
+        const can = Math.max(0, avg * tMo - consumed);
+        const use = Math.min(b.q, can);
+        waste += b.q - use;
+        consumed += use;
+      }
+    }
+    const first = new Date(+batches[0].e.slice(0, 4), +batches[0].e.slice(5, 7) - 1, +batches[0].e.slice(8, 10));
+    const expMonths = (first - asOf) / 86400000 / DAYS_PER_MONTH;
+    const cov = avg > 0 ? stock / avg : null;
+    const expCov = avg > 0 ? (stock - waste) / avg : null;
+    const risk = avg > 0 && waste >= 1 && cov - expCov >= 1;
+    if (risk) riskCount++;
+    perCode.set(code, { avg, stock, cov, expMonths, waste, expCov, risk, batchCount: batches.length, firstExp: batches[0].e });
+  }
+  return { months, asOfIso: iso(asOf), perCode, riskCount };
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(expectedFromRealFiles());
 }
