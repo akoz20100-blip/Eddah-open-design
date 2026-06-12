@@ -3,7 +3,7 @@
    and calculation is client-side). The cache name carries a build stamp that
    build.py rewrites on every build; a changed sw.js byte-stream is what makes
    installed clients pick up a new dashboard version. */
-var CACHE = "psmmc-edbbad2eca"; /* __PSMMC_BUILD_LINE__ */
+var CACHE = "psmmc-637705f4f5"; /* __PSMMC_BUILD_LINE__ */
 var SHELL = ["./"];
 
 self.addEventListener("install", function (e) {

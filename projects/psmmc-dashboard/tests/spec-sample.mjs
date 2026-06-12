@@ -49,23 +49,26 @@ try {
   R.ok(!!critical, "critical card present");
   if (critical) R.ok(leadNum(critical.value) === 72, `critical value is 72 (got "${critical.value}")`);
 
-  // total available units ≈ 109.7M. Arabic "إجمالي المخزون المتاح".
-  const totalUnits = findCard("إجمالي المخزون المتاح", "Total available stock");
-  R.ok(!!totalUnits, "total available units card present");
-  if (totalUnits)
-    R.ok(/109\.7\s*M/.test(totalUnits.value) || leadNum(totalUnits.value) === 109.7,
-      `total units ~109.7M (got "${totalUnits.value}")`);
+  // Item-census cards (owner spec v3): totals/with-stock/zero counted from
+  // the SAME sample dataset the page rendered.
+  const census = await page.evaluate(() => {
+    const rows = window.PSMMC_SAMPLE.rows;
+    const withStock = rows.filter((r) => r.stock > 0).length;
+    return { total: rows.length, withStock, zero: rows.length - withStock };
+  });
+  const itemsCard = findCard("البنود", "Items");
+  R.ok(!!itemsCard, "items-census card present");
+  if (itemsCard)
+    R.ok(leadNum(itemsCard.value) === census.total && itemsCard.full.includes(String(census.withStock)),
+      `items card counts ${census.total} total / ${census.withStock} with stock (got "${itemsCard.full}")`);
+  const zeroCard = findCard("البنود الصفرية", "Zero-stock items");
+  R.ok(!!zeroCard, "zero-stock card present");
+  if (zeroCard)
+    R.ok(leadNum(zeroCard.value) === census.zero, `zero-stock card counts ${census.zero} (got "${zeroCard.value}")`);
 
-  // monthly consumption ≈ 9.5M. Arabic "الاستهلاك الشهري".
-  const monthly = findCard("الاستهلاك الشهري", "Monthly consumption");
-  R.ok(!!monthly, "monthly consumption card present");
-  if (monthly)
-    R.ok(/9\.5\s*M/.test(monthly.value) || Math.abs(leadNum(monthly.value) - 9.5) < 0.1,
-      `monthly consumption ~9.5M (got "${monthly.value}")`);
-
-  // MoM badge present (the .kdelta inside the consumption card).
+  // MoM badge survives on the monthly-stream card (.kdelta moved there).
   const hasDelta = await page.$(".kdelta");
-  R.ok(!!hasDelta, "monthly consumption MoM badge (.kdelta) rendered");
+  R.ok(!!hasDelta, "MoM badge (.kdelta) rendered on the monthly stream card");
 
   // --- order sheet shows 7 rows ---
   const osRows = await page.$$eval(".ordersheet .os-row", (els) => els.length);

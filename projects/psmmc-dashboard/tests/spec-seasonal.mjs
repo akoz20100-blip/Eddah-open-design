@@ -29,16 +29,25 @@ try {
   await open(page);
 
   // Seed prior-year history BEFORE the app reads it (reload re-runs init).
-  await page.evaluate(() => {
-    const ym = {};
-    for (let m = 4; m <= 12; m++) ym[`2025-${String(m).padStart(2, "0")}`] = 50;
-    localStorage.setItem(
-      "psmmc_history_v1",
-      JSON.stringify({ v: 1, items: { 5000001: { desc: "Paracetamol 500mg", uom: "TAB", ym } }, uploads: [] }),
-    );
-  });
-  await page.reload({ waitUntil: "load" });
-  await page.waitForSelector("#btnSample", { timeout: 5000 });
+  // Under full-suite load the file:// localStorage write has been observed to
+  // not survive an immediate reload (one-in-a-run flake): verify the seed is
+  // still there after reload and retry once if the browser dropped it.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.evaluate(() => {
+      const ym = {};
+      for (let m = 4; m <= 12; m++) ym[`2025-${String(m).padStart(2, "0")}`] = 50;
+      localStorage.setItem(
+        "psmmc_history_v1",
+        JSON.stringify({ v: 1, items: { 5000001: { desc: "Paracetamol 500mg", uom: "TAB", ym } }, uploads: [] }),
+      );
+    });
+    await page.reload({ waitUntil: "load" });
+    await page.waitForSelector("#btnSample", { timeout: 5000 });
+    const seeded = await page.evaluate(() => {
+      try { return !!JSON.parse(localStorage.getItem("psmmc_history_v1")).items["5000001"]; } catch (e) { return false; }
+    });
+    if (seeded) break;
+  }
 
   await uploadFiles(page, "fileWithdrawals", WD);
   await confirmDetectedPeriod(page);
