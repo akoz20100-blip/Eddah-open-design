@@ -11,10 +11,11 @@ join slots built now). Methods documented in AUDIT.md. Branch
 
 | PR | Item | Proof |
 |----|------|-------|
+| PR-C | Reporting — export FAB now builds one structured workbook: Summary sheet (KPIs+totals) first, then Reorder/At-Risk/Expired detail sheets, with column widths, autofilters, SAR/thousands number formats, zero formula errors. Community SheetJS can't emit color fills/freeze (probed) → conditional-format COLORS deferred as a dependency decision (exceljs ≈ +270KB) raised to owner for round 2. | `spec-report` red→green: sheet order, KPI values (1,005/63.3M/300/158), row counts, number formats, autofilter, 0 error cells. Suite 25→26. |
 | PR-B | Features 3+4 — new **Expiry Watch** tab: batch-level cross-cutting list, At-Risk (FEFO remainders) / Expired (physical Total Qty) filters, by-expiry/by-quantity sort, per-planner subtotals, value column deferred to prices. parseStock splits date-merged batches into live vs expired; expiryStats returns per-batch at-risk; item card lists expired batches separately. | `spec-expiryviews` red→green vs date-merged mirror: At-Risk 300/9.2M/206 prod, Expired 158/2.7M (TRETINOIN lot 0932001). Suite 24→25. |
 | PR-A | Features 1+2 — Planner column + Stockout/Reorder-By dates + ORDER NOW on the planning table; projection block + daily burn in the item card; new optional planner-mapping upload slot with by-code/by-family join (Unassigned until file dropped). Daily burn = avg ÷ 30.44; stockout anchored on stock-as-of. | `spec-projection` red-first → green vs independent mirror on real files (LINAGLIPTIN cov 3.7 → 28 May 2026 ORDER NOW; LEVETIRACETAM cov 11.2 → 10 Jan 2027 healthy) + planner join proven via synthetic file; suite 23→24. Fixed 2 index/debounce-brittle specs (spec-dedup col shift, spec-realdata → setSearch). |
 
-Remaining this round: PR-B (F3 expired view + F4 at-risk view), PR-C (styled xlsx export). Then stop for owner's next-round decision.
+Round 1 COMPLETE: PR-A (F1+F2), PR-B (F3+F4), PR-C (Reporting) all merged. Stop for owner's round-2 decision. Open decisions for round 2: (a) report color-fill styling → vendor exceljs (~+270KB) vs keep lightweight; (b) Features 5 (budget forecast) + 6 (planner scorecard) need a real price file + planner-mapping file from the owner (join slots already built).
 
 
 ## Routine v2 — Round 2 (2026-06-12) — owner bug + ROADMAP steps 1–3
