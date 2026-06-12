@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Inline styles.css, app.js, vendor SheetJS, sample-data.js and the crest
-into a single self-contained HTML file. Outputs:
+"""Inline styles.css, app.js, vendor SheetJS, sample-data.js, vendored
+fonts and the crest into a single self-contained HTML file. Outputs:
   - projects/psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
-  - docs/index.html                  (served by classic /docs GitHub Pages)
+  - docs/index.html                           (served by classic /docs GitHub Pages)
 Also stamps sw.js with the build hash (in place + docs/sw.js) and copies
 manifest.webmanifest to docs/, so the PWA can install and work offline from
 the published copies.
-Run:  python3 projects/projects/psmmc-dashboard/build.py
+Run:  python3 projects/psmmc-dashboard/build.py
 """
 import base64, hashlib, os, re
 
@@ -22,6 +22,14 @@ xlsx  = read("vendor/xlsx.full.min.js")
 sample= read("sample-data.js")
 crest = read("assets/psmmc-crest.svg")
 crest_uri = "data:image/svg+xml;base64," + base64.b64encode(crest.encode("utf-8")).decode("ascii")
+
+# vendored woff2 fonts -> data URIs inside the stylesheet, so the single-file
+# build (and the offline PWA serving it) never fetches a font from anywhere.
+def _font_uri(m):
+    path = os.path.join(HERE, "vendor", "fonts", m.group(1))
+    with open(path, "rb") as fh:
+        return "url(data:font/woff2;base64," + base64.b64encode(fh.read()).decode("ascii") + ")"
+css = re.sub(r"url\(\./vendor/fonts/([^)]+)\)", _font_uri, css)
 
 # stylesheet -> inline <style>
 html = html.replace('<link rel="stylesheet" href="./styles.css" />', "<style>\n" + css + "\n</style>")
