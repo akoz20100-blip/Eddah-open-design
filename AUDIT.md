@@ -1,9 +1,29 @@
-# AUDIT — PSMMC Pharmacy Dashboard (`psmmc-dashboard/`)
+# AUDIT — PSMMC Pharmacy Dashboard (`projects/psmmc-dashboard/`)
 
 Focus: the Dash project — the PSMMC pharmacy stock & reorder dashboard (its app code,
 build pipeline, sample data, publish workflow). The surrounding Open Design monorepo
 fork is out of scope except where it touches the dashboard (`docs/index.html`,
 `.github/workflows/psmmc-pages.yml`).
+
+## Routine v2 · Round 1 (2026-06-12)
+
+North star adopted: evolve the dashboard into a complete pharmacy inventory
+MANAGEMENT system validated against the real hospital files in
+`projects/psmmc-dashboard/real-data/` every round.
+
+- Shipped: English-default UI (Arabic toggle intact, parity 233/233 automated),
+  relocation to `projects/psmmc-dashboard/`, vendored Inter + IBM Plex Sans
+  Arabic typography (subsetted woff2, inlined into the single-file build),
+  real-file validation harness (`spec-realdata` + independent expectation
+  mirror), and a red-spec-first fix making the real MODHS catalog's item
+  descriptions searchable (the ADRENALINE→EPINEPHRINE class of search misses).
+- Suite: 16 → 19 specs, all green. `pnpm guard` + `pnpm typecheck` green.
+- Performance: built page 1602 → 1802 KB raw (gzip 476 → 627 KB) — entirely
+  the mandated self-hosted fonts; TTI proxy unchanged (235 → 237 ms
+  unthrottled, ~0.95 s at 4× CPU throttle, iPhone viewport).
+- Blocked: repository rename to `all-dashboard` (no rename capability in this
+  environment's GitHub toolset; owner action — Settings → General → Rename;
+  GitHub Pages URLs do NOT redirect, installed PWAs must be re-installed).
 
 ## Snapshot
 
