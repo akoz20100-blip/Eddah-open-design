@@ -29,8 +29,26 @@ Three tabs in one page:
 | Withdrawals | NUPCO outbound (`.xlsx`) | `NUPCO Material` | `Order Qty`, `Delivery Date`, rows with `Status` ∈ {DISPATCHED, APPROVED}; multiple files accepted (multiple warehouses) |
 | Stock on hand | NUPCO stock (`.xls`) | `Generic Item Number` | `Total Available Qty`, aggregated across all batches/lots per item |
 | Identifiers / MODHS catalog (optional) | Hospital/MODHS catalog (`.xlsx`, `.xls`, `.csv`) | NUPCO code | NUPCO code ↔ hospital code / MODHS code, trade name, scientific name, classification, priority; optional price columns: pack price, units per pack, awarded qty, free qty — unit price = pack ÷ units; effective price discounts bonus qty; rows are merged per code across uploads |
+| Previous orders / PO (optional) | Purchase-orders export (`.xlsx`, `.xls`, `.csv`) | NUPCO code | order date, qty, status — kept as a compact per-item ledger (last 5 orders); drill-down shows the last order and an "in transit" badge when a recent order is not yet reflected in stock |
 
-Header matching is tolerant (trim / case-insensitive / extra columns ignored).
+Header matching is tolerant (trim / case-insensitive / extra columns ignored;
+Arabic and English header names recognized for the identifiers and PO files).
+
+**Round-3 planner features** — catalog-wide name search (a search that misses
+every loaded row also scans the saved identifiers catalog, so a drug with no
+movement and no stock is still findable); per-item **drug information** in the
+drill-down (curated bilingual generic-stem dictionary + MODHS classification
+fallback) with SFDA and web-search links; **budget runway** card on the
+Management tab (remaining budget ÷ monthly consumption value → months left +
+projected run-out date, prices required); **order tracking** (mark an item as
+ordered — excluded from re-suggestion until a later covering stock upload
+clears the flag); **seasonal suggestion** (≥ 6 months of history weighs the
+same upcoming months from the prior year, with a "seasonal" badge);
+**"what changed" digest** after every upload (entered danger / spikes >30% /
+new / recovered, dismissible); **per-item alert threshold** overriding the
+6-month rule; and a **PWA** (installable on iPhone/desktop, works fully
+offline from the permanent link via a version-stamped cache-first service
+worker).
 
 **Period confirmation dialog** — after every withdrawals upload the app detects
 the covered months from delivery dates and presents a 3-month / 6-month /

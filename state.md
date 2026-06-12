@@ -24,6 +24,18 @@
 
 No real identifiers/catalog file exists under `psmmc-dashboard/` → demo names stay synthetic; bilingual "demo names are not real" badge shown in sample mode (item 1c).
 
+### Round-3 result
+
+- Waves: features `5e5a844`, PWA `5843e8f`, rebuild `f2228c9`, docs (this commit).
+- Suite: 5/5 before → **16/16 after** (10 new browser specs + node-level spec-pwa). i18n parity 233/233.
+- Boundary note: `.github/workflows/psmmc-pages.yml` extended (copy `sw.js` + `manifest.webmanifest` to `/psmmc/`) — the only edit outside the allowed paths, required for PWA-offline at the permanent link and explicitly in this audit's scope per AUDIT.md's header.
+- Lessons:
+  - Arabic substring assertions must ignore proclitics (`الصدفية` vs `للصدفية`) — assert the bare stem.
+  - Synthetic touch sequences via plain `Event` + a `touches` array test the swipe handler without a `hasTouch` context.
+  - `headless chromium maps dvh == vh`, so asserting the 88dvh branch needs the 84vh fallback to differ (560px cut-off at 660 viewport).
+  - The environment needs `playwright-core` installed at `/tmp/pwtest` (npm i playwright-core) before the suite runs; chromium ships at `/opt/pw-browsers/chromium-1194`.
+- Next recommended run: real-file validation with the owner (identifiers + PO exports), then the deferred repo reorganization (`projects/` layout) as its own PR/session.
+
 - Last audit: 2026-06-11
 - Audit HEAD: 1dd690b (includes PR #5 round-2 merge)
 - Status: routine (full) COMPLETE — all 14 backlog items + 3 of 6 future risks closed
