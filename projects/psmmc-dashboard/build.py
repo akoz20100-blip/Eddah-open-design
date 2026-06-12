@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """Inline styles.css, app.js, vendor SheetJS, sample-data.js and the crest
 into a single self-contained HTML file. Outputs:
-  - psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
-  - docs/index.html                  (served by classic /docs GitHub Pages)
+  - projects/psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
+  - docs/index.html                           (served by classic /docs GitHub Pages)
 Also stamps sw.js with the build hash (in place + docs/sw.js) and copies
 manifest.webmanifest to docs/, so the PWA can install and work offline from
 the published copies.
-Run:  python3 psmmc-dashboard/build.py
+Run:  python3 projects/psmmc-dashboard/build.py
 """
 import base64, hashlib, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+ROOT = os.path.dirname(os.path.dirname(HERE))  # repo root: HERE is projects/psmmc-dashboard
 read = lambda p: open(os.path.join(HERE, p), encoding="utf-8").read()
 
 html  = read("index.html")
 css   = read("styles.css")
+# Vendored subset fonts -> base64 data URIs so the single file stays
+# self-contained and the offline PWA needs no CDN.
+def _inline_font(m):
+    raw = open(os.path.join(HERE, "vendor", "fonts", m.group(1)), "rb").read()
+    return 'url(data:font/woff2;base64,' + base64.b64encode(raw).decode("ascii") + ')'
+css = re.sub(r'url\("\./vendor/fonts/([\w.-]+\.woff2)"\)', _inline_font, css)
 appjs = read("app.js")
 xlsx  = read("vendor/xlsx.full.min.js")
 sample= read("sample-data.js")

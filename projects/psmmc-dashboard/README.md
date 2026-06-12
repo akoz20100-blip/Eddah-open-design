@@ -19,6 +19,14 @@ Three tabs in one page:
   upload, saved-history sparklines for up to 24 months, rising / falling / new
   filters, and history export / import buttons.
 
+**Language & type:** the UI defaults to **English** with a one-tap toggle to
+full **Arabic (RTL)** — the choice persists on the device. English and figures
+render in an Apple-grade stack (SF Pro on Apple devices, self-hosted subset
+**Inter** elsewhere, tabular numerals throughout); Arabic renders in
+self-hosted **IBM Plex Sans Arabic** (Saudi government digital style). Fonts
+are vendored and inlined at build time, so the single file and the offline PWA
+never touch a CDN.
+
 > **Scope:** only **medicines** are included — NUPCO codes **starting with `5`**.
 > Medical supplies (other prefixes) are excluded automatically.
 
@@ -100,16 +108,16 @@ tests/            headless Chromium test suite (see tests/README.md)
 To rebuild the single-file outputs after editing the source:
 
 ```bash
-python3 psmmc-dashboard/build.py
+python3 projects/psmmc-dashboard/build.py
 ```
 
 ## Tests
 
 ```bash
-node psmmc-dashboard/tests/run.mjs
+node projects/psmmc-dashboard/tests/run.mjs
 ```
 
-Runs a headless Chromium smoke suite. See `psmmc-dashboard/tests/README.md` for
+Runs a headless Chromium smoke suite. See `projects/psmmc-dashboard/tests/README.md` for
 details on what is covered and how to add cases.
 
 ## Deploy / share
@@ -125,5 +133,5 @@ https://akoz20100-blip.github.io/eddah-open-design/
 double-click, email it, or drag it onto Netlify Drop for an instant link.
 
 To use the official hospital logo, drop the PNG at
-`psmmc-dashboard/assets/psmmc-logo.png` and rebuild; the header picks it up
+`projects/psmmc-dashboard/assets/psmmc-logo.png` and rebuild; the header picks it up
 automatically (falling back to the bundled SVG emblem if absent).

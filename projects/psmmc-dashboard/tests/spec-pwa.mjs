@@ -10,7 +10,7 @@ import { resolve } from "node:path";
 import { DASHBOARD_DIR, makeReporter } from "./helpers.mjs";
 
 const R = makeReporter("spec-pwa");
-const ROOT = resolve(DASHBOARD_DIR, "..");
+const ROOT = resolve(DASHBOARD_DIR, "..", "..");
 
 try {
   // Manifest: valid JSON, installable fields, self-contained icon.
