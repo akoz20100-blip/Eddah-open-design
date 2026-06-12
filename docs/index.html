@@ -39,6 +39,7 @@
   --coral:#ee5138; --coral-soft:#fdeeea;
   --amber:#d28f1d; --amber-soft:#fbf3e2;
   --indigo:#5560d8; --indigo-soft:#e9ebfb;
+  --violet:#7a5fc7; --violet-soft:#efeafb;
   --pink:#ff2d87; --pink-deep:#e4136e;
   --inset:#f4f5f7; --line:#eeeff2;
   --shadow:0 1px 2px rgba(16,18,24,.04), 0 12px 36px rgba(16,18,24,.07);
@@ -291,6 +292,8 @@ td.code .subcode{display:block; font-size:10px; color:var(--muted-2); margin-top
 .pill.ok{background:var(--blue-soft); color:var(--blue)}
 .pill.no_movement{background:var(--inset); color:var(--muted)}
 .pill.not_in_stock{background:var(--indigo-soft); color:var(--indigo)}
+/* Effective coverage above 13 months = overstock (owner spec v3). */
+.pill.excess{background:var(--violet-soft); color:var(--violet)}
 .covbar{position:relative; height:6px; width:70px; background:var(--inset); border-radius:999px; overflow:hidden;
   display:inline-block; vertical-align:middle; margin-inline-start:8px}
 .covbar i{position:absolute; inset-inline-start:0; top:0; bottom:0; border-radius:999px}
@@ -774,6 +777,17 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   var DAYS_PER_MONTH = 30.44;
   var STATUS_OK = { DISPATCHED: 1, APPROVED: 1 };
   var REORDER_MONTHS = 6, WATCH_MONTHS = 7, ORDER_COVER_MONTHS = 9;
+  /* Effective-stock rules (owner spec v3): hand-dispensed forms stop being
+     dispensable GRACE_MONTHS before expiry (hospital policy: nothing with
+     ≤ 3 months shelf life is handed to a patient); parenteral forms (vials,
+     ampules, injections, syringes, IV bags) are consumed in-hospital until
+     expiry. Effective coverage above EXCESS_MONTHS classifies as overstock. */
+  var GRACE_MONTHS = 3, EXCESS_MONTHS = 13;
+  /* UOM tokens marking parenteral forms across the real exports' spellings:
+     planner file (VIAL/AMPULE/INJECTION/SYRINGE/BAG), withdrawals file
+     (VIA/AMP/INJ/PFS/BAG), stock file (VL/AP/IJ/PS/BG). Unknown UOM → no
+     grace (the conservative raw behavior). */
+  var INJECTABLE_UOMS = { VIAL: 1, VAIL: 1, VIA: 1, VL: 1, AMP: 1, AMPULE: 1, AMPOULE: 1, AP: 1, INJ: 1, IJ: 1, INJECTION: 1, SYRINGE: 1, PFS: 1, PS: 1, BAG: 1, BG: 1, INFUSION: 1, IV: 1 };
   var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
@@ -802,7 +816,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       search_ph: "Search by code or name — separate items with commas…",
       period: "Period", stock_as_of: "Stock as of", mo: "mo", sorted_by: "Sorted by",
       showing: "Showing", of: "of", items: "items", no_rows: "No rows match this filter.",
-      f_all: "All", f_order_now: "Order now", f_no_movement: "No movement", f_not_in_stock: "Not in stock",
+      f_all: "All", f_order_now: "Order now", f_excess: "Excess stock", f_no_movement: "No movement", f_not_in_stock: "Not in stock",
       f_all_instock: "All in stock", f_available: "Available", f_outstock: "Out of stock",
       k_order: "Order now",
       k_watch: "Watch", k_nomove: "No movement", k_notstock: "Not in stock",
@@ -823,7 +837,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       c_avg: "Monthly Avg", c_trend: "Trend Δ%", c_stock: "Current Stock", c_cov: "Coverage (mo)",
       c_status: "Status", c_qty9: "Qty (9 mo)", c_sug: "Suggested Order",
       c_avail: "Available Stock", c_use: "Monthly Use", c_value: "Stock Value",
-      s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
+      s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_excess: "Excess", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
@@ -840,7 +854,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
-      dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
+      dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_cov_raw: "raw coverage — before expiry trim", dt_usable: "dispensable stock (units)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
       f_watch: "Watch", f_rising: "Rising +10%", f_falling: "Falling −10%", f_new: "New", c_spark: "Recent months", c_delta: "Trend Δ%",
       f_watchlist: "My watchlist",
       pin_add: "Pin to my watchlist",
@@ -907,6 +921,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       qr_empty: "no usable identifier fields",
       qr_dup: "duplicate order line",
       qr_baddate: "unreadable date — row counted in totals, excluded from monthly history",
+      qr_outlier: "dated far outside the file's period — counted in totals, excluded from period detection and monthly trends",
       qr_badexp: "unreadable expiry — excluded from expiry analysis",
       qr_dupfile: "duplicate file skipped",
       qs_qty: "quantity",
@@ -969,7 +984,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       search_ph: "ابحث بالكود أو الاسم — افصل بين عدة بنود بفاصلة…",
       period: "الفترة", stock_as_of: "المخزون بتاريخ", mo: "شهر", sorted_by: "مرتّب حسب",
       showing: "عرض", of: "من", items: "صنف", no_rows: "لا توجد صفوف مطابقة لهذا الفلتر.",
-      f_all: "الكل", f_order_now: "اطلب الآن", f_no_movement: "بدون حركة", f_not_in_stock: "غير متوفر بالمخزون",
+      f_all: "الكل", f_order_now: "اطلب الآن", f_excess: "مخزون زائد", f_no_movement: "بدون حركة", f_not_in_stock: "غير متوفر بالمخزون",
       f_all_instock: "كل المخزون", f_available: "متوفر", f_outstock: "نفد",
       k_order: "اطلب الآن",
       k_watch: "للمتابعة", k_nomove: "بدون حركة", k_notstock: "غير متوفر",
@@ -990,7 +1005,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       c_avg: "المتوسط الشهري", c_trend: "الاتجاه Δ٪", c_stock: "المخزون الحالي", c_cov: "التغطية (شهر)",
       c_status: "الحالة", c_qty9: "كمية ٩ أشهر", c_sug: "الطلب المقترح",
       c_avail: "المخزون المتاح", c_use: "الاستهلاك الشهري", c_value: "قيمة المخزون",
-      s_order_now: "اطلب الآن", s_warning: "للمتابعة", s_ok: "جيد", s_no_movement: "بدون حركة", s_not_in_stock: "غير متوفر",
+      s_order_now: "اطلب الآن", s_warning: "للمتابعة", s_ok: "جيد", s_excess: "زائد", s_no_movement: "بدون حركة", s_not_in_stock: "غير متوفر",
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
@@ -1007,7 +1022,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       k_total_units: "إجمالي المخزون المتاح", k_overall_cov: "يغطي <b class=\"num\">{m}</b> شهرًا بمعدل الاستهلاك الحالي",
       k_monthly_use: "الاستهلاك الشهري", vs_prev_month: "{a} مقابل {b}", units_word: "وحدة", items_word: "صنفًا",
       os_title: "ورقة الطلب — الأكثر إلحاحًا", os_view_all: "عرض الكل في الجدول", os_export: "تصدير ورقة الطلب", os_email: "تقرير بالإيميل", os_wa: "واتساب", os_print: "طباعة", os_cov_left: "شهر تغطية", os_suggested: "كمية مقترحة",
-      dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية",
+      dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_cov_raw: "التغطية الخام — قبل خصم الصلاحية", dt_usable: "المخزون القابل للصرف (وحدة)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية",
       f_watch: "للمتابعة", f_rising: "صاعد +10٪", f_falling: "هابط −10٪", f_new: "جديد", c_spark: "الأشهر الأخيرة", c_delta: "الاتجاه Δ٪",
       f_watchlist: "متابعتي",
       pin_add: "تثبيت في قائمة متابعتي",
@@ -1074,6 +1089,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       qr_empty: "صف بلا حقول معرفات مفيدة",
       qr_dup: "سطر طلب مكرر",
       qr_baddate: "تاريخ غير مقروء — يُحتسب في الإجمالي ويُستبعد من السجل الشهري",
+      qr_outlier: "تاريخ خارج فترة الملف بفارق كبير — يُحتسب في الإجمالي ويُستبعد من كشف الفترة والاتجاهات الشهرية",
       qr_badexp: "تاريخ صلاحية غير مقروء — مستبعد من تحليل الصلاحية",
       qr_dupfile: "ملف مكرر تم تجاهله",
       qs_qty: "الكمية",
@@ -1134,6 +1150,14 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   var $ = function (id) { return document.getElementById(id); };
   function normCode(v) { if (v == null || v === "") return null; if (typeof v === "number") return String(Math.round(v)); var s = String(v).trim(); if (/^\d+\.0+$/.test(s)) s = s.split(".")[0]; return s; }
   function isDrug(c) { return c && c.charAt(0) === "5"; }
+  /* Hand-dispensed predicate: anything that is not a recognized parenteral
+     UOM is treated as dispensed into the patient's hand (tablets, syrups,
+     tubes, sachets, pens, …) and gets the 3-month no-dispense grace. */
+  function handDispensed(uom) {
+    if (uom == null || uom === "") return false;
+    var tok = String(uom).trim().toUpperCase().split("/")[0].trim();
+    return !!tok && !INJECTABLE_UOMS[tok];
+  }
   function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
   function fmtInt(n) { return Math.round(n).toLocaleString("en-US"); }
   function fmt1(n) { return (Math.round(n * 10) / 10).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
@@ -1358,8 +1382,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       de = findCol(H, ["Description", "Item Description", "Generic Item description"]),
       xi = findCol(H, ["Expiry Date", "Expiry"]), bi = findCol(H, ["Batch No", "Batch"]);
     if (ci < 0 || qi < 0) throw new Error("cols:NUPCO Material/Order Qty");
-    var byCode = {}, monthlyByCode = {}, minD = null, maxD = null, badDates = 0;
+    var byCode = {}, monthlyByCode = {}, badDates = 0;
     var qTotal = 0, qStatus = 0, qCode = 0, qNonDrug = 0;
+    var events = []; // dated accepted rows, bucketed AFTER the dense-period pass
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
       qTotal++;
@@ -1376,23 +1401,12 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         var cell = row[di];
         var d = parseDate(cell);
         if (d) {
-          if (!minD || d < minD) minD = d;
-          if (!maxD || d > maxD) maxD = d;
-          var ym = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
-          var mc = monthlyByCode[code] || (monthlyByCode[code] = {});
-          mc[ym] = (mc[ym] || 0) + q;
-          // Expiry fallback signal: warehouses pick earliest-expiry-first, so
-          // the latest dispatch's batch expiry approximates the front of the
-          // remaining stock queue when the stock file carries no expiry.
+          var ev = { code: code, q: q, d: d, ym: d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) };
           if (xi >= 0) {
             var xd = parseDate(row[xi]);
-            var dIso = isoDate(d);
-            if (xd && (!rec.lastD || dIso >= rec.lastD)) {
-              rec.lastD = dIso;
-              rec.lastExp = isoDate(xd);
-              if (bi >= 0 && row[bi]) rec.lastBatch = String(row[bi]).trim();
-            }
+            if (xd) { ev.exp = isoDate(xd); if (bi >= 0 && row[bi]) ev.batch = String(row[bi]).trim(); }
           }
+          events.push(ev);
         } else if (cell != null && String(cell).trim() !== "") {
           // A non-empty cell we could not read: surfaced to the user so a
           // mistyped/locale-mangled date is not silently dropped from the period.
@@ -1400,14 +1414,48 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         }
       }
     }
+    /* Dense-period detection: a single row whose date parses years away (a
+       typo or a locale-mangled export) must not stretch the analysis period —
+       a 5-month file once reported ~65 months, deflating every monthly
+       average ~12x. Edge months holding fewer than max(2, 0.5%) of the dated
+       rows are outliers: their rows keep counting toward consumption totals
+       (the withdrawal happened; only its date is suspect) but are excluded
+       from period detection, monthly buckets, and the expiry-fallback queue. */
+    var ymCount = {};
+    events.forEach(function (ev) { ymCount[ev.ym] = (ymCount[ev.ym] || 0) + 1; });
+    var yms = Object.keys(ymCount).sort();
+    var thr = Math.max(2, Math.ceil(events.length * 0.005));
+    var lo = 0, hi = yms.length - 1;
+    while (lo < hi && ymCount[yms[lo]] < thr) lo++;
+    while (hi > lo && ymCount[yms[hi]] < thr) hi--;
+    var ymLo = yms[lo] || null, ymHi = yms[hi] || null;
+    var minD = null, maxD = null, outlierDates = 0;
+    events.forEach(function (ev) {
+      if (ymLo && (ev.ym < ymLo || ev.ym > ymHi)) { outlierDates++; return; }
+      if (!minD || ev.d < minD) minD = ev.d;
+      if (!maxD || ev.d > maxD) maxD = ev.d;
+      var mc = monthlyByCode[ev.code] || (monthlyByCode[ev.code] = {});
+      mc[ev.ym] = (mc[ev.ym] || 0) + ev.q;
+      // Expiry fallback signal: warehouses pick earliest-expiry-first, so
+      // the latest dispatch's batch expiry approximates the front of the
+      // remaining stock queue when the stock file carries no expiry.
+      if (ev.exp) {
+        var rec = byCode[ev.code], dIso = isoDate(ev.d);
+        if (!rec.lastD || dIso >= rec.lastD) {
+          rec.lastD = dIso;
+          rec.lastExp = ev.exp;
+          if (ev.batch) rec.lastBatch = ev.batch;
+        }
+      }
+    });
     var months = (minD && maxD) ? Math.max((maxD - minD) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
     var quality = {
       total: qTotal, accepted: qTotal - qStatus - qCode - qNonDrug,
       rejects: qreasons({ qr_status: qStatus, qr_code: qCode, qr_nondrug: qNonDrug }),
-      warns: qreasons({ qr_baddate: badDates }),
+      warns: qreasons({ qr_baddate: badDates, qr_outlier: outlierDates }),
       cols: qcols(H, [["c_code", ci], ["qs_qty", qi], ["qs_date", di], ["c_status", si], ["c_desc", de], ["c_uom", ui], ["c_expiry", xi], ["qs_batch", bi]])
     };
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months, badDates: badDates, quality: quality };
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months, badDates: badDates, outlierDates: outlierDates, quality: quality };
   }
   /* Merge several parsed withdrawals files (e.g. one per warehouse) into one
      aggregate: quantities and monthly buckets sum per code, the analysis
@@ -1450,7 +1498,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         });
       });
     });
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, badDates: badDates, files: parts.map(function (p) { return p.name; }), quality: quality };
+    var outlierDates = 0;
+    parts.forEach(function (p) { outlierDates += p.outlierDates || 0; });
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, badDates: badDates, outlierDates: outlierDates, files: parts.map(function (p) { return p.name; }), quality: quality };
   }
   /* Renamed copies of the same export must not double-count: two parsed parts
      with the identical period AND the identical grand-total quantity are the
@@ -1655,6 +1705,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       hi = findCol(H, ["Hospital Code", "Hospital Item Number", "Hospital Number", "Local Code", "Hospital", "كود المستشفى", "رقم المستشفى"]),
       mi = findCol(H, ["MODHS-CODE", "MODHS CODE", "MSD Code", "MSD Number", "MSD", "الكود الموحد"]),
       cl = findCol(H, ["Classification", "التصنيف"]),
+      uo = findCol(H, ["UOM", "Unit", "الوحدة"]),
       pl = findCol(H, ["Priorty Level", "Priority Level", "الأولوية"]),
       pp = findCol(H, ["Pack Price", "Unit Pack Price", "سعر العلبة", "سعر العبوة", "Price"]),
       up = findCol(H, ["Units per Pack", "Pack Size", "Units/Pack", "عدد الحبات", "عدد الوحدات"]),
@@ -1673,7 +1724,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       if (!isDrug(code)) { qNonDrug++; continue; }
       var rec = {
         trade: val(row, ti), sci: val(row, gi), hosp: val(row, hi), msd: val(row, mi),
-        cls: val(row, cl), prio: val(row, pl),
+        cls: val(row, cl), prio: val(row, pl), uom: val(row, uo),
         packPrice: numVal(row, pp), unitsPerPack: numVal(row, up), awardQty: numVal(row, aq), freeQty: fq < 0 ? null : (parseFloat(row[fq]) >= 0 ? parseFloat(row[fq]) : null)
       };
       if (rec.trade || rec.sci || rec.hosp || rec.msd || rec.cls || rec.packPrice) {
@@ -2174,17 +2225,24 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function parsePlannerMap(aoa) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
-    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
+    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Nupco", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
       ni = findCol(H, ["Planner Name", "Planner", "Responsible Planner", "Buyer", "Owner", "اسم المخطط", "المخطط", "المسؤول"]),
       ei = findCol(H, ["Planner Email", "Planner E-mail", "Email", "E-mail", "البريد الإلكتروني", "الإيميل", "البريد"]),
+      ui = findCol(H, ["UOM", "Unit", "الوحدة"]),
+      hi = findCol(H, ["Product Code", "Hospital Code", "Hospital Item Number", "كود المستشفى"]),
+      mi = findCol(H, ["MSD Code", "MSD", "الكود الموحد"]),
       fi = findCol(H, ["Item Family Group", "Item Family Short Key", "Family", "المجموعة", "مجموعة الصنف"]);
     if ((ci < 0 && fi < 0) || ni < 0) throw new Error("cols:NUPCO Code/Planner Name");
     var byCode = {}, byFamily = {}, n = 0;
+    function txtAt(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
       var name = ni >= 0 && row[ni] != null ? String(row[ni]).trim() : ""; if (!name) continue;
       var email = ei >= 0 && row[ei] != null && String(row[ei]).trim() !== "" ? String(row[ei]).trim() : null;
-      var rec = { name: name, email: email };
+      // UOM rides along: the planner sheet is the owner's authoritative
+      // dosage-form source (drives the 3-month hand-dispense grace). The
+      // hospital + MSD codes ride along too so the table/card can show them.
+      var rec = { name: name, email: email, uom: txtAt(row, ui), hosp: txtAt(row, hi), msd: txtAt(row, mi) };
       var code = ci >= 0 ? normCode(row[ci]) : null;
       if (code && isDrug(code)) { byCode[code] = rec; n++; }
       else if (fi >= 0 && row[fi] != null && String(row[fi]).trim() !== "") { byFamily[String(row[fi]).trim().toUpperCase()] = rec; n++; }
@@ -2232,7 +2290,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     rows.forEach(function (r) {
       var o = ORDERS.byCode[r.code];
       if (!o) return;
-      var covered = r.inStock && (r.status === "ok" || r.status === "warning");
+      var covered = r.inStock && (r.status === "ok" || r.status === "warning" || r.status === "excess");
       var later = !STATE.meta.stock_as_of || !o.d || STATE.meta.stock_as_of >= o.d;
       if (covered && later) { delete ORDERS.byCode[r.code]; cleared++; }
     });
@@ -2318,7 +2376,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       }
       if (matched >= 3) {
         r.qty9 = sum;
-        r.sug = Math.max(0, sum - r.stock);
+        // The seasonal target replaces only the demand side; what we already
+        // hold is still the DISPENSABLE stock (effective rule), not the raw
+        // count that includes expiring/at-risk units.
+        r.sug = Math.max(0, sum - (r.usable != null ? r.usable : r.stock));
         r.seasonal = matched;
       }
     });
@@ -2417,14 +2478,17 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
      the stock-as-of date; whatever a batch cannot contribute before its own
      expiry is waste ("units at risk"). Effective coverage = usable ÷ avg —
      the "stock covers 10 months but expiry ends it after 4" number. */
-  function expiryStats(batches, avg, stock, asOfIso, approx) {
+  function expiryStats(batches, avg, stock, asOfIso, approx, graceMo) {
     if (!batches || !batches.length) return null;
     var asOf = parseIsoLocal(asOfIso) || new Date();
+    var grace = graceMo || 0;
     var consumed = 0, waste = 0, atRisk = [];
     for (var i = 0; i < batches.length; i++) {
       var b = batches[i];
       var d = parseIsoLocal(b.e);
-      var tMo = d ? Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH) : 0;
+      // Hand-dispensed forms stop being dispensable `grace` months before
+      // expiry, so a batch only contributes what fits before that cutoff.
+      var tMo = d ? Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH - grace) : 0;
       if (avg > 0) {
         var can = Math.max(0, avg * tMo - consumed);
         var use = Math.min(b.q, can);
@@ -2442,14 +2506,67 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       expWaste: avg > 0 ? waste : 0,
       expCov: avg > 0 ? (stock - waste) / avg : null,
       expApprox: !!approx,
+      grace: grace,
       batches: batches,
       atRiskBatches: atRisk.length ? atRisk : null
     };
   }
   /* The ROADMAP-1 alert predicate: at least one unit would expire unused AND
-     that loss shortens the flat coverage by a month or more. */
+     that loss shortens the RAW coverage by a month or more (cov itself is
+     already the effective figure, so the raw one anchors the comparison). */
   function expiryRisk(r) {
-    return !!(r.moved && r.expWaste >= 1 && r.cov != null && r.expCov != null && r.cov - r.expCov >= 1);
+    return !!(r.moved && r.expWaste >= 1 && r.covRaw != null && r.expCov != null && r.covRaw - r.expCov >= 1);
+  }
+  /* UOM precedence for the dosage form: the planner file is the owner's
+     authoritative sheet, then the identifiers/catalog upload, then the
+     withdrawals file's own UOM column. */
+  function uomFor(code, wdUom) {
+    var p = PLANNERS && PLANNERS.byCode && PLANNERS.byCode[code];
+    if (p && p.uom) return p.uom;
+    var m = MAP && MAP.byCode && MAP.byCode[code];
+    if (m && m.uom) return m.uom;
+    return wdUom || null;
+  }
+  /* Effective-stock engine (owner spec v3): every order decision reads the
+     stock that can actually be DISPENSED — expired and FEFO-unreachable
+     units (incl. the 3-month hand-dispense grace) are excluded from
+     coverage, the stockout/reorder projection, the suggested quantity and
+     the status. Raw figures stay on the row for display transparency.
+     Items without batch data keep raw behavior (degrade gracefully). */
+  function applyEffective(r, asOfIso) {
+    var grace = handDispensed(uomFor(r.code, r.uom)) ? GRACE_MONTHS : 0;
+    var es = null;
+    if (r.liveBatches) es = expiryStats(r.liveBatches, r.avg, r.stock, asOfIso, false, grace);
+    else if (r.inStock && r.stock > 0 && r.approxExp) es = expiryStats([{ e: r.approxExp, q: r.stock, b: r.approxBatch || null }], r.avg, r.stock, asOfIso, true, grace);
+    r.covRaw = r.avg > 0 ? r.stock / r.avg : null;
+    r.expFirst = es ? es.firstExp : null;
+    r.expMonths = es ? es.expMonths : null;
+    r.expWaste = es ? es.expWaste : 0;
+    r.expCov = es ? es.expCov : null;
+    r.expApprox = es ? es.expApprox : false;
+    r.grace = grace;
+    r.batches = es ? es.batches : null;
+    r.atRiskBatches = es ? es.atRiskBatches : null;
+    r.usable = Math.max(0, r.stock - (es ? es.expWaste : 0));
+    r.cov = es && r.avg > 0 ? es.expCov : r.covRaw;
+    r.qty9 = r.avg * ORDER_COVER_MONTHS;
+    r.sug = Math.max(0, r.qty9 - r.usable);
+    r.status = statusOf(r.cov == null ? 0 : r.cov, r.avg, r.inStock, r.code);
+    r.stockoutIso = (r.avg > 0 && r.usable > 0) ? addDaysIso(asOfIso, r.cov * DAYS_PER_MONTH) : (r.avg > 0 ? asOfIso : null);
+    r.reorderIso = r.avg > 0 ? addDaysIso(asOfIso, ((r.cov == null ? 0 : r.cov) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
+  }
+  /* Re-grade every row after a dosage-form source changes (planner upload,
+     identifiers upload): grace may flip, which moves usable stock, dates,
+     suggestions, and statuses. */
+  function recomputeEffective() {
+    if (!STATE.rows.length || STATE.meta.source !== "upload") return;
+    var asOfIso = STATE.meta.stock_as_of;
+    STATE.rows.forEach(function (r) {
+      if (r.liveBatches || r.approxExp) applyEffective(r, asOfIso);
+    });
+    // applyEffective resets qty9/sug to the flat rule; seasonal items get
+    // their prior-year-weighted suggestion re-applied on top, as in compute.
+    applySeasonal(STATE.rows);
   }
   /* Status thresholds: the 6-month rule, unless the planner set a per-item
      override (e.g. alert a critical drug already at 8 months). Watch is always
@@ -2460,6 +2577,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var re = (code && thresholdFor(code)) || REORDER_MONTHS;
     if (cov <= re) return "order_now";
     if (cov <= re + 1) return "warning";
+    if (cov > EXCESS_MONTHS) return "excess";
     return "ok";
   }
   function refreshStatuses() {
@@ -2473,20 +2591,18 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       var w = wd.byCode[code], s = st.byCode[code];
       var total = w ? w.qty : 0, avg = w ? total / months : 0;
       var inStock = !!s, stock = inStock ? s.qty : 0;
-      var cov = avg > 0 ? stock / avg : null;
-      // Expiry: real batches from the stock file win; otherwise the latest
-      // dispatch batch from the withdrawals file approximates the queue front.
-      var es = null;
-      if (s && s.batches) es = expiryStats(s.batches, avg, stock, st.stock_as_of, false);
-      else if (inStock && stock > 0 && w && w.lastExp) es = expiryStats([{ e: w.lastExp, q: stock, b: w.lastBatch || null }], avg, stock, st.stock_as_of, true);
-      // FEATURE 1/2 — project stockout + reorder-by from the stock-as-of date
-      // at the current daily burn (avg ÷ 30.44). Available already excludes
-      // expired (NUPCO routes expired to Hold), so coverage is the usable run.
-      var stockoutIso = (avg > 0 && stock > 0) ? addDaysIso(st.stock_as_of, cov * DAYS_PER_MONTH) : (avg > 0 ? st.stock_as_of : null);
-      var reorderIso = avg > 0 ? addDaysIso(st.stock_as_of, ((cov == null ? 0 : cov) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
       var expiredBatches = (s && s.expiredBatches) || null;
       var expiredQty = 0; if (expiredBatches) expiredBatches.forEach(function (b) { expiredQty += b.q; });
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, family: (s && s.family) || null, stockoutIso: stockoutIso, reorderIso: reorderIso, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null, atRiskBatches: es ? es.atRiskBatches : null, expiredBatches: expiredBatches, expiredQty: expiredQty });
+      var r = { code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, family: (s && s.family) || null, expiredBatches: expiredBatches, expiredQty: expiredQty };
+      // Expiry inputs: real batches from the stock file win; otherwise the
+      // latest dispatch batch from the withdrawals file approximates the
+      // queue front (FEFO picking). applyEffective derives every decision
+      // figure (coverage, status, projection, suggestion) from USABLE stock.
+      r.liveBatches = (s && s.batches) || null;
+      r.approxExp = (!r.liveBatches && w && w.lastExp) ? w.lastExp : null;
+      r.approxBatch = (w && w.lastBatch) || null;
+      applyEffective(r, st.stock_as_of);
+      rows.push(r);
     });
     return rows;
   }
@@ -2607,7 +2723,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     if (STATE.view === "averages") return STATE.rows.filter(function (r) { return r.moved || monthlySeriesFor(r.code); });
     return STATE.rows;
   }
-  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0 }; base.forEach(function (r) { if (r.status === "order_now") c.order_now++; else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
+  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, excess: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0 }; base.forEach(function (r) { if (r.status === "order_now") c.order_now++; else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; else if (r.status === "excess") c.excess++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
   function applyFilter(base) {
     var f = STATE.filter;
     var rows = base.filter(function (r) {
@@ -2886,7 +3002,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   }
 
   // ---------- table pieces ----------
-  var STATUS_COLOR = { order_now: "var(--coral)", warning: "var(--amber)", ok: "var(--blue)", no_movement: "var(--muted-2)", not_in_stock: "var(--indigo)" };
+  var STATUS_COLOR = { order_now: "var(--coral)", warning: "var(--amber)", ok: "var(--blue)", excess: "var(--violet)", no_movement: "var(--muted-2)", not_in_stock: "var(--indigo)" };
   function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--blue)") + '"></i></span>'; }
   /* Expiry column: earliest batch expiry in months from the stock date.
      Flagged red when coverage outlives expiry (units would expire unused);
@@ -3026,7 +3142,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + cardStream(t("k_monthly_title"), STATE.monthly)
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
@@ -3287,11 +3403,19 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var clsRow = (r.cls || r.prio || r.agent)
       ? '<div class="dt-codes">' + (r.cls ? '<span class="callout lo">' + esc(r.cls) + '<i>' + t("dt_class") + '</i></span>' : "") + (r.prio ? '<span class="callout ' + (/LIFE/i.test(r.prio) ? "hi" : "lo") + '">' + esc(r.prio) + '<i>' + t("dt_priority") + '</i></span>' : "") + (r.agent ? '<span class="callout lo">' + esc(r.agent) + '<i>' + t("dt_agent") + '</i></span>' : "") + '</div>'
       : "";
+    // Raw-vs-effective transparency: when expiry/grace trimmed the usable
+    // stock, the card shows the usable figure and the raw coverage so the
+    // planner can audit how the decision number was produced.
+    var trimmed = r.covRaw != null && r.cov != null && r.covRaw - r.cov >= 0.05;
     var stats = '<div class="statgrid">'
       + '<span class="stat"><b class="num">' + fmt1(r.avg) + '</b><i>' + t("dt_avg") + '</i></span>'
       + '<span class="stat"><b>' + trendCell(r) + '</b><i>' + t("dt_vs_prev") + '</i></span>'
       + '<span class="stat"><b class="num">' + fmtInt(r.stock) + '</b><i>' + t("dt_stock") + '</i></span>'
       + '<span class="stat"><b class="num">' + (r.inStock ? (r.cov == null ? "∞" : fmt1(r.cov)) : "0.0") + '</b><i>' + t("dt_cov") + '</i></span>'
+      + (trimmed
+        ? '<span class="stat"><b class="num">' + fmtInt(r.usable) + '</b><i>' + t("dt_usable") + '</i></span>'
+          + '<span class="stat"><b class="num muted">' + fmt1(r.covRaw) + '</b><i>' + t("dt_cov_raw") + '</i></span>'
+        : "")
       + '<span class="stat"><b class="num" style="color:var(--blue)">' + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag">' + t("ss_tag") + "</i>" : "") + '</b><i>' + t("dt_sug") + '</i></span>'
       + '<span class="stat"><b class="num">' + fmtInt(r.total) + '</b><i>' + t("dt_total_hist") + '</i></span>'
       + '</div>';
@@ -3978,6 +4102,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
           $("lblMp").classList.remove("is-baseline");
           $("lblMp").classList.add("is-loaded");
           var linked = STATE.rows.length ? applyMap(STATE.rows) : parsed.count;
+          // Catalog UOM can change the dosage form → re-grade effective stock.
+          recomputeEffective();
           applyStatic();
           render();
           // An identifiers file without a recognized trade/scientific-name
@@ -4038,6 +4164,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
           $("lblPl").classList.remove("is-baseline");
           $("lblPl").classList.add("is-loaded");
           applyStatic();
+          // The planner sheet's UOM column is the authoritative dosage form:
+          // re-grade every row so the 3-month hand-dispense grace follows it.
+          recomputeEffective();
           if (STATE.rows.length) render();
           toast(tFmt("pl_loaded", { n: fmtInt(parsed.count) }));
         } catch (ex) { toast(t("err_pl") + colsHint(ex)); }

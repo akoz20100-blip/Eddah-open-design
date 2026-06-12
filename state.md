@@ -1,5 +1,36 @@
 # state.md — Dash project loop state
 
+## Owner spec v3 round (2026-06-12) — comprehensive audit + effective stock
+
+Owner sent a large v3 spec (Arabic) + 3 real files (per-unit prices, planner
+assignment with UOM, framework-agreement orders) + 2 screenshots, and asked
+for a full re-audit with a complete plan before any execution. Plan approved
+(6 waves); branch `claude/psmmc-dashboard-audit-lbnrqt`, PR #20.
+
+Owner decisions taken this round: NO exceljs (reports stay light, no cell
+colors); 3-month hand-dispense rule classified by UOM (parenterals exempt);
+Sharek slot built now, file later; work from repo files + synthetic outlier
+fixtures.
+
+| Wave | Item | Proof |
+|------|------|-------|
+| 0 | Owner files landed in `real-data/`: `NUPCO_net_unit_prices_12062026.xlsx` (2,863 per-UNIT prices), `PSMMC_planner_assignment_12062026.xlsx` (1,173 items, UOM + planner names, no email), `NUPCO_framework_orders_asof_12062026.sanitized.xlsx` (1,162 orders Dec 2025→May 2026; only 19 drug rows; Arabic statuses). New `sanitize-orders.mjs` blanks `Order Placed By` + `Customer Comment` (staff names/free text); verified 0 leftovers. | re-read verification script; README table updated |
+| 1 | **Effective-stock engine** (`applyEffective`): coverage, status, stockout/reorder dates, suggested qty all run on DISPENSABLE stock — FEFO waste (incl. 3-month grace for hand-dispensed UOMs; vial/ampule/inj/syringe/IV-bag exempt) and expired stock excluded. New `excess` status (eff cov > 13 mo) + filter chip. Planner-file UOM is authoritative (then catalog, then withdrawals UOM); planner/identifier uploads re-grade rows (`recomputeEffective`). Item sheet shows dispensable units + raw coverage for transparency. Seasonal suggestion subtracts dispensable (not raw) stock; `clearCoveredOrders` treats `excess` as covered. Real-file impact: **26 items flip healthy→ORDER NOW** (e.g. raw cov 127 mo → eff 3.8), 186 items excess, order-now 216→242. | `spec-effective` red-first (8 red) → green: grace anchor 5114170300500 raw 12.9→eff 0.0 ORDER NOW; excess anchor 5115180100100 raw 29.4→17.9; planner-UOM flip 5118190100100 AMP→EACH ok→order_now |
+| 1 | **Dense-period guard** (the owner's FERINJECT screenshot bug, root-caused numerically: his live card values = correct values ÷ ~65-month period; 2,860÷65=43.8 exactly matches the screenshot): edge months holding < max(2, 0.5%) of dated rows are outliers — counted in totals, excluded from period detection/monthly buckets, named on the quality card (`qr_outlier`). | `spec-period` red-first (64.8 mo with one 2021-dated row) → green (5.3 mo + quality warning) |
+| 1 | **All-items mirror net** (owner: "راجع كل البنود"): report workbook's Reorder sheet (all 1,005 products) compared field-by-field (avg/stock/cov/stockout/reorder/status/sug incl. seasonal) against `expectedEffectiveFromRealFiles`. FERINJECT verified: avg 1,589/mo, cov 1.8, ORDER NOW. | `spec-allitems` red (246 cov + 569 status mismatches) → green (0 mismatches ×8 fields) |
+
+Mirrors updated for the approved semantics: `expectedExpiryFromRealFiles` /
+`expectedExpiryViewsFromRealFiles` grace-aware (at-risk 300→351 batches /
+9.2M→11.5M units; BISOPROLOL eff 16.7→13.7; digest 199→226);
+`expectedProjectionFromRealFiles` now delegates to the effective mirror.
+Suite 26 → 29 specs.
+
+Pending owner files: Sharek platform export, undelivered tenders, direct
+purchases, free-goods price columns. Next waves: KPI item-count cards +
+explainers + sticky table; prices/budget; orders ledger + Arabic
+urgency/replacement emails; Sharek + per-filter reports.
+
+
 ## Inventory-intelligence round (2026-06-12) — owner feature spec (in progress)
 
 Owner dropped a 6-feature spec (stockout/reorder projection, expired handling,
