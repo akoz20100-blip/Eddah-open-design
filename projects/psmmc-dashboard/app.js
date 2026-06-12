@@ -24,13 +24,13 @@
       file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
       err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
       mp_linked: "items linked",
-      mp_no_trade: "no trade-name column was recognized in this file — name search stays limited",
+      mp_no_trade: "No trade-name column was recognized in this file — name search will stay limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
-      upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
+      upl_hint: "Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
-      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with real numbers.",
+      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to explore the dashboard with sample numbers.",
       empty_btn: "Load sample data",
       foot: "Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.",
       search_ph: "Search by code or name — separate items with commas…",
@@ -42,7 +42,7 @@
       k_watch: "Watch", k_nomove: "No movement", k_notstock: "Not in stock",
       k_instock: "Medicines in stock", k_units: "Total available units",
       k_out: "Out of stock", k_reorder: "Need reorder",
-      k_value: "Stock value (SAR)", k_value_sub: "add a price list to enable",
+      k_value: "Stock value (SAR)", k_value_sub: "add a price list to activate",
       k_withdrawn: "Total withdrawn", monthly_word: "per month",
       k_monthly_title: "Monthly consumption", lg_total: "Total",
       k_median: "Median coverage", of_analysed: "of analysed",
@@ -252,7 +252,7 @@
       langName: "عربي"
     }
   };
-  var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "ar"; } catch (e) { return "ar"; } })();
+  var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "en"; } catch (e) { return "en"; } })();
   function t(k) { return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
 
   // ---------- state ----------
@@ -1991,6 +1991,7 @@
     return t("file_wd_hint");
   }
   function applyStatic() {
+    document.title = "PSMMC \u2014 " + t("app_title");
     document.documentElement.lang = LANG;
     document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
