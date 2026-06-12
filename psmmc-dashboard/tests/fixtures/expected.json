@@ -1,0 +1,52 @@
+{
+  "basic": {
+    "detected_months": 2.9,
+    "detected_months_fmt1": "2.9",
+    "period_start": "2026-01-01",
+    "period_end": "2026-03-31",
+    "period_start_pretty": "01 Jan 2026",
+    "period_end_pretty": "31 Mar 2026",
+    "drugCode_inStock": {
+      "code": "5000001",
+      "total": 600,
+      "stock": 1200,
+      "avg": 206.89655172413794,
+      "avg_fmt1": "206.9",
+      "cov": 5.8,
+      "cov_fmt1": "5.8",
+      "status": "order_now"
+    },
+    "drugCode_notInStock": {
+      "code": "5000002",
+      "total": 120,
+      "avg": 41.37931034482759,
+      "status": "not_in_stock"
+    },
+    "excluded": {
+      "nonDrug": "4000003",
+      "rejected": "5000004"
+    },
+    "expectedRowCount": 2
+  },
+  "override6": {
+    "months": 6,
+    "drugCode_inStock": {
+      "code": "5000001",
+      "avg": 100,
+      "avg_fmt1": "100.0",
+      "cov": 12,
+      "cov_fmt1": "12.0",
+      "status": "ok"
+    },
+    "rescaleFactor": 0.48333333333333334
+  },
+  "june": {
+    "period_start": "2026-06-01",
+    "period_start_pretty_prefix": "01 Jun",
+    "bug_shifted_prefix": "31 May"
+  },
+  "xss": {
+    "code": "5<img src=x onerror=window.__xss=1>",
+    "prefix": "5"
+  }
+}

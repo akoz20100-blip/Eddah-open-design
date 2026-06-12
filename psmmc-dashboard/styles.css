@@ -7,7 +7,7 @@
 :root{
   --bg:#ebecef;
   --card:#ffffff; --card-edge:rgba(255,255,255,.9);
-  --ink:#0c0d10; --ink-2:#3b3e44; --muted:#959aa4; --muted-2:#c5c8ce;
+  --ink:#0c0d10; --ink-2:#3b3e44; --muted:#676d7a; --muted-2:#c5c8ce;
   --blue:#2456f5; --blue-deep:#1a41cf; --blue-soft:#e9eefe;
   --lav:#e6e9fb; --lav-ink:#3d56e0;
   --coral:#ee5138; --coral-soft:#fdeeea;
@@ -365,6 +365,7 @@ td.code.copyable:hover .copyic{opacity:.6}
 /* ---- round 2: print sheet ---- */
 .print-sheet{display:none}
 @media print{
+  @page{margin:14mm 12mm}
   body>*{display:none !important}
   body>.print-sheet{display:block !important}
   body{background:#fff;padding:0;max-width:none}
@@ -372,11 +373,97 @@ td.code.copyable:hover .copyic{opacity:.6}
   .print-sheet h2{font-size:13px;margin:0 0 6px;color:#333}
   .print-sheet p{font-size:11px;margin:0 0 10px;color:#444}
   .print-sheet table{width:100%;border-collapse:collapse;font-size:10.5px;min-width:0}
+  /* Repeat the header on every printed page and keep rows whole. */
+  .print-sheet thead{display:table-header-group}
+  .print-sheet tfoot{display:table-footer-group}
+  .print-sheet tr{break-inside:avoid;page-break-inside:avoid}
   .print-sheet th,.print-sheet td{border:1px solid #bbb;padding:4px 6px;text-align:start;white-space:normal}
   .print-sheet th{background:#f0f0f0}
-  .print-sheet .sign{margin-top:26px;font-size:12px}
+  /* Signature block sits at a fixed distance from the table and never splits
+     across a page break. When app.js emits the structured three-column markup
+     (.sign-col / .sign-line) it lays out as date · name · signature ruled
+     blanks; otherwise the legacy single <p class="sign"> still reads cleanly. */
+  .print-sheet .sign{margin-top:34px;font-size:11px;break-inside:avoid;page-break-inside:avoid}
+  .print-sheet .sign:has(.sign-col){display:flex;gap:28px;align-items:flex-end}
+  .print-sheet .sign .sign-col{flex:1;min-width:0}
+  .print-sheet .sign .sign-line{border-bottom:1px solid #555;height:1px;margin-bottom:4px}
+  .print-sheet .sign .sign-lbl{font-size:10px;color:#444}
 }
 
 /* ---- round 2c: empty price slot in the item card ---- */
 .priceblock.is-empty .pb-item b{color:var(--muted-2)}
 .priceblock .pb-hint{flex-basis:100%;font-size:11px;color:var(--muted);font-weight:600;line-height:1.5}
+
+/* ---- round 3: keyboard focus visibility ---- */
+/* Suppress the default ring for mouse/touch; keyboard users get a coherent
+   2px blue halo with breathing offset. Dark surfaces invert to a light ring. */
+:where(.tab,.fab,.fchip,.btn-soft,.btn-primary,.btn-ink,.lang-toggle,
+  .filebtn,th.sortable,.code-chip,td.code.copyable,.dt-close,.seg button,
+  .os-row,.search input):focus{outline:none}
+
+.tab:focus-visible,.fab:focus-visible,.fchip:focus-visible,.btn-soft:focus-visible,
+.btn-primary:focus-visible,.lang-toggle:focus-visible,.filebtn:focus-within,
+.code-chip:focus-visible,.dt-close:focus-visible,.seg button:focus-visible,
+.os-row:focus-visible,td.code.copyable:focus-visible{
+  outline:2px solid var(--blue); outline-offset:2px; border-radius:inherit;
+}
+/* th has no border-radius of its own; give the ring a defined corner + inset
+   so it never collides with the table's clipped edge. */
+th.sortable:focus-visible{
+  outline:2px solid var(--blue); outline-offset:-2px; border-radius:8px;
+}
+/* Dark/tinted surfaces: a blue ring on near-black is invisible, so use a
+   bright halo that reads on ink and on the active pink/blue chips. */
+.btn-ink:focus-visible,.fchip.is-active:focus-visible{
+  outline:2px solid #fff; outline-offset:2px;
+  box-shadow:0 0 0 4px rgba(36,86,245,.55); border-radius:inherit;
+}
+.fab:focus-visible{
+  outline:2px solid #fff; outline-offset:3px;
+  box-shadow:0 0 0 5px rgba(255,45,135,.45);
+}
+/* The search field has no visible border at rest; a subtle inset ring keeps it
+   calm but unmistakable under keyboard focus. */
+.search input:focus-visible{outline:none}
+.search:focus-within{box-shadow:var(--shadow),0 0 0 2px var(--blue)}
+
+/* ---- round 3: reduced motion — drop transforms, keep colour ---- */
+@media (prefers-reduced-motion: reduce){
+  .lang-toggle:hover,.btn-ink:hover,.btn-primary:hover,.kcard:hover,
+  .fchip:hover,.fab:not(:disabled):hover{transform:none}
+  .lang-knob,.lang-toggle.is-en .lang-knob{transition:none}
+  .kcard,.fab,.fchip,.btn-soft,.btn-primary,.btn-ink,.lang-toggle,.filebtn,
+  .seg button,.tab{transition-property:color,background-color,border-color,box-shadow,opacity}
+}
+
+/* ---- round 3: horizontal scroll affordance on the table ----
+   Classic CSS-only scroll shadows: opaque cover layers (background-attachment:
+   local) sit over translucent shadow layers (background-attachment: scroll).
+   When scrolled to an edge the cover hides that edge's shadow. Logical edges
+   keep it correct in RTL. */
+.tablewrap{
+  background:
+    linear-gradient(to right, var(--card) 30%, rgba(255,255,255,0)) left center / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--card) 30%, rgba(255,255,255,0)) right center / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(16,18,24,.10), rgba(16,18,24,0)) left center / 16px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(16,18,24,.10), rgba(16,18,24,0)) right center / 16px 100% no-repeat scroll;
+}
+
+/* ---- round 3: micro-polish sweep ---- */
+/* Active filter chip presses in slightly when toggled / activated. */
+.fchip:active{transform:translateY(0) scale(.97)}
+.fchip.is-active{transition:.16s var(--ease)}
+/* Order rows read as clickable: a faint accent bar grows at the logical start
+   edge on hover/focus (RTL-aware via inset-inline-start). */
+.os-row{position:relative}
+.os-row::before{content:"";position:absolute;inset-inline-start:0;top:8px;bottom:8px;
+  width:3px;border-radius:999px;background:var(--blue);opacity:0;
+  transform:scaleY(.4);transform-origin:center;transition:.18s var(--ease)}
+.os-row:hover::before,.os-row:focus-visible::before{opacity:.85;transform:scaleY(1)}
+/* Empty-state icon tile gets a touch more breathing room above the heading. */
+.empty .tile-lg{margin-bottom:4px}
+
+@media (prefers-reduced-motion: reduce){
+  .fchip:active{transform:none}
+  .os-row::before{transition:opacity .18s var(--ease);transform:scaleY(1)}
+}
