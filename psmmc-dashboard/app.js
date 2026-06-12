@@ -23,6 +23,7 @@
       file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
       err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
       mp_linked: "items linked",
+      mp_no_trade: "no trade-name column was recognized in this file — name search stays limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
@@ -99,6 +100,7 @@
       file_mp: "ملف الأسماء والمعرفات", file_mp_hint: "اختياري · أكواد المستشفى وMSD والاسم التجاري",
       err_mp: "تعذّر قراءة ملف المعرفات (يلزم عمود كود نبكو + أعمدة الاسم التجاري / كود المستشفى / MSD)",
       mp_linked: "صنف مرتبط",
+      mp_no_trade: "لم يتم التعرف على عمود الاسم التجاري في هذا الملف — البحث بالاسم سيبقى محدودًا",
       c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD", c_agent: "الوكيل / المورد", c_class: "التصنيف",
       dt_agent: "الوكيل / المورد",
       btn_sample: "تحميل بيانات تجريبية",
@@ -232,9 +234,46 @@
     bd.onclick = function (ev) { if (ev.target === bd) closeModal(); };
     document.removeEventListener("keydown", modalEsc);
     document.addEventListener("keydown", modalEsc);
+    wireSheetSwipe(card);
     try { card.focus(); } catch (e) {}
   }
   function modalEsc(ev) { if (ev.key === "Escape") closeModal(); }
+  /* Swipe-down-to-dismiss for the bottom sheet: when the sheet is scrolled to
+     its top, dragging downward follows the finger and a pull past the
+     threshold closes it. Wired once — the listeners live on the persistent
+     #modalCard element across opens. */
+  function wireSheetSwipe(card) {
+    if (card._swipeWired) return;
+    card._swipeWired = true;
+    var startY = null, dy = 0, dragging = false;
+    card.addEventListener("touchstart", function (ev) {
+      if (ev.touches.length !== 1) { startY = null; return; }
+      startY = ev.touches[0].clientY; dy = 0; dragging = false;
+    }, { passive: true });
+    card.addEventListener("touchmove", function (ev) {
+      if (startY == null) return;
+      dy = ev.touches[0].clientY - startY;
+      if (card.scrollTop <= 0 && dy > 0) {
+        dragging = true;
+        card.style.transform = "translateY(" + dy + "px)";
+        if (ev.cancelable) ev.preventDefault();
+      } else if (dragging) {
+        dragging = false;
+        card.style.transform = "";
+      }
+    }, { passive: false });
+    card.addEventListener("touchend", function () {
+      if (dragging && dy > 80) {
+        card.style.transform = "";
+        closeModal();
+      } else if (card.style.transform) {
+        card.style.transition = "transform .18s cubic-bezier(.23,1,.32,1)";
+        card.style.transform = "";
+        setTimeout(function () { card.style.transition = ""; }, 200);
+      }
+      startY = null; dragging = false;
+    });
+  }
   function closeModal() {
     var bd = $("modal");
     if (bd.hidden) return;
@@ -242,6 +281,7 @@
     var prev = bd._prevFocus; bd._prevFocus = null;
     bd.hidden = true;
     $("modalCard").innerHTML = "";
+    $("modalCard").style.transform = "";
     document.body.style.overflow = "";
     document.removeEventListener("keydown", modalEsc);
     STATE.detail = null;
@@ -592,11 +632,11 @@
   function parseMapping(aoa) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
-    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material"]),
-      ti = findCol(H, ["Trade Name", "Brand Name", "Brand", "Commercial Name", "Trade"]),
-      gi = findCol(H, ["Scientific Name", "Generic Name", "Scientific"]),
-      hi = findCol(H, ["Hospital Code", "Hospital Item Number", "Hospital Number", "Local Code", "Hospital"]),
-      mi = findCol(H, ["MODHS-CODE", "MODHS CODE", "MSD Code", "MSD Number", "MSD"]),
+    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
+      ti = findCol(H, ["Trade Name", "Brand Name", "Brand", "Commercial Name", "Trade", "الاسم التجاري", "الاسم التجارى", "اسم تجاري"]),
+      gi = findCol(H, ["Scientific Name", "Generic Name", "Scientific", "الاسم العلمي", "اسم علمي", "المادة الفعالة"]),
+      hi = findCol(H, ["Hospital Code", "Hospital Item Number", "Hospital Number", "Local Code", "Hospital", "كود المستشفى", "رقم المستشفى"]),
+      mi = findCol(H, ["MODHS-CODE", "MODHS CODE", "MSD Code", "MSD Number", "MSD", "الكود الموحد"]),
       cl = findCol(H, ["Classification", "التصنيف"]),
       pl = findCol(H, ["Priorty Level", "Priority Level", "الأولوية"]),
       pp = findCol(H, ["Pack Price", "Unit Pack Price", "سعر العلبة", "سعر العبوة", "Price"]),
@@ -621,7 +661,7 @@
       }
     }
     if (!n) throw new Error("empty-map");
-    return { byCode: byCode, count: n, priced: priced };
+    return { byCode: byCode, count: n, priced: priced, hasTrade: ti >= 0 || gi >= 0 };
   }
   function saveMap(map) { persist(MAP_KEY, map); }
   function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
@@ -1667,7 +1707,10 @@
           var linked = STATE.rows.length ? applyMap(STATE.rows) : parsed.count;
           applyStatic();
           render();
-          toast(fmtInt(linked) + " " + t("mp_linked"));
+          // An identifiers file without a recognized trade/scientific-name
+          // column still links codes — but name search would silently stay
+          // dead, so say it out loud.
+          toast(fmtInt(linked) + " " + t("mp_linked") + (parsed.hasTrade ? "" : " · " + t("mp_no_trade")));
         } catch (ex) { toast(t("err_mp") + colsHint(ex)); }
       });
     };

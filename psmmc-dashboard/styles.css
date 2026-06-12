@@ -279,8 +279,18 @@ td.code .subcode{display:block; font-size:10px; color:var(--muted-2); margin-top
 .modal-backdrop{position:fixed;inset:0;background:rgba(12,13,16,.45);backdrop-filter:blur(3px);z-index:70;display:grid;place-items:center;padding:18px;padding-bottom:max(18px,env(safe-area-inset-bottom))}
 .modal-backdrop[hidden]{display:none}
 .modal-card{background:var(--card);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);max-width:420px;width:calc(100% - 8px);padding:22px}
-.modal-card.modal-sheet{max-width:720px;max-height:88vh;overflow-y:auto}
-@media (max-width:640px){.modal-backdrop{align-items:end;padding:0}.modal-card{border-radius:28px 28px 0 0;max-width:none;width:100%}.modal-card.modal-sheet{max-height:92vh}}
+.modal-card.modal-sheet{max-width:720px;max-height:86vh;overflow-y:auto;position:relative}
+/* iOS Safari: vh includes the collapsed URL bar, pushing the sheet's top (and its
+   close button) under browser chrome. dvh tracks the VISIBLE viewport. */
+@supports (height:1dvh){.modal-card.modal-sheet{max-height:86dvh}}
+@media (max-width:640px){
+  .modal-backdrop{align-items:end;padding:0}
+  .modal-card{border-radius:28px 28px 0 0;max-width:none;width:100%}
+  .modal-card.modal-sheet{max-height:84vh;padding-top:30px;touch-action:pan-y}
+  /* grab handle — signals the sheet is swipe-dismissable */
+  .modal-card.modal-sheet::before{content:"";position:sticky;top:-22px;display:block;margin:-8px auto 10px;width:44px;height:5px;border-radius:999px;background:var(--muted-2)}
+}
+@media (max-width:640px){@supports (height:1dvh){.modal-card.modal-sheet{max-height:88dvh}}}
 .modal-title{font-size:17px;font-weight:800;letter-spacing:-.01em;margin:0 0 4px}
 .modal-sub{font-size:12.5px;color:var(--muted);font-weight:600;margin:0 0 14px}
 .pc-period{display:flex;align-items:center;gap:12px;background:var(--inset);border-radius:var(--r-md);padding:13px 15px;margin-bottom:14px}
