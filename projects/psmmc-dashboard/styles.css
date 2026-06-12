@@ -226,14 +226,27 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .expcell .exp-risk{color:var(--coral); font-weight:800; cursor:help}
 .os-row .exp-tag{font-style:normal; font-size:10.5px; font-weight:800; color:var(--muted); white-space:nowrap; margin-inline-start:8px}
 .os-row .exp-tag.is-risk{color:var(--coral)}
-.exp-block{margin-top:16px}
-.batch-row{display:flex; gap:14px; align-items:baseline; padding:7px 2px; font-size:12.5px; font-weight:600; border-bottom:1px dashed var(--line)}
-.batch-row b{min-width:96px}
-.batch-row i{font-style:normal; color:var(--muted)}
-.batch-row u{text-decoration:none; color:var(--muted); margin-inline-start:auto; font-size:11px}
-.batch-row.is-expired, .batch-row.is-expired i{color:var(--coral)}
+.exp-block,.expired-block{margin-top:16px}
+/* Card-only batch list (flex rows). The Expiry-Watch view uses tr.batch-row,
+   which must stay a normal table row — so this is scoped to the card blocks. */
+.exp-block .batch-row,.expired-block .batch-row{display:flex; gap:14px; align-items:baseline; padding:7px 2px; font-size:12.5px; font-weight:600; border-bottom:1px dashed var(--line)}
+.exp-block .batch-row b,.expired-block .batch-row b{min-width:96px}
+.exp-block .batch-row i,.expired-block .batch-row i{font-style:normal; color:var(--muted)}
+.exp-block .batch-row u,.expired-block .batch-row u{text-decoration:none; color:var(--muted); margin-inline-start:auto; font-size:11px}
+.batch-row.is-expired,.exp-block .batch-row.is-expired i,.expired-block .batch-row.is-expired i{color:var(--coral)}
 .exp-stats{margin-top:12px}
 #printSheet td.exp-risk{color:#b3261e; font-weight:700}
+
+/* ---- Expiry Watch view (FEATURE 3+4) ---- */
+.expiry-summary{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; padding:16px 18px}
+.expiry-summary .ev-tot{display:flex; gap:22px}
+.expiry-summary .ev-tot .stat b{font-size:20px}
+.ev-planners{display:flex; flex-wrap:wrap; gap:8px}
+.ev-planner{padding:5px 11px; border-radius:999px; background:var(--inset); font-size:12px; font-weight:700; color:var(--ink-2)}
+.fil-sep{flex:1 1 12px}
+tr.batch-row{cursor:pointer}
+tr.batch-row .tradename{display:block; font-size:10.5px; color:var(--muted); margin-top:2px}
+tr.batch-row td .exp-risk{color:var(--coral); font-weight:700}
 
 /* Brand = generic mapping applied to the current search (trade-name synonyms). */
 .syn-hint{display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:12.5px;

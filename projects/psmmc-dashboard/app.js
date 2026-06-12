@@ -166,6 +166,14 @@
       dt_batches: "Batches & expiry",
       dt_exp_eff: "effective coverage after expiry (mo)",
       dt_exp_risk: "units at risk of expiry",
+      tab_expiry: "Expiry Watch",
+      ev_atrisk: "At-risk", ev_expired: "Expired",
+      ev_batches: "batches", ev_total_qty: "total units", ev_value_pending: "value — add prices",
+      ev_sort_exp: "By expiry", ev_sort_qty: "By quantity",
+      ev_tte: "to expiry", ev_overdue: "overdue",
+      c_lot: "Lot / Batch", c_expdate: "Expiry date",
+      ev_empty: "No at-risk or expired batches in this file.",
+      dt_expired_batches: "Expired batches (in quarantine)",
       th_title: "Custom alert threshold",
       th_ph: "months",
       th_save: "Save",
@@ -324,6 +332,14 @@
       dt_batches: "الدفعات والصلاحية",
       dt_exp_eff: "التغطية الفعلية بعد الصلاحية (شهر)",
       dt_exp_risk: "وحدات مهددة بانتهاء الصلاحية",
+      tab_expiry: "مراقبة الصلاحية",
+      ev_atrisk: "مهدّد بالانتهاء", ev_expired: "منتهي الصلاحية",
+      ev_batches: "دفعة", ev_total_qty: "إجمالي الوحدات", ev_value_pending: "القيمة — أضف الأسعار",
+      ev_sort_exp: "حسب الصلاحية", ev_sort_qty: "حسب الكمية",
+      ev_tte: "حتى الانتهاء", ev_overdue: "متأخرة",
+      c_lot: "رقم الدفعة", c_expdate: "تاريخ الصلاحية",
+      ev_empty: "لا توجد دفعات مهددة أو منتهية في هذا الملف.",
+      dt_expired_batches: "دفعات منتهية الصلاحية (في الحجر)",
       th_title: "حد تنبيه مخصص",
       th_ph: "أشهر",
       th_save: "حفظ",
@@ -1559,6 +1575,10 @@
       fmi = findCol(H, ["Item Family Group", "Item Family Short Key"]);
     if (ci < 0) throw new Error("cols:Generic Item Number");
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
+    // Total (physical) qty is a distinct column from available: expired stock
+    // is moved to Hold so its Available is 0, but its Total Qty is the unit
+    // count the Expired view must surface.
+    var tqi = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
     function txt(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
     var qTotal = 0, qCode = 0, qNonDrug = 0, qBadExp = 0;
@@ -1577,39 +1597,50 @@
       if (!rec.agent) rec.agent = txt(row, vi);
       if (!rec.sci) rec.sci = txt(row, gi);
       if (!rec.msd) rec.msd = txt(row, mi);
-      // Batch line: rows with available units and a readable expiry feed the
-      // expiry intelligence; same-date batches merge so the FEFO walk stays
-      // small even when a code spans many warehouse rows.
-      if (xi >= 0 && q > 0) {
+      // Batch line: every row with a readable expiry feeds the expiry views,
+      // tracking available (live FEFO) and total (expired) qty separately;
+      // same-date batches merge per code so the walk stays small.
+      if (xi >= 0) {
         var xd = parseDate(row[xi]);
         if (xd) {
           var key = isoDate(xd);
           var bm = rec.expByDate || (rec.expByDate = {});
-          var slot = bm[key] || (bm[key] = { q: 0, b: null });
-          slot.q += q;
+          var slot = bm[key] || (bm[key] = { av: 0, tot: 0, b: null });
+          slot.av += q;
+          slot.tot += tqi >= 0 ? num(row[tqi]) : q;
           if (!slot.b && bi >= 0 && row[bi] != null && row[bi] !== "") slot.b = String(row[bi]).trim();
-        } else if (row[xi] != null && String(row[xi]).trim() !== "") {
+        } else if (q > 0 && row[xi] != null && String(row[xi]).trim() !== "") {
           qBadExp++;
         }
       }
     }
+    var asOf = dateFromFilename(filename);
+    if (!asOf && wb && wb.Props && wb.Props.ModifiedDate) asOf = new Date(wb.Props.ModifiedDate);
+    var asOfIso = isoDate(asOf);
+    // Split each code's date-merged batches into LIVE (expiry ≥ as-of, has
+    // available units → FEFO/at-risk input) and EXPIRED (expiry < as-of →
+    // counted by physical Total Qty). Without an as-of date, all available
+    // batches are treated as live (the prior behavior).
     Object.keys(byCode).forEach(function (code) {
       var rec = byCode[code];
       if (!rec.expByDate) return;
-      rec.batches = Object.keys(rec.expByDate).sort().map(function (e) {
-        return { e: e, q: rec.expByDate[e].q, b: rec.expByDate[e].b };
+      var live = [], expired = [];
+      Object.keys(rec.expByDate).sort().forEach(function (e) {
+        var s = rec.expByDate[e];
+        if (asOfIso && e < asOfIso) { if (s.tot > 0) expired.push({ e: e, q: s.tot, b: s.b }); }
+        else if (s.av > 0) live.push({ e: e, q: s.av, b: s.b });
       });
+      rec.batches = live.length ? live : null;
+      rec.expiredBatches = expired.length ? expired : null;
       delete rec.expByDate;
     });
-    var asOf = dateFromFilename(filename);
-    if (!asOf && wb && wb.Props && wb.Props.ModifiedDate) asOf = new Date(wb.Props.ModifiedDate);
     var quality = {
       total: qTotal, accepted: qTotal - qCode - qNonDrug,
       rejects: qreasons({ qr_code: qCode, qr_nondrug: qNonDrug }),
       warns: qreasons({ qr_badexp: qBadExp }),
       cols: qcols(H, [["c_code", ci], ["c_avail", ai], ["c_desc", de], ["c_trade", ti], ["dt_agent", vi], ["qs_sci", gi], ["c_msd", mi], ["c_expiry", xi], ["qs_batch", bi]])
     };
-    return { byCode: byCode, stock_as_of: isoDate(asOf), quality: quality };
+    return { byCode: byCode, stock_as_of: asOfIso, quality: quality };
   }
 
   // ---------- compute ----------
@@ -1622,7 +1653,7 @@
   function expiryStats(batches, avg, stock, asOfIso, approx) {
     if (!batches || !batches.length) return null;
     var asOf = parseIsoLocal(asOfIso) || new Date();
-    var consumed = 0, waste = 0;
+    var consumed = 0, waste = 0, atRisk = [];
     for (var i = 0; i < batches.length; i++) {
       var b = batches[i];
       var d = parseIsoLocal(b.e);
@@ -1630,8 +1661,11 @@
       if (avg > 0) {
         var can = Math.max(0, avg * tMo - consumed);
         var use = Math.min(b.q, can);
-        waste += b.q - use;
+        var risk = b.q - use;
+        waste += risk;
         consumed += use;
+        // Per-batch at-risk remainder (≥ 1 unit) for the At-Risk view.
+        if (risk >= 1) atRisk.push({ e: b.e, q: risk, b: b.b });
       }
     }
     var first = parseIsoLocal(batches[0].e);
@@ -1641,7 +1675,8 @@
       expWaste: avg > 0 ? waste : 0,
       expCov: avg > 0 ? (stock - waste) / avg : null,
       expApprox: !!approx,
-      batches: batches
+      batches: batches,
+      atRiskBatches: atRisk.length ? atRisk : null
     };
   }
   /* The ROADMAP-1 alert predicate: at least one unit would expire unused AND
@@ -1682,7 +1717,9 @@
       // expired (NUPCO routes expired to Hold), so coverage is the usable run.
       var stockoutIso = (avg > 0 && stock > 0) ? addDaysIso(st.stock_as_of, cov * DAYS_PER_MONTH) : (avg > 0 ? st.stock_as_of : null);
       var reorderIso = avg > 0 ? addDaysIso(st.stock_as_of, ((cov == null ? 0 : cov) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, family: (s && s.family) || null, stockoutIso: stockoutIso, reorderIso: reorderIso, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null });
+      var expiredBatches = (s && s.expiredBatches) || null;
+      var expiredQty = 0; if (expiredBatches) expiredBatches.forEach(function (b) { expiredQty += b.q; });
+      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, family: (s && s.family) || null, stockoutIso: stockoutIso, reorderIso: reorderIso, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null, atRiskBatches: es ? es.atRiskBatches : null, expiredBatches: expiredBatches, expiredQty: expiredQty });
     });
     return rows;
   }
@@ -2400,6 +2437,66 @@
     return secline + toolbar(filters) + buildTableHTML("averages", base) + '<p class="dt-note" style="margin:10px 4px">' + t("av_tap") + '</p>';
   }
 
+  /* ---------- Expiry Watch view (FEATURE 3 + 4) ----------
+     A cross-cutting BATCH-level list (not product rows): the At-Risk filter
+     flattens every product's FEFO at-risk batches; the Expired filter lists
+     every batch already past expiry (counted by physical Total Qty). Both are
+     sortable by expiry or quantity and subtotaled per planner. The value
+     column stays "—" until a price file is loaded. */
+  function expiryCounts() {
+    var ar = 0, ex = 0;
+    STATE.rows.forEach(function (r) { if (r.atRiskBatches) ar += r.atRiskBatches.length; if (r.expiredBatches) ex += r.expiredBatches.length; });
+    return { atrisk: ar, expired: ex };
+  }
+  function expiryBatchRows() {
+    var f = STATE.expiryFilter || "atrisk", out = [];
+    STATE.rows.forEach(function (r) {
+      var list = f === "expired" ? r.expiredBatches : r.atRiskBatches;
+      if (!list) return;
+      list.forEach(function (b) { out.push({ r: r, e: b.e, q: b.q, lot: b.b || null }); });
+    });
+    if ((STATE.expirySort || "exp") === "qty") out.sort(function (a, b) { return b.q - a.q; });
+    else out.sort(function (a, b) { return a.e < b.e ? -1 : a.e > b.e ? 1 : 0; });
+    return out;
+  }
+  function fchipE(key, label, count, icon) { return '<button class="fchip' + (((STATE.expiryFilter || "atrisk") === key) ? " is-active" : "") + '" data-efilter="' + key + '">' + (icon ? '<span class="fic">' + icon + "</span>" : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
+  function fsortE(key, label) { return '<button class="fchip' + (((STATE.expirySort || "exp") === key) ? " is-active" : "") + '" data-esort="' + key + '">' + label + "</button>"; }
+  function renderExpiry() {
+    var f = STATE.expiryFilter || "atrisk", counts = expiryCounts(), rows = expiryBatchRows();
+    var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
+    var totalQty = 0, byPlanner = {};
+    rows.forEach(function (x) { totalQty += x.q; var pn = plannerName(x.r) || t("planner_unassigned"); byPlanner[pn] = (byPlanner[pn] || 0) + x.q; });
+    var filters = '<div class="filters">'
+      + fchipE("atrisk", t("ev_atrisk"), counts.atrisk, ICON.alert)
+      + fchipE("expired", t("ev_expired"), counts.expired, ICON.ban)
+      + '<span class="fil-sep"></span>'
+      + fsortE("exp", t("ev_sort_exp")) + fsortE("qty", t("ev_sort_qty")) + "</div>";
+    var plannerChips = Object.keys(byPlanner).sort(function (a, b) { return byPlanner[b] - byPlanner[a]; }).slice(0, 8)
+      .map(function (pn) { return '<span class="ev-planner">' + esc(pn) + ' <b class="num">' + fmtM(byPlanner[pn]) + "</b></span>"; }).join("");
+    var summary = '<div class="kcard span12 expiry-summary"><div class="ev-tot">'
+      + '<span class="stat"><b class="num">' + fmtInt(rows.length) + '</b><i>' + t("ev_batches") + "</i></span>"
+      + '<span class="stat"><b class="num ev-total-qty">' + fmtM(totalQty) + '</b><i>' + t("ev_total_qty") + "</i></span>"
+      + '<span class="stat"><b class="muted">—</b><i>' + t("ev_value_pending") + "</i></span>"
+      + "</div>" + (plannerChips ? '<div class="ev-planners">' + plannerChips + "</div>" : "") + "</div>";
+    if (!rows.length) {
+      return summary + filters + '<div class="empty card"><span class="tile tile-lav">' + ICON.clock + '</span><h3>' + t("ev_empty") + "</h3></div>";
+    }
+    var body = rows.map(function (x) {
+      var d = parseIsoLocal(x.e), mo = d ? (d - asOf) / 86400000 / DAYS_PER_MONTH : null;
+      var tte = f === "expired"
+        ? '<span class="exp-risk">' + t("ev_overdue") + (mo != null ? " " + fmt1(-mo) + " " + t("mo") : "") + "</span>"
+        : (mo != null ? '<span class="num">' + fmt1(mo) + " " + t("mo") + "</span>" : "—");
+      var pn = plannerName(x.r);
+      return '<tr class="batch-row" data-code="' + esc(x.r.code) + '"><td class="desc">' + esc(x.r.desc) + '<i class="tradename num">' + esc(x.r.code) + "</i></td>"
+        + '<td class="num">' + esc(x.lot || "—") + "</td><td class=\"num\">" + prettyDate(x.e) + "</td><td>" + tte + "</td>"
+        + '<td class="right num">' + fmtInt(x.q) + "</td>"
+        + '<td class="plancell">' + (pn ? esc(pn) : '<span class="muted">' + t("planner_unassigned") + "</span>") + "</td>"
+        + '<td class="right ev-value muted">—</td></tr>';
+    }).join("");
+    var head = "<thead><tr><th>" + t("c_desc") + "</th><th>" + t("c_lot") + "</th><th>" + t("c_expdate") + "</th><th>" + t("ev_tte") + '</th><th class="right">' + t("ev_total_qty") + "</th><th>" + t("c_planner") + '</th><th class="right">' + t("c_value") + "</th></tr></thead>";
+    return summary + filters + '<div class="tablecard"><div class="tablewrap"><table>' + head + "<tbody>" + body + "</tbody></table></div></div>";
+  }
+
   /* Item drill-down: full monthly bar history (seasonality), stats, prices
      and the MODHS classification, opened from any table or order-sheet row. */
   function renderDetail(code) {
@@ -2502,6 +2599,18 @@
         : "";
       expBlock = '<div class="exp-block"><div class="di-title">' + t("dt_batches") + (r.expApprox ? ' <i class="muted" title="' + esc(t("exp_approx_tip")) + '">≈</i>' : "") + '</div>' + brows + bMore + effLine + '</div>';
     }
+    // FEATURE 3 — expired batches listed separately (physical Total Qty, in
+    // quarantine), with lot numbers and how long ago each expired.
+    var expiredBlock = "";
+    if (r.expiredBatches && r.expiredBatches.length) {
+      var asOfE = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
+      var erows = r.expiredBatches.slice(0, 6).map(function (b) {
+        var bd = parseIsoLocal(b.e), mo = bd ? (bd - asOfE) / 86400000 / DAYS_PER_MONTH : null;
+        return '<div class="batch-row is-expired"><b class="num">' + prettyDate(b.e) + '</b><span class="num">' + fmtInt(b.q) + " " + t("units_word") + '</span><i class="num">' + t("exp_expired") + (mo != null ? " " + fmt1(-mo) + " " + t("mo") : "") + "</i>" + (b.b ? '<u class="num">' + esc(b.b) + "</u>" : "") + "</div>";
+      }).join("");
+      var eMore = r.expiredBatches.length > 6 ? '<p class="dt-note">+' + fmtInt(r.expiredBatches.length - 6) + "</p>" : "";
+      expiredBlock = '<div class="expired-block"><div class="di-title">' + t("dt_expired_batches") + ' <b class="num" style="color:var(--coral)">' + fmtInt(r.expiredQty) + "</b></div>" + erows + eMore + "</div>";
+    }
     var catNote = r.catalogOnly ? '<p class="dt-note">' + esc(t("cat_note")) + '</p>' : "";
     // Previous-orders ledger: last order + in-transit signal.
     var poBlock = "";
@@ -2541,7 +2650,7 @@
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + projStats + ooBlock + poBlock + expBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote + stats + projStats + ooBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;
@@ -2589,6 +2698,7 @@
       tb.setAttribute("aria-selected", active ? "true" : "false");
     });
     if (!STATE.rows.length) return;
+    if (STATE.view === "expiry") { $("content").innerHTML = renderExpiry(); wireDynamic(); return; }
     var base = viewBase(), c = filterCounts(base);
     $("content").innerHTML = STATE.view === "planning" ? renderPlanning(base, c) : STATE.view === "averages" ? renderAverages(base, c) : renderManagement(base, c);
     wireDynamic();
@@ -2646,6 +2756,8 @@
       _searchT = setTimeout(function () { STATE.search = v; renderTableOnly(); }, 150);
     };
     document.querySelectorAll(".fchip[data-filter]").forEach(function (b) { b.onclick = function () { STATE.filter = this.dataset.filter; render(); }; });
+    document.querySelectorAll(".fchip[data-efilter]").forEach(function (b) { b.onclick = function () { STATE.expiryFilter = this.dataset.efilter; render(); }; });
+    document.querySelectorAll(".fchip[data-esort]").forEach(function (b) { b.onclick = function () { STATE.expirySort = this.dataset.esort; render(); }; });
     wireTable($("content"));
     var va = $("osViewAll"); if (va) va.onclick = function () { STATE.filter = "order_now"; render(); var tb = document.querySelector(".toolbar"); if (tb) tb.scrollIntoView({ behavior: "smooth", block: "start" }); };
     var oe = $("osExport"); if (oe) oe.onclick = exportOrderSheet;
@@ -2731,8 +2843,26 @@
   }
 
   // ---------- export ----------
+  /* Expiry Watch export: the active filter's batch list, one row per batch,
+     with the planner and a value column that fills once prices are loaded. */
+  function exportExpiry() {
+    var f = STATE.expiryFilter || "atrisk", rows = expiryBatchRows();
+    var aoa = [[t("c_code"), t("c_desc"), t("c_lot"), t("c_expdate"), t("ev_tte"), t("ev_total_qty"), t("c_planner"), t("c_value")]];
+    var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
+    rows.forEach(function (x) {
+      var d = parseIsoLocal(x.e), mo = d ? Math.round((d - asOf) / 86400000 / DAYS_PER_MONTH * 10) / 10 : "";
+      aoa.push([x.r.code, x.r.desc, x.lot || "", x.e, mo, Math.round(x.q), plannerName(x.r) || t("planner_unassigned"), ""]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, f === "expired" ? "Expired" : "AtRisk");
+    var name = "PSMMC_" + (f === "expired" ? "expired" : "at_risk") + "_" + (STATE.meta.stock_as_of || "") + ".xlsx";
+    XLSX.writeFile(wb, name);
+    toast((LANG === "ar" ? "تم تصدير " : "Exported ") + fmtInt(rows.length) + (LANG === "ar" ? " دفعة → " : " batches → ") + name);
+  }
   function exportExcel() {
     if (!STATE.rows.length) return;
+    // Expiry Watch exports the flattened batch list of the active filter.
+    if (STATE.view === "expiry") { exportExpiry(); return; }
     var rows = applyFilter(viewBase()), aoa, name, sheet;
     var anyTrade = STATE.rows.some(function (r) { return r.trade; }), anyAgent = STATE.rows.some(function (r) { return r.agent; }), anyCls = STATE.rows.some(function (r) { return r.cls; });
     var mapCols = (MAP || anyTrade ? [t("c_trade")] : []).concat(MAP ? [t("c_hosp"), t("c_msd")] : []).concat(anyAgent ? [t("c_agent")] : []).concat(anyCls ? [t("c_class")] : []);
@@ -2951,7 +3081,7 @@
     }
     applyStatic();
     $("langBtn").onclick = function () { setLang(LANG === "ar" ? "en" : "ar"); };
-    document.querySelectorAll(".tab").forEach(function (tb) { tb.onclick = function () { STATE.view = this.dataset.view; STATE.filter = "all"; STATE.search = ""; STATE.sort = defaultSort(); render(); }; });
+    document.querySelectorAll(".tab").forEach(function (tb) { tb.onclick = function () { STATE.view = this.dataset.view; STATE.filter = "all"; STATE.search = ""; STATE.expiryFilter = "atrisk"; STATE.expirySort = "exp"; STATE.sort = defaultSort(); render(); }; });
     $("btnSample").onclick = loadSample;
     $("btnExport").onclick = exportExcel;
     $("fileWithdrawals").onchange = function (e) {

@@ -11,6 +11,7 @@ join slots built now). Methods documented in AUDIT.md. Branch
 
 | PR | Item | Proof |
 |----|------|-------|
+| PR-B | Features 3+4 — new **Expiry Watch** tab: batch-level cross-cutting list, At-Risk (FEFO remainders) / Expired (physical Total Qty) filters, by-expiry/by-quantity sort, per-planner subtotals, value column deferred to prices. parseStock splits date-merged batches into live vs expired; expiryStats returns per-batch at-risk; item card lists expired batches separately. | `spec-expiryviews` red→green vs date-merged mirror: At-Risk 300/9.2M/206 prod, Expired 158/2.7M (TRETINOIN lot 0932001). Suite 24→25. |
 | PR-A | Features 1+2 — Planner column + Stockout/Reorder-By dates + ORDER NOW on the planning table; projection block + daily burn in the item card; new optional planner-mapping upload slot with by-code/by-family join (Unassigned until file dropped). Daily burn = avg ÷ 30.44; stockout anchored on stock-as-of. | `spec-projection` red-first → green vs independent mirror on real files (LINAGLIPTIN cov 3.7 → 28 May 2026 ORDER NOW; LEVETIRACETAM cov 11.2 → 10 Jan 2027 healthy) + planner join proven via synthetic file; suite 23→24. Fixed 2 index/debounce-brittle specs (spec-dedup col shift, spec-realdata → setSearch). |
 
 Remaining this round: PR-B (F3 expired view + F4 at-risk view), PR-C (styled xlsx export). Then stop for owner's next-round decision.
