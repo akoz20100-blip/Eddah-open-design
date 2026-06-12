@@ -16,6 +16,12 @@ read = lambda p: open(os.path.join(HERE, p), encoding="utf-8").read()
 
 html  = read("index.html")
 css   = read("styles.css")
+# Vendored subset fonts -> base64 data URIs so the single file stays
+# self-contained and the offline PWA needs no CDN.
+def _inline_font(m):
+    raw = open(os.path.join(HERE, "vendor", "fonts", m.group(1)), "rb").read()
+    return 'url(data:font/woff2;base64,' + base64.b64encode(raw).decode("ascii") + ')'
+css = re.sub(r'url\("\./vendor/fonts/([\w.-]+\.woff2)"\)', _inline_font, css)
 appjs = read("app.js")
 xlsx  = read("vendor/xlsx.full.min.js")
 sample= read("sample-data.js")
