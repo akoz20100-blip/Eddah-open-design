@@ -1,7 +1,7 @@
 // Test runner: regenerate fixtures, then run every spec-*.mjs sequentially.
 // Prints a summary table; exits 1 if any spec fails.
 //
-//   node psmmc-dashboard/tests/run.mjs
+//   node projects/psmmc-dashboard/tests/run.mjs
 //
 // Env overrides (forwarded to each child): PSMMC_CHROME, PSMMC_PW_DIR.
 
