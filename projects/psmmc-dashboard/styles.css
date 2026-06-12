@@ -191,6 +191,17 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 /* ---- table ---- */
 .tablecard{overflow:hidden; margin:0 2px; border-radius:var(--r-xl); background:var(--card);
   border:1px solid var(--card-edge); box-shadow:var(--shadow)}
+/* ---- data quality card (ROADMAP step 2) ---- */
+.qualitycard .ql-actions{display:flex; gap:8px}
+.ql-file{border-top:1px solid var(--line)}
+.ql-file summary{display:flex; align-items:baseline; gap:10px; cursor:pointer; padding:9px 2px; flex-wrap:wrap}
+.ql-file summary i{color:var(--muted); font-style:normal; font-size:11.5px; max-width:260px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ql-sum{margin-inline-start:auto; font-size:12.5px; color:var(--muted); font-weight:600}
+.ql-line{display:flex; gap:10px; padding:4px 18px; font-size:12.5px; font-weight:600}
+.ql-line b{min-width:64px; text-align:end}
+.ql-cols{padding:8px 18px 12px; font-size:11.5px; color:var(--muted); line-height:1.9}
+
 /* ---- expiry intelligence (ROADMAP step 1) ---- */
 .expcell{white-space:nowrap}
 .expcell .exp-risk{color:var(--coral); font-weight:800; cursor:help}

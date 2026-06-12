@@ -46,13 +46,14 @@ export const SAMPLE_TEXT = "تحميل بيانات تجريبية";
 /**
  * Launch a chromium browser pinned to a timezone + locale.
  * Default timezone Asia/Riyadh pins the calendar invariant.
+ * Extra context options (e.g. acceptDownloads for export specs) pass through.
  */
-export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar" } = {}) {
+export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar", contextOptions = {} } = {}) {
   const browser = await chromium.launch({
     executablePath: CHROME,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
-  const context = await browser.newContext({ timezoneId, locale });
+  const context = await browser.newContext({ timezoneId, locale, ...contextOptions });
   const page = await context.newPage();
 
   const pageErrors = [];
