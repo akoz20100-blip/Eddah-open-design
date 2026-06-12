@@ -24,12 +24,38 @@
   "lighter every round" budget pull in opposite directions; offsets recovered 85 KB,
   net +94 KB raw. Next-round levers: lazy sample data, leaner SheetJS build.
 
+### Reconciliation (PR #11, merged after PR #10)
+
+Two sessions executed round 1 concurrently. PR #10 landed first (move, English
+default, vendored type, sample slimming); PR #11 reconciled onto it, keeping
+its unique contributions:
+
+- **Real-data set landed** — `projects/psmmc-dashboard/real-data/` (cherry-pick of
+  PR #9 head `ad2ec16`): sanitized outbound Jan→10 Jun 2026 (10,130 rows),
+  stock-on-hand `.xls` (20,984 rows), MODHS catalog 07/2025 (1,462 active).
+  This clears former blocked item 1 below.
+- **Real-file validation harness** — `tests/real-data-expected.mjs` (independent
+  mirror of the documented parse rules) + `tests/spec-realdata.mjs` (uploads all
+  three real files through the actual UI slots in headless Chromium). Rendered
+  figures == mirror: **1,005 medicines · period 01 Jan→10 Jun 2026 = 5.3 mo ·
+  stock-as-of 04 Feb 2026 · 63.3M available units · zero page errors**.
+- **Catalog-names bug, red spec first** — parseMapping did not recognize the real
+  MODHS catalog's `MODHS ITEM DESCRIPTION`/`NUPCO ITEM DESCRIPTION` columns, so
+  the owner's real identifiers file linked codes but left name search dead
+  ("name search will stay limited" toast). Catalog descriptions now feed the
+  scientific-name slot: searching "adrenaline" finds the EPINEPHRINE rows,
+  "acyclovir" finds the ACICLOVIR row. `spec-realdata` was red on both, green
+  after the one-line fix.
+- Duplicated work (typography, English default, move) resolved in favor of the
+  already-merged PR #10 versions; PR #11's parallel implementations dropped.
+- Lesson: two routine sessions on one round duplicate ~80% of the work — round 2
+  should run as a single session (or partition parts explicitly up front).
+
 ### Blocked (need owner action)
 
-1. **Real data files absent** — `projects/psmmc-dashboard/real-data/` does not exist
-   in the repo or the session container (searched all branches + filesystem). The
-   routine's mandatory real-file validation could not run. Owner must attach the
-   three sanitized files (or grant access) so round 2 can validate against them.
+1. ~~**Real data files absent**~~ — RESOLVED by PR #11 (see Reconciliation):
+   `real-data/` is now in the repo and `spec-realdata` validates against it
+   every run.
 2. **Phase 0.3 repo rename → `all-dashboard`** — the session's GitHub access has no
    repository-rename capability (scope is pinned to `akoz20100-blip/eddah-open-design`).
    Owner action: GitHub → Settings → rename to `all-dashboard`; Pages URL becomes

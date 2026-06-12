@@ -14,9 +14,17 @@ build, tabular numerals); sample-data now carries raw facts only and the demo
 derives every figure through production formulas. Suite 16 → 18 specs
 (spec-lang with enforced en/ar parity, spec-typography). Built standalone
 1602 → 1696 KB (fonts +179 KB / data −85 KB); load→interactive 733 → 785 ms
-at 4x throttle. Blocked, needs owner: real-data files for mandatory
-validation; repo rename to `all-dashboard` (no rename capability in session
-scope). Path references in this file predate the `projects/` move.
+at 4x throttle. Blocked, needs owner: repo rename to `all-dashboard` (no
+rename capability in session scope). Path references in this file predate
+the `projects/` move.
+
+PR #11 (reconciled on top of PR #10) closed the real-data gap: the three
+sanitized hospital files now live in `projects/psmmc-dashboard/real-data/`,
+`spec-realdata` drives them through the actual upload slots every run
+(1,005 medicines · 5.3-month period · 63.3M units, asserted against an
+independent mirror of the parse rules), and a red-spec-first parser fix made
+the real MODHS catalog's item descriptions searchable (ADRENALINE →
+EPINEPHRINE class of misses). Suite 18 → 19 specs.
 
 ## Snapshot
 
