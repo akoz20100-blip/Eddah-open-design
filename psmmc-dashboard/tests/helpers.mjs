@@ -47,12 +47,21 @@ export const SAMPLE_TEXT = "تحميل بيانات تجريبية";
  * Launch a chromium browser pinned to a timezone + locale.
  * Default timezone Asia/Riyadh pins the calendar invariant.
  */
-export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar" } = {}) {
+export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar", lang = "ar" } = {}) {
   const browser = await chromium.launch({
     executablePath: CHROME,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
   const context = await browser.newContext({ timezoneId, locale });
+  // The app's first-visit default is ENGLISH; the suite's assertions are
+  // written against the Arabic UI, so seed the persisted language choice
+  // before any page script runs. Pass `lang: null` to exercise the true
+  // first-visit default (see spec-lang.mjs).
+  if (lang) {
+    await context.addInitScript(
+      `try { localStorage.setItem("psmmc_lang", ${JSON.stringify(lang)}); } catch (e) {}`
+    );
+  }
   const page = await context.newPage();
 
   const pageErrors = [];

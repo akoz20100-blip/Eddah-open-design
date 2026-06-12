@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ebecef" />
   <meta name="description" content="PSMMC pharmacy inventory analytics — coverage, reorder and budget planning, computed locally in your browser. تحليلات مخزون صيدلية مدينة الأمير سلطان الطبية العسكرية — التغطية وإعادة الطلب وتخطيط الميزانية، تُحتسب محليًا في متصفحك." />
-  <title>PSMMC — تحليلات مخزون الصيدلية</title>
+  <title>PSMMC — Pharmacy Stock &amp; Reorder Analytics</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IlBTTU1DIOKAlCBNZWRpY2FsIFNlcnZpY2VzIGVtYmxlbSI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InJpbmdHIiBjeD0iNTAlIiBjeT0iNDIlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmY5ZTU0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBmN2EzNyIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBvdXRlciB0aGluIHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMGY3YTM3IiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIGxhdXJlbCB3cmVhdGggcmluZyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijg2IiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjcmluZ0cpIiBzdHJva2Utd2lkdGg9IjEzIiBzdHJva2UtZGFzaGFycmF5PSIzIDUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNzYiIGZpbGw9IiNmZmZmZmYiLz4KICA8IS0tIHJlZCBjcmVzY2VudCBvcGVuaW5nIHJpZ2h0IC0tPgogIDxwYXRoIGQ9Ik0xMTggNDRhNjQgNjQgMCAxIDAgMCAxMTIgNTIgNTIgMCAxIDEgMC0xMTJ6IiBmaWxsPSIjZDMyNjJiIi8+CiAgPCEtLSBjZW50cmFsIHdoaXRlIGRpc2Mgd2l0aCBTYXVkaSBwYWxtICsgY3Jvc3NlZCBzd29yZHMgLS0+CiAgPGNpcmNsZSBjeD0iMTA4IiBjeT0iMTAwIiByPSIzNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjMGY3YTM3IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDwhLS0gY3Jvc3NlZCBzd29yZHMgLS0+CiAgPGcgc3Ryb2tlPSIjMGY3YTM3IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSI+CiAgICA8cGF0aCBkPSJNOTAgMTIwIEwxMjYgOTIiLz4KICAgIDxwYXRoIGQ9Ik0xMjYgMTIwIEw5MCA5MiIvPgogIDwvZz4KICA8IS0tIHBhbG0gdHJlZSAtLT4KICA8ZyBmaWxsPSIjMGY3YTM3Ij4KICAgIDxyZWN0IHg9IjEwNi41IiB5PSI5MiIgd2lkdGg9IjMiIGhlaWdodD0iMjAiIHJ4PSIxLjUiLz4KICAgIDxwYXRoIGQ9Ik0xMDggOTJjLTktNi0xNi00LTIwLTEgNi0xIDEzIDAgMjAgNHpNMTA4IDkyYzktNiAxNi00IDIwLTEtNi0xLTEzIDAtMjAgNHpNMTA4IDkwYy02LTgtNS0xNS0yLTE5LTEgNiAwIDEyIDIgMTl6TTEwOCA5MGM2LTggNS0xNSAyLTE5IDEgNiAwIDEyLTIgMTl6Ii8+CiAgPC9nPgogIDwhLS0gZ3JlZW4gYmFubmVyIHJpYmJvbiAtLT4KICA8cGF0aCBkPSJNMjggMTUwIHE3MiAzMCAxNDQgMCBsLTggMjIgcS02NCAyMiAtMTI4IDAgeiIgZmlsbD0iIzBmN2EzNyIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTcxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iVGFob21hLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iI2ZmZmZmZiIgZm9udC13ZWlnaHQ9ImJvbGQiPtin2YTYrtiv2YXYp9iqINin2YTYt9io2YrYqTwvdGV4dD4KPC9zdmc+Cg==" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -521,16 +521,16 @@ th.sortable:focus-visible{
 </head>
 <body>
   <noscript>
-    <div class="noscript">هذه معاينة ثابتة بدون تشغيل — افتح الرابط في Safari أو Chrome لتفعيل اللوحة · Static preview — open this link in Safari or Chrome to enable the dashboard.</div>
+    <div class="noscript">Static preview — open this link in Safari or Chrome to enable the dashboard · هذه معاينة ثابتة بدون تشغيل — افتح الرابط في Safari أو Chrome لتفعيل اللوحة.</div>
   </noscript>
 
   <header class="appbar">
     <div class="brand-text">
-      <small data-i18n="app_sub">مدينة الأمير سلطان الطبية العسكرية · الخدمات الطبية</small>
-      <strong data-i18n="app_title">تحليلات مخزون الصيدلية وإعادة الطلب</strong>
+      <small data-i18n="app_sub">Prince Sultan Military Medical City · Medical Services</small>
+      <strong data-i18n="app_title">Pharmacy Stock &amp; Reorder Analytics</strong>
     </div>
     <button class="lang-toggle" id="langBtn" type="button" aria-label="Switch language / تبديل اللغة">
-      <span class="lang-name" id="langName">عربي</span>
+      <span class="lang-name" id="langName">English</span>
       <span class="lang-track" aria-hidden="true">
         <span class="lang-knob">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
@@ -552,31 +552,31 @@ th.sortable:focus-visible{
       <span class="tile tile-lav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
       </span>
-      <span class="filebtn-txt"><b data-i18n="file_wd">ملف السحوبات</b><i id="wdName" data-i18n="file_wd_hint">صادر نبكو · ‎.xlsx</i></span>
+      <span class="filebtn-txt"><b data-i18n="file_wd">Withdrawals file</b><i id="wdName" data-i18n="file_wd_hint">NUPCO outbound · .xlsx</i></span>
     </label>
     <label class="filebtn" id="lblSt">
       <input type="file" id="fileStock" accept=".xlsx,.xls" hidden />
       <span class="tile tile-lav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
       </span>
-      <span class="filebtn-txt"><b data-i18n="file_st">ملف المخزون المتاح</b><i id="stName" data-i18n="file_st_hint">مخزون نبكو · ‎.xls</i></span>
+      <span class="filebtn-txt"><b data-i18n="file_st">Stock-on-hand file</b><i id="stName" data-i18n="file_st_hint">NUPCO stock · .xls</i></span>
     </label>
     <label class="filebtn" id="lblMp">
       <input type="file" id="fileMap" accept=".xlsx,.xls,.csv" hidden />
       <span class="tile tile-lav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
       </span>
-      <span class="filebtn-txt"><b data-i18n="file_mp">ملف الأسماء والمعرفات</b><i id="mpName" data-i18n="file_mp_hint">اختياري · أكواد المستشفى وMSD والاسم التجاري</i></span>
+      <span class="filebtn-txt"><b data-i18n="file_mp">Names &amp; identifiers file</b><i id="mpName" data-i18n="file_mp_hint">optional · hospital &amp; MSD codes + trade name</i></span>
     </label>
     <label class="filebtn" id="lblPo">
       <input type="file" id="filePo" accept=".xlsx,.xls,.csv" hidden />
       <span class="tile tile-lav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="11" rx="2"/><path d="M16 10h3l2 3v5h-5"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
       </span>
-      <span class="filebtn-txt"><b data-i18n="file_po">ملف الطلبات السابقة</b><i id="poName" data-i18n="file_po_hint">اختياري · أوامر الشراء · الكود والتاريخ والكمية</i></span>
+      <span class="filebtn-txt"><b data-i18n="file_po">Previous orders file</b><i id="poName" data-i18n="file_po_hint">optional · purchase orders · code + date + qty</i></span>
     </label>
-    <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">تحميل بيانات تجريبية</button>
-    <p class="upl-hint" id="uplHint">أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).</p>
+    <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">Load sample data</button>
+    <p class="upl-hint" id="uplHint">Drop both files to compute coverage and reorder suggestions. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.</p>
   </section>
 
   <main id="content" class="content">
@@ -584,13 +584,13 @@ th.sortable:focus-visible{
       <span class="tile tile-lav tile-lg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h16"/><rect x="7" y="11" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="8" rx="1"/><rect x="17" y="5" width="3" height="11" rx="1"/></svg>
       </span>
-      <h2 data-i18n="empty_title">لا توجد بيانات محمّلة بعد</h2>
-      <p data-i18n="empty_text">ارفع ملف السحوبات وملف المخزون، أو اضغط «تحميل بيانات تجريبية» لمعاينة اللوحة بأرقام حقيقية.</p>
-      <button class="btn-primary" type="button" data-i18n="empty_btn" onclick="document.getElementById('btnSample').click()">تحميل بيانات تجريبية</button>
+      <h2 data-i18n="empty_title">No data loaded yet</h2>
+      <p data-i18n="empty_text">Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with realistic numbers.</p>
+      <button class="btn-primary" type="button" data-i18n="empty_btn" onclick="document.getElementById('btnSample').click()">Load sample data</button>
     </div>
   </main>
 
-  <footer class="foot" data-i18n="foot">أُعدّت لقسم التخطيط بمدينة الأمير سلطان الطبية العسكرية · جميع الحسابات تتم محليًا في متصفحك — لا تغادر البيانات هذه الصفحة.</footer>
+  <footer class="foot" data-i18n="foot">Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.</footer>
 
   <nav class="dock" role="tablist" aria-label="Dashboard views">
     <button class="tab is-active" data-view="planning" role="tab" aria-selected="true" aria-controls="content">
@@ -600,7 +600,7 @@ th.sortable:focus-visible{
       <span class="ic ic-fill" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M8 2h8a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3zm1 6.5a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H9zm0 4a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H9zm0 4a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H9z"/></svg>
       </span>
-      <span class="tab-lbl" data-i18n="tab_planning">قسم التخطيط</span>
+      <span class="tab-lbl" data-i18n="tab_planning">Planning Department</span>
     </button>
     <button class="tab" data-view="management" role="tab" aria-selected="false" aria-controls="content">
       <span class="ic ic-line" aria-hidden="true">
@@ -609,7 +609,7 @@ th.sortable:focus-visible{
       <span class="ic ic-fill" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M11.25 2.6a1.6 1.6 0 0 1 1.5 0l8.4 5.1c.52.31.85.88.85 1.49 0 .97-.78 1.76-1.75 1.76H3.75C2.78 10.95 2 10.16 2 9.19c0-.61.33-1.18.85-1.49l8.4-5.1zM4.2 12.7h3.1v5.6H4.2v-5.6zm6.25 0h3.1v5.6h-3.1v-5.6zm6.25 0h3.1v5.6h-3.1v-5.6zM3.6 20.05h16.8a1.45 1.45 0 0 1 0 2.9H3.6a1.45 1.45 0 0 1 0-2.9z"/></svg>
       </span>
-      <span class="tab-lbl" data-i18n="tab_management">الإدارة والميزانية</span>
+      <span class="tab-lbl" data-i18n="tab_management">Management &amp; Budget</span>
     </button>
     <button class="tab" data-view="averages" role="tab" aria-selected="false" aria-controls="content">
       <span class="ic ic-line" aria-hidden="true">
@@ -618,7 +618,7 @@ th.sortable:focus-visible{
       <span class="ic ic-fill" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 3a1 1 0 0 1 1 1v15h15a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm4 8a1.2 1.2 0 0 1 1.2 1.2v3.6a1.2 1.2 0 0 1-2.4 0v-3.6A1.2 1.2 0 0 1 8 11zm4-4a1.2 1.2 0 0 1 1.2 1.2v7.6a1.2 1.2 0 0 1-2.4 0V8.2A1.2 1.2 0 0 1 12 7zm4 2a1.2 1.2 0 0 1 1.2 1.2v5.6a1.2 1.2 0 0 1-2.4 0v-5.6A1.2 1.2 0 0 1 16 9z"/></svg>
       </span>
-      <span class="tab-lbl" data-i18n="tab_averages">المتوسطات</span>
+      <span class="tab-lbl" data-i18n="tab_averages">Averages</span>
     </button>
     <button id="btnExport" class="fab" type="button" disabled aria-label="Export Excel" title="Export Excel">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
@@ -626,7 +626,7 @@ th.sortable:focus-visible{
   </nav>
 
   <div class="modal-backdrop" id="modal" hidden>
-    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-label="تفاصيل / Details"></div>
+    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-label="Details / تفاصيل"></div>
   </div>
 
   <div class="toast" id="toast" role="status" hidden></div>
@@ -692,13 +692,13 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
       err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
       mp_linked: "items linked",
-      mp_no_trade: "no trade-name column was recognized in this file — name search stays limited",
+      mp_no_trade: "No trade-name column was recognized in this file — name search will stay limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
-      upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
+      upl_hint: "Drop both files to compute coverage and reorder suggestions. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
-      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with real numbers.",
+      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with realistic numbers.",
       empty_btn: "Load sample data",
       foot: "Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.",
       search_ph: "Search by code or name — separate items with commas…",
@@ -728,18 +728,18 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
-      err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
+      err_wd: "Could not read the withdrawals file", err_st: "Could not read the stock-on-hand file", no_sample: "Sample data is not available",
       two_files: "2 files", files_word: "files",
       baseline_meta: "saved baseline", baseline_to: "to",
       tab_averages: "Averages",
-      pc_title: "Confirm withdrawals period", pc_sub: "Period detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the months are right.",
+      pc_title: "Confirm the withdrawals period", pc_sub: "The period was detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the month count is correct.",
       pc_detected: "detected automatically from the file", pc_use_detected: "Use detected", pc_months_3: "3 mo", pc_months_6: "6 mo", pc_custom_ph: "Custom…", pc_confirm: "Use", manual_mark: "manual",
       hist_quota: "Device storage is full — history trimmed to the last 12 months",
       dup_skipped: "Duplicate withdrawals file skipped — it was already counted once",
       save_failed: "Device storage is full — could not save on this device for next time",
       k_need_order: "Needs ordering now", k_need_order_sub: "Total suggested qty <b class=\"num\">{u}</b> units · <b>{n}</b> withdrawn but not in stock",
       k_critical: "Critical — out of stock", k_critical_sub: "Actively withdrawn items at zero balance — top priority",
-      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
+      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current consumption rate",
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
       dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
@@ -783,7 +783,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       oo_badge: "On order",
       oo_since: "on order since {d} · {q} units",
       oo_clear: "Clear",
-      oo_cleared: "{n} on-order item(s) covered by the new stock — flag cleared",
+      oo_cleared: "{n} on-order item(s) now covered by the new stock — flag cleared",
       oo_qty_ph: "qty",
       ss_tag: "seasonal",
       ss_basis: "Seasonal suggestion — weighted by the same {n} upcoming month(s) from last year instead of the flat average",
@@ -920,7 +920,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       langName: "عربي"
     }
   };
-  var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "ar"; } catch (e) { return "ar"; } })();
+  // English is the default for first-time visitors; the toggle persists the
+  // choice per device. Only an explicit stored "ar"/"en" overrides it.
+  var LANG = (function () { try { var s = localStorage.getItem(LANG_KEY); return s === "ar" || s === "en" ? s : "en"; } catch (e) { return "en"; } })();
   function t(k) { return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
 
   // ---------- state ----------
@@ -2661,6 +2663,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function applyStatic() {
     document.documentElement.lang = LANG;
     document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+    document.title = "PSMMC — " + t("app_title");
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var k = el.getAttribute("data-i18n");
       if (k === "upl_hint") return; // handled below (html)

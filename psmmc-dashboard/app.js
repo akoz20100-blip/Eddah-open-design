@@ -24,13 +24,13 @@
       file_mp: "Names & identifiers file", file_mp_hint: "optional · hospital & MSD codes + trade name",
       err_mp: "Could not read the identifiers file (needs a NUPCO column plus trade-name / hospital / MSD columns)",
       mp_linked: "items linked",
-      mp_no_trade: "no trade-name column was recognized in this file — name search stays limited",
+      mp_no_trade: "No trade-name column was recognized in this file — name search will stay limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
-      upl_hint: "Drop both files to compute coverage &amp; reorder. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so later a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
+      upl_hint: "Drop both files to compute coverage and reorder suggestions. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
-      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with real numbers.",
+      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with realistic numbers.",
       empty_btn: "Load sample data",
       foot: "Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.",
       search_ph: "Search by code or name — separate items with commas…",
@@ -60,18 +60,18 @@
       s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
-      err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
+      err_wd: "Could not read the withdrawals file", err_st: "Could not read the stock-on-hand file", no_sample: "Sample data is not available",
       two_files: "2 files", files_word: "files",
       baseline_meta: "saved baseline", baseline_to: "to",
       tab_averages: "Averages",
-      pc_title: "Confirm withdrawals period", pc_sub: "Period detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the months are right.",
+      pc_title: "Confirm the withdrawals period", pc_sub: "The period was detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the month count is correct.",
       pc_detected: "detected automatically from the file", pc_use_detected: "Use detected", pc_months_3: "3 mo", pc_months_6: "6 mo", pc_custom_ph: "Custom…", pc_confirm: "Use", manual_mark: "manual",
       hist_quota: "Device storage is full — history trimmed to the last 12 months",
       dup_skipped: "Duplicate withdrawals file skipped — it was already counted once",
       save_failed: "Device storage is full — could not save on this device for next time",
       k_need_order: "Needs ordering now", k_need_order_sub: "Total suggested qty <b class=\"num\">{u}</b> units · <b>{n}</b> withdrawn but not in stock",
       k_critical: "Critical — out of stock", k_critical_sub: "Actively withdrawn items at zero balance — top priority",
-      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
+      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current consumption rate",
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
       dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
@@ -115,7 +115,7 @@
       oo_badge: "On order",
       oo_since: "on order since {d} · {q} units",
       oo_clear: "Clear",
-      oo_cleared: "{n} on-order item(s) covered by the new stock — flag cleared",
+      oo_cleared: "{n} on-order item(s) now covered by the new stock — flag cleared",
       oo_qty_ph: "qty",
       ss_tag: "seasonal",
       ss_basis: "Seasonal suggestion — weighted by the same {n} upcoming month(s) from last year instead of the flat average",
@@ -252,7 +252,9 @@
       langName: "عربي"
     }
   };
-  var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "ar"; } catch (e) { return "ar"; } })();
+  // English is the default for first-time visitors; the toggle persists the
+  // choice per device. Only an explicit stored "ar"/"en" overrides it.
+  var LANG = (function () { try { var s = localStorage.getItem(LANG_KEY); return s === "ar" || s === "en" ? s : "en"; } catch (e) { return "en"; } })();
   function t(k) { return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
 
   // ---------- state ----------
@@ -1993,6 +1995,7 @@
   function applyStatic() {
     document.documentElement.lang = LANG;
     document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+    document.title = "PSMMC — " + t("app_title");
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var k = el.getAttribute("data-i18n");
       if (k === "upl_hint") return; // handled below (html)
