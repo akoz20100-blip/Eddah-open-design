@@ -265,6 +265,21 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .ledger-row.is-open::before{content:""; position:absolute; inset-inline-start:0; top:8px; bottom:8px; width:3px; border-radius:999px; background:var(--blue)}
 .ledger-row.is-open i{color:var(--blue); font-weight:700}
 
+/* Ready-to-send email actions on the item card. */
+.email-row{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px}
+.email-row .btn-soft{display:inline-flex; align-items:center; gap:6px}
+.email-row .btn-soft svg{width:15px; height:15px}
+
+/* Top-50 ranking cards: a scrollable mini-table inside a management card. */
+.rankcard .rank-scroll{max-height:300px; overflow:auto; margin-top:8px}
+.rankcard table{width:100%; border-collapse:collapse; font-size:12px}
+.rankcard thead th{position:sticky; top:0; background:#fafafc; text-align:start; padding:7px 9px; font-size:10.5px; color:var(--muted); font-weight:700; z-index:1}
+.rankcard tbody td{padding:6px 9px; border-bottom:1px solid var(--line)}
+.rankcard td.desc{max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rankcard td.code{cursor:pointer}
+.rankcard td.code:hover{color:var(--blue)}
+.rankcard .right{text-align:end}
+
 /* ---- Expiry Watch view (FEATURE 3+4) ---- */
 .expiry-summary{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; padding:16px 18px}
 .expiry-summary .ev-tot{display:flex; gap:22px}
@@ -916,6 +931,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       pr_paid_share: "paid share (units)", pr_free_share: "free share ({p}% free)",
       bw_title: "Monthly order workload", bw_month: "Month", bw_orders: "Orders to raise", bw_value: "Value (SAR)", bw_now: "This month (incl. overdue)",
       ex_workload_t: "Monthly order workload", ex_workload_b: "Each item lands in the month its Reorder-By date falls in (reorder-by = the day effective coverage drops to 6 months). Items already past that date count in the current month — they are today's workload. The planner split counts items assigned to each planner from the planner file; SAR value = Σ suggested qty × unit price for priced items.",
+      em_urgency: "Expedite order (email)", em_replace: "Request replacement (email)",
+      rk_spend: "Top 50 by order spend", rk_inventory: "Top 50 by inventory value",
+      ex_rk_spend_t: "Top 50 by order spend", ex_rk_spend_b: "Drugs ranked by the total SAR value of their procurement orders in the ledger (sum of every order's item total value), with how many orders each has. Independent of the price file.",
+      ex_rk_inventory_t: "Top 50 by inventory value", ex_rk_inventory_b: "Items ranked by the SAR value of stock sitting in the warehouse (available units × unit price). Needs the price file. Highlights where capital is tied up.",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
@@ -1112,6 +1131,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       pr_paid_share: "الكمية المدفوعة (وحدة)", pr_free_share: "الكمية المجانية ({p}% مجاني)",
       bw_title: "حِمل الطلبات الشهري", bw_month: "الشهر", bw_orders: "طلبات تُرفع", bw_value: "القيمة (ريال)", bw_now: "هذا الشهر (مع المتأخر)",
       ex_workload_t: "حِمل الطلبات الشهري", ex_workload_b: "كل بند يقع في الشهر الذي يحلّ فيه تاريخ «أعد الطلب قبل» (وهو اليوم الذي تهبط فيه التغطية الفعلية إلى 6 أشهر). البنود التي تجاوزت ذلك التاريخ تُحسب في الشهر الحالي — فهي حِمل اليوم. توزيع المخططين يَعُدّ بنود كل مخطط من ملف المخططين؛ والقيمة بالريال = مجموع الكمية المقترحة × سعر الوحدة للبنود المسعّرة.",
+      em_urgency: "استعجال الطلب (إيميل)", em_replace: "طلب استبدال (إيميل)",
+      rk_spend: "أعلى ٥٠ إنفاقًا (طلبات)", rk_inventory: "أعلى ٥٠ قيمة مخزون",
+      ex_rk_spend_t: "أعلى ٥٠ إنفاقًا حسب الطلبات", ex_rk_spend_b: "ترتيب الأدوية حسب إجمالي قيمة طلبات الشراء بالريال في السجل (مجموع قيمة كل طلب)، مع عدد الطلبات لكل دواء. مستقل عن ملف الأسعار.",
+      ex_rk_inventory_t: "أعلى ٥٠ قيمة مخزون", ex_rk_inventory_b: "ترتيب البنود حسب قيمة المخزون الراكد في المستودع بالريال (الكمية المتاحة × سعر الوحدة). يحتاج ملف الأسعار. يبيّن أين يتجمّد رأس المال.",
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
@@ -3560,6 +3583,40 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '<div class="tablewrap"><table><thead><tr><th>' + t("bw_month") + '</th><th class="right">' + t("bw_orders") + "</th><th>" + t("c_planner") + "</th>" + (priced ? '<th class="right">' + t("bw_value") + "</th>" : "") + "</tr></thead>"
       + "<tbody>" + rows + "</tbody></table></div></div>";
   }
+  /* Top-N rankings (owner spec v3): the drugs that consume the most money
+     through procurement orders, and the items tying up the most inventory
+     value in the warehouse. Spend comes from the ledger (independent of a
+     price file); inventory value needs prices. */
+  function topSpend(base, n) {
+    if (!LEDGER) return [];
+    var idx = ledgerByCode(), descBy = {};
+    base.forEach(function (r) { descBy[r.code] = r.desc; });
+    var out = [];
+    Object.keys(idx).forEach(function (code) {
+      var sum = 0; idx[code].forEach(function (e) { sum += e.totalValue || 0; });
+      if (sum > 0) out.push({ code: code, val: sum, desc: descBy[code] || code, n: idx[code].length });
+    });
+    return out.sort(function (a, b) { return b.val - a.val; }).slice(0, n || 50);
+  }
+  function topInventory(base, n) {
+    return base.filter(function (r) { return r.stockValue != null && r.stockValue > 0; })
+      .map(function (r) { return { code: r.code, val: r.stockValue, desc: r.desc, q: r.stock }; })
+      .sort(function (a, b) { return b.val - a.val; }).slice(0, n || 50);
+  }
+  function rankCard(titleKey, items, explainKey, extraHead, extra) {
+    if (!items.length) return "";
+    var head = '<tr><th>#</th><th>' + t("c_code") + "</th><th>" + t("c_desc") + "</th>" + (extraHead ? "<th class=\"right\">" + t(extraHead) + "</th>" : "") + '<th class="right">' + t("bw_value") + "</th></tr>";
+    var body = items.map(function (x, i) {
+      return '<tr data-code="' + esc(x.code) + '"><td class="num">' + (i + 1) + "</td>"
+        + '<td class="code num" data-copy="' + esc(x.code) + '" role="button" tabindex="0" title="' + t("cp_copied") + '">' + esc(x.code) + "</td>"
+        + '<td class="desc">' + esc(x.desc) + "</td>"
+        + (extra ? '<td class="right num">' + extra(x) + "</td>" : "")
+        + '<td class="right num">' + fmtM(x.val) + "</td></tr>";
+    }).join("");
+    return '<div class="kcard span6 rankcard"><div class="ktitle-row"><span class="ktitle">' + t(titleKey)
+      + '</span><span class="thinfo" data-explain="' + explainKey + '" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '">ⓘ</span></div>'
+      + '<div class="rank-scroll"><table><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div></div>";
+  }
   function renderManagement(base, c) {
     var totalUnits = base.reduce(function (s, r) { return s + r.stock; }, 0);
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
@@ -3592,6 +3649,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       // Workload spans ALL items (the management base hides zero-stock rows,
       // but a zero-stock moving item is exactly an order to raise NOW).
       + workloadCard(STATE.rows)
+      + rankCard("rk_spend", topSpend(STATE.rows, 50), "ex_rk_spend", "bw_orders", function (x) { return fmtInt(x.n); })
+      + rankCard("rk_inventory", topInventory(base, 50), "ex_rk_inventory", "c_stock", function (x) { return fmtInt(x.q); })
       + '</div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + copyAllChip() + "</div>";
     return cards + toolbar(filters) + buildTableHTML("management", base);
@@ -3843,6 +3902,18 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       expiredBlock = '<div class="expired-block"><div class="di-title">' + t("dt_expired_batches") + ' <b class="num" style="color:var(--coral)">' + fmtInt(r.expiredQty) + "</b></div>" + erows + eMore + "</div>";
     }
     var catNote = r.catalogOnly ? '<p class="dt-note">' + esc(t("cat_note")) + '</p>' : "";
+    // Ready-to-send Arabic emails: expedite an open order, and/or request
+    // replacement of expired/at-risk batches. Rendered as mailto links so the
+    // OS mail client opens with the body pre-filled.
+    var emailRow = "";
+    var mooe = openOrderFor(r.code);
+    var hasExpiry = (r.expiredBatches && r.expiredBatches.length) || (r.atRiskBatches && r.atRiskBatches.length);
+    if (mooe || hasExpiry) {
+      emailRow = '<div class="email-row">'
+        + (mooe ? '<a class="btn-soft accent" id="mailUrgency" href="' + esc(mailtoUrgency(r, mooe)) + '">' + ICON.mail + " " + t("em_urgency") + "</a>" : "")
+        + (hasExpiry ? '<a class="btn-soft" id="mailReplace" href="' + esc(mailtoReplacement(r)) + '">' + ICON.mail + " " + t("em_replace") + "</a>" : "")
+        + "</div>";
+    }
     // Procurement ledger: every order on this item (newest first) with its
     // number, date, qty, status and supplier; open orders are highlighted so
     // the planner sees at a glance that a tight item is already being procured.
@@ -3900,7 +3971,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + projStats + ooBlock + ledgerBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote + stats + projStats + emailRow + ooBlock + ledgerBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;
@@ -4248,6 +4319,55 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     if (!STATE.rows.length) return;
     var subj = t("em_subject") + " · " + prettyDate(STATE.meta.period_end);
     location.href = "mailto:?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(reportText(1800));
+  }
+  /* ---------- ready-to-send Arabic procurement emails (owner spec v3) ----------
+     The hospital corresponds with NUPCO and the local agents in Arabic, so
+     these bodies are always Arabic regardless of the UI language. Each builds
+     a mailto: URL (no recipient — the planner addresses it) with the exact
+     item identifiers a supplier needs to act. */
+  function mailtoHref(subject, lines) {
+    var body = lines.filter(function (x) { return x != null; }).join("\n");
+    return "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  }
+  /* Expedite an OPEN purchase order on a fast-running item. */
+  function mailtoUrgency(r, oo) {
+    var subject = "استعجال أمر شراء — " + r.desc + " (نبكو " + r.code + ")";
+    return mailtoHref(subject, [
+      "السلام عليكم ورحمة الله وبركاته،",
+      "",
+      "نأمل التكرّم باستعجال توريد أمر الشراء التالي نظرًا لقرب نفاد المخزون لدينا:",
+      "",
+      "الدواء: " + r.desc,
+      "كود نبكو: " + r.code,
+      r.hosp ? "رقم البند بالمستشفى: " + r.hosp : null,
+      oo.poNumber ? "رقم أمر الشراء: " + oo.poNumber : null,
+      "رقم الطلب: " + oo.orderNo,
+      "الكمية المطلوبة: " + fmtInt(oo.qty),
+      oo.supplier ? "المورّد: " + oo.supplier : null,
+      (r.cov != null ? "المخزون الحالي يغطّي قرابة " + fmt1(r.cov) + " شهرًا فقط." : null),
+      "",
+      "ولكم جزيل الشكر،"
+    ]);
+  }
+  /* Request replacement of expired / soon-to-expire batches from the agent. */
+  function mailtoReplacement(r) {
+    var subject = "طلب استبدال كميات — " + r.desc + " (نبكو " + r.code + ")";
+    var lines = [
+      "السلام عليكم ورحمة الله وبركاته،",
+      "",
+      "نأمل التكرّم بالنظر في استبدال الكميات التالية من (" + r.desc + ") لكونها منتهية الصلاحية أو قاربت على الانتهاء قبل إمكانية صرفها:",
+      "",
+      "كود نبكو: " + r.code,
+      r.hosp ? "رقم البند بالمستشفى: " + r.hosp : null,
+      r.agent ? "الوكيل: " + r.agent : null,
+      "",
+      "الدفعات:"
+    ];
+    var total = 0;
+    (r.expiredBatches || []).forEach(function (b) { total += b.q; lines.push("- منتهية · تشغيلة " + (b.b || "—") + " · الكمية " + fmtInt(b.q) + " · انتهت " + prettyDate(b.e)); });
+    (r.atRiskBatches || []).forEach(function (b) { total += b.q; lines.push("- قاربت · تشغيلة " + (b.b || "—") + " · الكمية " + fmtInt(b.q) + " · تنتهي " + prettyDate(b.e)); });
+    lines.push("", "إجمالي الكمية: " + fmtInt(total), "", "ولكم جزيل الشكر،");
+    return mailtoHref(subject, lines);
   }
   function waReport() {
     if (!STATE.rows.length) return;

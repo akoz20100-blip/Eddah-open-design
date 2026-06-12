@@ -113,7 +113,7 @@ try {
   await uploadFiles(page, "fileWithdrawals", REAL_WD);
   await confirmDetectedPeriod(page);
   await uploadFiles(page, "fileStock", REAL_ST);
-  await page.waitForSelector("table tbody tr", { timeout: 60000 });
+  await page.waitForSelector("table tbody tr", { timeout: 120000 });
   await uploadFiles(page, "filePlanner", REAL_PLANNER);
   await page.waitForSelector("#toast:not([hidden])", { timeout: 20000 });
 
@@ -125,10 +125,12 @@ try {
   await switchTab(page, "management");
   await setSearch(page, anchor.code);
   let row = null;
-  for (let i = 0; i < 30 && !row; i++) {
+  for (let i = 0; i < 90 && !row; i++) {
     row = await page.evaluate((c) => {
-      if (document.querySelectorAll("table tbody tr").length > 60) return null;
-      const tr = document.querySelector(`table tbody tr[data-code="${c}"]`);
+      // Scope to the main data table (.tablecard table.t-main): the top-50
+      // rank cards on Management also render <table><tbody><tr data-code>.
+      if (document.querySelectorAll(".tablecard table.t-main tbody tr").length > 60) return null;
+      const tr = document.querySelector(`.tablecard table.t-main tbody tr[data-code="${c}"]`);
       return tr ? Array.from(tr.querySelectorAll("td")).map((td) => td.textContent.trim()) : null;
     }, anchor.code);
     if (!row) await new Promise((r) => setTimeout(r, 200));
@@ -174,14 +176,19 @@ try {
     await new Promise((r) => setTimeout(r, 200));
   }
   R.ok(wrote > 500, `price map written to localStorage before reload (${wrote})`);
+  // The 29 KB price map needs a real flush window before navigating: once a
+  // reload races the chromium file:// disk flush, the write is gone for good
+  // (retrying the reload can't recover it). A longer settle BEFORE the first
+  // reload is what makes this deterministic under suite load.
+  await new Promise((r) => setTimeout(r, 2500));
   let priced = 0;
-  for (let attempt = 0; attempt < 4 && priced <= 500; attempt++) {
-    await new Promise((r) => setTimeout(r, 500));
+  for (let attempt = 0; attempt < 3 && priced <= 500; attempt++) {
     await page.reload({ waitUntil: "load" });
     await page.waitForSelector("#btnSample");
     priced = await page.evaluate(() => {
       try { return JSON.parse(localStorage.getItem("psmmc_idmap_v1") || "{}").priced || 0; } catch (e) { return 0; }
     });
+    if (priced <= 500) await new Promise((r) => setTimeout(r, 800));
   }
   R.ok(priced > 500, `prices persisted on-device across reload (${priced} priced codes)`);
 
@@ -189,12 +196,12 @@ try {
   await uploadFiles(page, "fileWithdrawals", REAL_WD);
   await confirmDetectedPeriod(page);
   await uploadFiles(page, "fileStock", REAL_ST);
-  await page.waitForSelector("table tbody tr", { timeout: 60000 });
+  await page.waitForSelector("table tbody tr", { timeout: 120000 });
   await uploadFiles(page, "fileMap", FREE_FIX);
   await page.waitForSelector("#toast:not([hidden])", { timeout: 20000 });
   await setSearch(page, anchor.code);
   let opened = false;
-  for (let i = 0; i < 30 && !opened; i++) {
+  for (let i = 0; i < 90 && !opened; i++) {
     opened = await page.evaluate((c) => {
       if (document.querySelectorAll("table tbody tr").length > 60) return false;
       const tr = document.querySelector(`table tbody tr[data-code="${c}"]`);

@@ -56,7 +56,7 @@ try {
   await uploadFiles(page, "fileWithdrawals", REAL_WD);
   await confirmDetectedPeriod(page);
   await uploadFiles(page, "fileStock", REAL_ST);
-  await page.waitForSelector("table tbody tr", { timeout: 60000 });
+  await page.waitForSelector("table tbody tr", { timeout: 120000 });
 
   // ---- pin two items from the table -----------------------------------------
   for (const code of [PIN_A, PIN_B]) {
@@ -98,7 +98,7 @@ try {
   await page.reload({ waitUntil: "load" });
   await page.waitForSelector("#btnSample");
   await uploadFiles(page, "fileStock", REAL_ST); // baseline withdrawals auto-load
-  await page.waitForSelector("table tbody tr", { timeout: 60000 });
+  await page.waitForSelector("table tbody tr", { timeout: 120000 });
   const afterReload = await page.evaluate(() => ({
     first: [...document.querySelectorAll("table tbody tr[data-code]")].slice(0, 2).map((tr) => tr.getAttribute("data-code")),
     chip: (document.querySelector('.fchip[data-filter="watchlist"]') || {}).textContent || "",

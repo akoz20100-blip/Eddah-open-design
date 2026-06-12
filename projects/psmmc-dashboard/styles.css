@@ -250,6 +250,21 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .ledger-row.is-open::before{content:""; position:absolute; inset-inline-start:0; top:8px; bottom:8px; width:3px; border-radius:999px; background:var(--blue)}
 .ledger-row.is-open i{color:var(--blue); font-weight:700}
 
+/* Ready-to-send email actions on the item card. */
+.email-row{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px}
+.email-row .btn-soft{display:inline-flex; align-items:center; gap:6px}
+.email-row .btn-soft svg{width:15px; height:15px}
+
+/* Top-50 ranking cards: a scrollable mini-table inside a management card. */
+.rankcard .rank-scroll{max-height:300px; overflow:auto; margin-top:8px}
+.rankcard table{width:100%; border-collapse:collapse; font-size:12px}
+.rankcard thead th{position:sticky; top:0; background:#fafafc; text-align:start; padding:7px 9px; font-size:10.5px; color:var(--muted); font-weight:700; z-index:1}
+.rankcard tbody td{padding:6px 9px; border-bottom:1px solid var(--line)}
+.rankcard td.desc{max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rankcard td.code{cursor:pointer}
+.rankcard td.code:hover{color:var(--blue)}
+.rankcard .right{text-align:end}
+
 /* ---- Expiry Watch view (FEATURE 3+4) ---- */
 .expiry-summary{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; padding:16px 18px}
 .expiry-summary .ev-tot{display:flex; gap:22px}
