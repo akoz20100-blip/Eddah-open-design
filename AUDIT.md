@@ -42,6 +42,16 @@ supplied — only the join slots are built now.
   at-risk value, budget totals, inventory value per planner) remain deferred and
   flagged, per the spec's degrade-gracefully rule.
 
+PR-B (Features 3+4) shipped: a new **Expiry Watch** tab — a cross-cutting,
+batch-level list with At-Risk (default) and Expired filters, sortable by
+expiry/quantity, subtotaled per planner, value column "—" until prices load.
+parseStock now captures expired batches by **physical Total Qty** (Available is
+0 for them) and `expiryStats` returns the per-batch at-risk remainders; the item
+card lists a product's expired batches separately. `spec-expiryviews` (red-first)
+asserts the rendered counts/qty against an independent date-merged mirror:
+**At-Risk 300 batches / 9.2M units / 206 products; Expired 158 batches / 2.7M
+units** (e.g. TRETINOIN lot 0932001). Suite 24 → 25 specs.
+
 PR-A (Features 1+2) shipped: Planner + Stockout/Reorder columns on the planning
 table, ORDER NOW flag, projection block + daily burn in the item card, planner
 upload slot. `spec-projection` (red-first) asserts the rendered dates against an

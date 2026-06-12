@@ -148,6 +148,85 @@ function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+/* ---------- expiry-views mirror (FEATURE 3 + 4) ----------
+   Independently mirrors the dedicated Expired and At-Risk batch views. Both
+   merge a product's stock rows by expiry DATE (matching the app's per-code
+   per-date batch grouping), then:
+     - Expired = date-batches whose expiry < stock-as-of, counted by their
+       Total Qty (NUPCO routes expired stock to Hold, so Available is 0)
+     - At-Risk = FEFO over the live (expiry ≥ as-of, available > 0) batches at
+       the monthly average; a batch's unconsumed remainder (≥ 1 unit) before
+       its own expiry is at-risk */
+export function expectedExpiryViewsFromRealFiles() {
+  const base = expectedFromRealFiles();
+  const months = base.monthsRounded1;
+
+  const wd = aoaOf(REAL_WD);
+  let H = wd[0];
+  let ci = findCol(H, ["NUPCO Material"]);
+  const qi = findCol(H, ["Order Qty"]);
+  const si = findCol(H, ["Status"]);
+  const tot = new Map();
+  for (let r = 1; r < wd.length; r++) {
+    const row = wd[r];
+    if (!row) continue;
+    if (!STATUS_OK[String(row[si] || "").trim().toUpperCase()]) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    tot.set(code, (tot.get(code) || 0) + num(row[qi]));
+  }
+
+  const st = aoaOf(REAL_ST);
+  H = st[0];
+  ci = findCol(H, ["Generic Item Number"]);
+  const ai = findCol(H, ["Total Available Qty"]);
+  const tqi = findCol(H, ["Total Qty"]);
+  const xi = findCol(H, ["Expiry Date"]);
+  const asOf = new Date(2026, 1, 4);
+  const asOfIso = isoFromDate(asOf);
+
+  const byCode = new Map();
+  for (let r = 1; r < st.length; r++) {
+    const row = st[r];
+    if (!row) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    const d = parseDateLikeApp(row[xi]);
+    if (!d) continue;
+    const key = isoFromDate(d);
+    const m = byCode.get(code) || new Map();
+    const slot = m.get(key) || { av: 0, tot: 0 };
+    slot.av += num(row[ai]);
+    slot.tot += tqi >= 0 ? num(row[tqi]) : num(row[ai]);
+    m.set(key, slot);
+    byCode.set(code, m);
+  }
+
+  let expBatches = 0, expQty = 0, arBatches = 0, arQty = 0;
+  const arProd = new Set();
+  for (const [code, m] of byCode) {
+    const dates = [...m.keys()].sort();
+    for (const k of dates) if (k < asOfIso && m.get(k).tot > 0) { expBatches++; expQty += m.get(k).tot; }
+    const avg = (tot.get(code) || 0) / months;
+    if (avg <= 0) continue;
+    let consumed = 0;
+    for (const k of dates.filter((x) => x >= asOfIso && m.get(x).av > 0)) {
+      const d = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
+      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH);
+      const q = m.get(k).av;
+      const use = Math.min(q, Math.max(0, avg * tMo - consumed));
+      const risk = q - use;
+      consumed += use;
+      if (risk >= 1) { arBatches++; arQty += risk; arProd.add(code); }
+    }
+  }
+  return {
+    asOfIso: iso(asOf), months,
+    expired: { batches: expBatches, qty: expQty },
+    atRisk: { batches: arBatches, qty: arQty, products: arProd.size },
+  };
+}
+
 /* ---------- projection mirror (FEATURE 1 + 2) ----------
    Independently mirrors the documented projection rules so spec-projection
    can assert the rendered Stockout Date / Reorder-By Date / ORDER NOW flag:
