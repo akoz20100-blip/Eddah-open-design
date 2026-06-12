@@ -47,8 +47,9 @@ try {
   R.ok(!!row, `row for ${E.code} present`);
   if (row) {
     const joined = row.join(" | ");
-    // Total column (index 3) must be the single-upload total, not doubled.
-    const totalCell = row[3].replace(/[,\s]/g, "");
+    // Columns: code(0) desc(1) planner(2) uom(3) total(4) — the Planner column
+    // (FEATURE 1) sits after the description, so the total is at index 4.
+    const totalCell = row[4].replace(/[,\s]/g, "");
     R.ok(
       totalCell === String(E.total),
       `[B1] total NOT doubled: expected ${E.total}, got ${totalCell} (row: "${joined}")`,

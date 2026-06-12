@@ -22,8 +22,22 @@ import {
   uploadFiles,
   waitForPeriodModal,
   confirmDetectedPeriod,
+  setSearch,
   makeReporter,
 } from "./helpers.mjs";
+
+/* Node-side search poll: headless chromium starves the in-page debounce on
+   idle file:// pages, so drive the production handler via setSearch and poll
+   from Node (see helpers.setSearch). */
+async function searchUntil(page, term, predicate) {
+  await setSearch(page, term);
+  const deadline = Date.now() + 10000;
+  while (Date.now() < deadline) {
+    if (await page.evaluate(predicate)) return true;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  return false;
+}
 import {
   expectedFromRealFiles,
   REAL_WD,
@@ -95,27 +109,20 @@ try {
     `MODHS catalog name columns are recognized — no "name search stays limited" warning (toast: "${toast}")`);
 
   // Planner searches the CATALOG name; the warehouse files say EPINEPHRINE.
-  await page.fill("#searchInput", "adrenaline");
-  await page.waitForFunction(
-    () => {
-      // a LOADED row (not the catalog-only fallback) must match
-      const rows = document.querySelectorAll("table tbody tr[data-code]:not(.cat-row)");
-      return [...rows].some((tr) => (tr.getAttribute("data-code") || "").startsWith("51151703"));
-    },
-    null,
-    { timeout: 10000 },
+  R.ok(
+    await searchUntil(page, "adrenaline", () =>
+      [...document.querySelectorAll("table tbody tr[data-code]:not(.cat-row)")]
+        .some((tr) => (tr.getAttribute("data-code") || "").startsWith("51151703"))),
+    'searching the catalog name "adrenaline" finds the EPINEPHRINE stock rows',
   );
-  R.ok(true, 'searching the catalog name "adrenaline" finds the EPINEPHRINE stock rows');
 
   // Catalog spelling vs warehouse spelling (ACYCLOVIR vs ACICLOVIR).
-  await page.fill("#searchInput", "acyclovir");
-  await page.waitForFunction(
-    () => [...document.querySelectorAll("table tbody tr[data-code]:not(.cat-row)")]
-      .some((tr) => tr.getAttribute("data-code") === "5110230100300"),
-    null,
-    { timeout: 10000 },
+  R.ok(
+    await searchUntil(page, "acyclovir", () =>
+      [...document.querySelectorAll("table tbody tr[data-code]:not(.cat-row)")]
+        .some((tr) => tr.getAttribute("data-code") === "5110230100300")),
+    'searching the catalog spelling "acyclovir" finds the ACICLOVIR row',
   );
-  R.ok(true, 'searching the catalog spelling "acyclovir" finds the ACICLOVIR row');
 
   R.ok(pageErrors.length === 0, `no page errors with real files (saw: ${JSON.stringify(pageErrors)})`);
 } catch (err) {
