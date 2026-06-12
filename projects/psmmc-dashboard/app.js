@@ -93,6 +93,7 @@
       demo_names: "Demo names are not real — upload the identifiers file once to see the real names",
       cat_note: "in catalog · no movement and no stock in the uploaded files",
       cat_badge: "In catalog",
+      syn_note: "Trade-name match:",
       di_title: "Drug information",
       di_note: "General guidance for the planning team — not medical advice.",
       di_none: "No curated description for this medicine yet — use the SFDA link below.",
@@ -211,6 +212,7 @@
       demo_names: "الأسماء التجريبية غير حقيقية — ارفع ملف المعرفات مرة واحدة لرؤية الأسماء الحقيقية",
       cat_note: "موجود في الكتالوج · بلا حركة وبلا رصيد في الملفات المرفوعة",
       cat_badge: "في الكتالوج",
+      syn_note: "تطابق الاسم التجاري:",
       di_title: "معلومات الدواء",
       di_note: "معلومات عامة لفريق التخطيط — ليست نصيحة طبية.",
       di_none: "لا يوجد وصف منسق لهذا الدواء بعد — استخدم رابط الهيئة أدناه.",
@@ -959,6 +961,230 @@
     return null;
   }
 
+  /* ---------- trade-name synonyms (owner request: search by commercial name) ----------
+     The hospital's files carry GENERIC names: the MODHS catalog has no
+     trade-name column at all, and the warehouse often stocks a DIFFERENT
+     brand of the same generic (stock says VAROXA while the planner searches
+     Xarelto). This curated dictionary maps well-known commercial names —
+     including common Saudi-market brands and Arabic spellings — to the
+     generic stem the files actually contain, so typing a trade name finds
+     the right medicine in sample mode, real uploads and the catalog search.
+     Every stem below was validated against the real MODHS catalog
+     (real-data/MODDHS_MEDICATION_CATALOG_072025.xlsx). Search assistance
+     only: the applied brand = generic mapping is always shown above the
+     results so the planner can verify the match. */
+  var TRADE_SYNONYMS = {
+    // analgesics / anti-inflammatory
+    PANADOL: "PARACETAMOL", ADOL: "PARACETAMOL", FEVADOL: "PARACETAMOL", TYLENOL: "PARACETAMOL",
+    BRUFEN: "IBUPROFEN", PROFINAL: "IBUPROFEN", ADVIL: "IBUPROFEN",
+    VOLTAREN: "DICLOFENAC", CATAFLAM: "DICLOFENAC", OLFEN: "DICLOFENAC", ROFENAC: "DICLOFENAC",
+    CELEBREX: "CELECOXIB", DYNASTAT: "PARECOXIB",
+    ASPIRIN: ["ACETYLSALICYLIC", "ACETYL SALICYLIC"], JUSPRIN: ["ACETYLSALICYLIC", "ACETYL SALICYLIC"],
+    TRAMAL: "TRAMADOL", ULTRAM: "TRAMADOL", DUROGESIC: "FENTANYL", OXYCONTIN: "OXYCODONE",
+    IMIGRAN: "SUMATRIPTAN", MAXALT: "RIZATRIPTAN", EMGALITY: "GALCANEZUMAB", UBRELVY: "UBROGEPANT",
+    // cardiovascular
+    LIPITOR: "ATORVASTATIN", CRESTOR: "ROSUVASTATIN", EZETROL: "EZETIMIBE", ZETIA: "EZETIMIBE",
+    REPATHA: "EVOLOCUMAB", LEQVIO: "INCLISIRAN", LIPANTHYL: "FENOFIBRATE",
+    PLAVIX: "CLOPIDOGREL", BRILINTA: "TICAGRELOR", BRILIQUE: "TICAGRELOR",
+    XARELTO: "RIVAROXABAN", ELIQUIS: "APIXABAN", LIXIANA: "EDOXABAN",
+    CLEXANE: "ENOXAPARIN", LOVENOX: "ENOXAPARIN", COUMADIN: "WARFARIN", MAREVAN: "WARFARIN",
+    CONCOR: "BISOPROLOL", TENORMIN: "ATENOLOL", INDERAL: "PROPRANOLOL", BETALOC: "METOPROLOL",
+    TRANDATE: "LABETALOL", BREVIBLOC: "ESMOLOL",
+    NORVASC: "AMLODIPINE", ADALAT: "NIFEDIPINE", ISOPTIN: "VERAPAMIL",
+    DIOVAN: "VALSARTAN", CODIOVAN: "VALSARTAN", EXFORGE: ["AMLODIPINE", "VALSARTAN"],
+    APROVEL: "IRBESARTAN", AVAPRO: "IRBESARTAN", COVERSYL: "PERINDOPRIL", RENITEC: "ENALAPRIL", CAPOTEN: "CAPTOPRIL",
+    LASIX: "FUROSEMIDE", ALDACTONE: "SPIRONOLACTONE", INSPRA: "EPLERENONE", ZAROXOLYN: "METOLAZONE", NATRILIX: "INDAPAMIDE",
+    PROCORALAN: "IVABRADINE", RANEXA: "RANOLAZINE", VERQUVO: "VERICIGUAT", CAMZYOS: "MAVACAMTEN",
+    LANOXIN: "DIGOXIN", CORDARONE: "AMIODARONE", TAMBOCOR: "FLECAINIDE",
+    ADEMPAS: "RIOCIGUAT", UPTRAVI: "SELEXIPAG", TRACLEER: "BOSENTAN", OPSUMIT: "MACITENTAN", VENTAVIS: "ILOPROST",
+    CIALIS: "TADALAFIL", ADCIRCA: "TADALAFIL",
+    ACTILYSE: "ALTEPLASE", METALYSE: "TENECTEPLASE", ANGIOMAX: "BIVALIRUDIN", AGGRASTAT: "TIROFIBAN",
+    NITROLINGUAL: "GLYCERYL TRINITRATE", TRIDIL: "GLYCERYL TRINITRATE",
+    // diabetes / endocrine
+    OZEMPIC: "SEMAGLUTIDE", WEGOVY: "SEMAGLUTIDE", RYBELSUS: "SEMAGLUTIDE", MOUNJARO: "TIRZEPATIDE",
+    VICTOZA: "LIRAGLUTIDE", SAXENDA: "LIRAGLUTIDE",
+    GLUCOPHAGE: "METFORMIN", JARDIANCE: "EMPAGLIFLOZIN", TRAJENTA: "LINAGLIPTIN",
+    AMARYL: "GLIMEPIRIDE", DIAMICRON: "GLICLAZIDE", ACTOS: "PIOGLITAZONE", KERENDIA: "FINERENONE",
+    LANTUS: "INSULIN GLARGINE", TOUJEO: "INSULIN GLARGINE", LEVEMIR: "INSULIN DETEMIR", TRESIBA: "INSULIN DEGLUDEC",
+    NOVORAPID: "INSULIN ASPART", NOVOMIX: "INSULIN ASPART", NOVOLOG: "INSULIN ASPART",
+    HUMALOG: "INSULIN LISPRO", HUMULIN: "INSULIN HUMAN", MIXTARD: "INSULIN HUMAN", GLUCAGEN: "GLUCAGON",
+    EUTHYROX: "LEVOTHYROXINE", ELTROXIN: "LEVOTHYROXINE", NEOMERCAZOLE: "CARBIMAZOLE",
+    GENOTROPIN: "SOMATROPIN", NORDITROPIN: "SOMATROPIN", MINIRIN: "DESMOPRESSIN", SYNACTHEN: "TETRACOSACTIDE",
+    SANDOSTATIN: "OCTREOTIDE", FORTEO: "TERIPARATIDE",
+    PROLIA: "DENOSUMAB", XGEVA: "DENOSUMAB", ACLASTA: "ZOLEDRONIC", ZOMETA: "ZOLEDRONIC",
+    FOSAMAX: "ALENDRONATE", AREDIA: "PAMIDRONATE", EVENITY: "ROMOSOZUMAB", MIACALCIC: "CALCITONIN",
+    ROCALTROL: "CALCITRIOL", ONEALPHA: "ALFACALCIDOL", ZEMPLAR: "PARICALCITOL",
+    NEBIDO: "TESTOSTERONE", SUSTANON: "TESTOSTERONE", DUPHASTON: "DYDROGESTERONE",
+    PROVERA: "MEDROXYPROGESTERONE", DEPOPROVERA: "MEDROXYPROGESTERONE", VISANNE: "DIENOGEST",
+    CLOMID: "CLOMIFENE", GONALF: "FOLLITROPIN", CETROTIDE: "CETRORELIX",
+    PREGNYL: "GONADOTROPHIN", OVITRELLE: "GONADOTROPHIN", DECAPEPTYL: "TRIPTORELIN",
+    // gastro / renal-electrolyte
+    NEXIUM: "ESOMEPRAZOLE", LOSEC: "OMEPRAZOLE", PRILOSEC: "OMEPRAZOLE", CONTROLOC: "PANTOPRAZOLE", PROTONIX: "PANTOPRAZOLE",
+    PEPCID: "FAMOTIDINE", MOTILIUM: "DOMPERIDONE", ZOFRAN: "ONDANSETRON", KYTRIL: "GRANISETRON",
+    EMEND: "APREPITANT", AKYNZEO: "NETUPITANT", BUSCOPAN: "HYOSCINE", DUSPATALIN: "MEBEVERINE",
+    IMODIUM: "LOPERAMIDE", DUPHALAC: "LACTULOSE", DULCOLAX: "BISACODYL",
+    MOVICOL: ["MACROGOL", "POLYETHYLINE"], FORLAX: "MACROGOL", GAVISCON: "ALGINATE",
+    PENTASA: "MESALAZINE", ASACOL: "MESALAZINE", SALOFALK: "MESALAZINE", XIFAXAN: "RIFAXIMIN",
+    URSOFALK: "URSODEOXYCHOLIC", CREON: "AMYLASE",
+    LOKELMA: "ZIRCONIUM", VELTASSA: "PATIROMER", KAYEXALATE: "POLYSTYRENE",
+    RENVELA: "SEVELAMER", RENAGEL: "SEVELAMER", VELPHORO: "SUCROFERRIC",
+    MIMPARA: "CINACALCET", SENSIPAR: "CINACALCET", PARSABIV: "ETELCALCETIDE",
+    // immunology / biologics / transplant
+    HUMIRA: "ADALIMUMAB", SKYRIZI: "RISANKIZUMAB", RINVOQ: "UPADACITINIB",
+    ENBREL: "ETANERCEPT", REMICADE: "INFLIXIMAB", STELARA: "USTEKINUMAB", COSENTYX: "SECUKINUMAB",
+    TREMFYA: "GUSELKUMAB", XELJANZ: "TOFACITINIB", OLUMIANT: "BARICITINIB", ORENCIA: "ABATACEPT",
+    CIMZIA: "CERTOLIZUMAB", BENLYSTA: "BELIMUMAB", SAPHNELO: "ANIFROLUMAB", ENTYVIO: "VEDOLIZUMAB",
+    ACTEMRA: "TOCILIZUMAB", DUPIXENT: "DUPILUMAB", XOLAIR: "OMALIZUMAB", FASENRA: "BENRALIZUMAB",
+    TYSABRI: "NATALIZUMAB", OCREVUS: "OCRELIZUMAB", KESIMPTA: "OFATUMUMAB", MAVENCLAD: "CLADRIBINE",
+    GILENYA: "FINGOLIMOD", AUBAGIO: "TERIFLUNOMIDE", TECFIDERA: "DIMETHYL FUMARATE",
+    PLAQUENIL: "HYDROXYCHLOROQUINE", ARAVA: "LEFLUNOMIDE", SALAZOPYRIN: "SULFASALAZINE", ZYLORIC: "ALLOPURINOL",
+    PROGRAF: "TACROLIMUS", ADVAGRAF: "TACROLIMUS", CELLCEPT: "MYCOPHENOLATE", MYFORTIC: "MYCOPHENOLATE",
+    NEORAL: ["CICLOSPORIN", "CYCLOSPORINE"], SANDIMMUN: ["CICLOSPORIN", "CYCLOSPORINE"],
+    RAPAMUNE: "SIROLIMUS", CERTICAN: "EVEROLIMUS", IMURAN: "AZATHIOPRINE",
+    SIMULECT: "BASILIXIMAB", THYMOGLOBULIN: "THYMOCYTE",
+    IVIG: "NORMAL IMMUNOGLOBULIN", OCTAGAM: "NORMAL IMMUNOGLOBULIN", KIOVIG: "NORMAL IMMUNOGLOBULIN",
+    // oncology
+    KEYTRUDA: "PEMBROLIZUMAB", OPDIVO: "NIVOLUMAB", TECENTRIQ: "ATEZOLIZUMAB", IMFINZI: "DURVALUMAB", BAVENCIO: "AVELUMAB",
+    HERCEPTIN: "TRASTUZUMAB", PERJETA: "PERTUZUMAB", KADCYLA: "TRASTUZUMAB EMTANSINE", ENHERTU: "TRASTUZUMAB DERUXTECAN",
+    MABTHERA: "RITUXIMAB", RITUXAN: "RITUXIMAB", AVASTIN: "BEVACIZUMAB", ERBITUX: "CETUXIMAB",
+    CYRAMZA: "RAMUCIRUMAB", VECTIBIX: "PANITUMUMAB",
+    IBRANCE: "PALBOCICLIB", KISQALI: "RIBOCICLIB", VERZENIO: "ABEMACICLIB", LYNPARZA: "OLAPARIB",
+    TAGRISSO: "OSIMERTINIB", TARCEVA: "ERLOTINIB", GLIVEC: "IMATINIB", GLEEVEC: "IMATINIB",
+    TASIGNA: "NILOTINIB", SPRYCEL: "DASATINIB", ICLUSIG: "PONATINIB", JAKAVI: "RUXOLITINIB", CALQUENCE: "ACALABRUTINIB",
+    REVLIMID: "LENALIDOMIDE", VIDAZA: "AZACITIDINE", VELCADE: "BORTEZOMIB", ADCETRIS: "BRENTUXIMAB", BLINCYTO: "BLINATUMOMAB",
+    ZYTIGA: "ABIRATERONE", XTANDI: "ENZALUTAMIDE", ERLEADA: "APALUTAMIDE",
+    NEXAVAR: "SORAFENIB", LENVIMA: "LENVATINIB", SUTENT: "SUNITINIB", STIVARGA: "REGORAFENIB", AFINITOR: "EVEROLIMUS",
+    HALAVEN: "ERIBULIN", ALIMTA: "PEMETREXED", XELODA: "CAPECITABINE",
+    ZOLADEX: "GOSERELIN", LUPRON: "LEUPROLIDE", FIRMAGON: "DEGARELIX", FASLODEX: "FULVESTRANT",
+    FEMARA: "LETROZOLE", AROMASIN: "EXEMESTANE", NOLVADEX: "TAMOXIFEN", FASTURTEC: "RASBURICASE",
+    NEUPOGEN: "FILGRASTIM", NEULASTA: "PEGFILGRASTIM", EPREX: "EPOETIN", ARANESP: "DARBEPOETIN",
+    REVOLADE: "ELTROMBOPAG", PROMACTA: "ELTROMBOPAG",
+    EXJADE: "DEFERASIROX", FERRIPROX: "DEFERIPRONE", DESFERAL: "DEFEROXAMINE", FERINJECT: "CARBOXYMALTOSE",
+    NOVOSEVEN: "EPTACOG", HEMLIBRA: "EMICIZUMAB", ULTOMIRIS: "RAVULIZUMAB", CYKLOKAPRON: "TRANEXAMIC", KONAKION: "PHYTOMENADIONE",
+    // antimicrobials
+    AUGMENTIN: "AMOXICILLIN", MEGAMOX: "AMOXICILLIN", HIBIOTIC: "AMOXICILLIN", FLOXAPEN: "FLUCLOXACILLIN",
+    ZINNAT: "CEFUROXIME", ROCEPHIN: "CEFTRIAXONE", FORTUM: "CEFTAZIDIME", MAXIPIME: "CEFEPIME",
+    OMNICEF: "CEFDINIR", KEFLEX: "CEPHALEXINE", TAZOCIN: "PIPERACILLIN",
+    MERONEM: "MEROPENEM", TIENAM: "IMIPENEM", INVANZ: "ERTAPENEM",
+    ZYVOX: "LINEZOLID", TYGACIL: "TIGECYCLINE", CUBICIN: "DAPTOMYCIN", TARGOCID: "TEICOPLANIN",
+    ZITHROMAX: "AZITHROMYCIN", KLACID: "CLARITHROMYCIN",
+    CIPROBAY: "CIPROFLOXACIN", CIPRO: "CIPROFLOXACIN", TAVANIC: "LEVOFLOXACIN", AVELOX: "MOXIFLOXACIN",
+    VIBRAMYCIN: "DOXYCYCLINE", FLAGYL: "METRONIDAZOLE", DALACIN: "CLINDAMYCIN",
+    BACTRIM: "SULFAMETHOXAZOLE", SEPTRIN: "SULFAMETHOXAZOLE", MACROBID: "NITROFURANTOIN", MONUROL: "FOSFOMYCIN",
+    DIFLUCAN: "FLUCONAZOLE", VFEND: "VORICONAZOLE", NOXAFIL: "POSACONAZOLE", SPORANOX: "ITRACONAZOLE",
+    AMBISOME: "AMPHOTERICIN", LAMISIL: "TERBINAFINE", MYCAMINE: "MICAFUNGIN", ERAXIS: "ANIDULAFUNGIN",
+    ZOVIRAX: "ACICLOVIR", VALTREX: "VALACICLOVIR", VALCYTE: "VALGANCICLOVIR", CYMEVENE: "GANCICLOVIR",
+    TAMIFLU: "OSELTAMIVIR", BARACLUDE: "ENTECAVIR", BIKTARVY: "BICTEGRAVIR", TRUVADA: "EMTRICITABINE",
+    SOVALDI: "SOFOSBUVIR", MAVYRET: "GLECAPREVIR", VEMLIDY: "TENOFOVIR", SYNAGIS: "PALIVIZUMAB",
+    MALARONE: "ATOVAQUONE", LARIAM: "MEFLOQUINE", RIAMET: "ARTEMETHER", COARTEM: "ARTEMETHER",
+    STROMECTOL: "IVERMECTIN", ZENTEL: "ALBENDAZOLE", VERMOX: "MEBENDAZOLE", BILTRICIDE: "PRAZIQUANTEL", FASIGYN: "TINIDAZOLE",
+    KALETRA: "LOPINAVIR", NORVIR: "RITONAVIR", PREZISTA: "DARUNAVIR", TIVICAY: "DOLUTEGRAVIR",
+    RETROVIR: "ZIDOVUDINE", EPIVIR: "LAMIVUDINE", ZEFFIX: "LAMIVUDINE",
+    // respiratory / allergy
+    VENTOLIN: "SALBUTAMOL", SERETIDE: "SALMETEROL", ADVAIR: "SALMETEROL", SYMBICORT: "FORMOTEROL",
+    PULMICORT: "BUDESONIDE", FLIXOTIDE: "FLUTICASONE", AVAMYS: "FLUTICASONE", FLONASE: "FLUTICASONE",
+    NASONEX: "MOMETASONE", SPIRIVA: "TIOTROPIUM", ATROVENT: "IPRATROPIUM",
+    ANORO: "UMECLIDINIUM", TRELEGY: "VILANTEROL", SINGULAIR: "MONTELUKAST",
+    AERIUS: "DESLORATADINE", PIRITON: "CHLORPHENIRAMINE", ATARAX: "HYDROXYZINE",
+    OTRIVIN: "XYLOMETAZOLINE", PULMOZYME: "DORNASE", MUCOMYST: "ACETYLCYSTEINE",
+    // neurology / psychiatry
+    LYRICA: "PREGABALIN", NEURONTIN: "GABAPENTIN", TEGRETOL: "CARBAMAZEPINE", TRILEPTAL: "OXCARBAZEPINE",
+    KEPPRA: "LEVETIRACETAM", LAMICTAL: "LAMOTRIGINE", DEPAKINE: "VALPROATE", DEPAKOTE: "VALPROATE",
+    TOPAMAX: "TOPIRAMATE", VIMPAT: "LACOSAMIDE", FYCOMPA: "PERAMPANEL", SABRIL: "VIGABATRIN",
+    RIVOTRIL: "CLONAZEPAM", XANAX: "ALPRAZOLAM", ATIVAN: "LORAZEPAM", VALIUM: "DIAZEPAM",
+    DORMICUM: "MIDAZOLAM", STILNOX: "ZOLPIDEM", AMBIEN: "ZOLPIDEM",
+    MADOPAR: "LEVODOPA", SINEMET: "CARBIDOPA", SIFROL: "PRAMIPEXOLE", MIRAPEX: "PRAMIPEXOLE",
+    EXELON: "RIVASTIGMINE", REMINYL: "GALANTAMINE", EBIXA: "MEMANTINE", NAMENDA: "MEMANTINE",
+    RILUTEK: "RILUZOLE", SPINRAZA: "NUSINERSEN", VYNDAQEL: "TAFAMIDIS",
+    PROZAC: "FLUOXETINE", CIPRALEX: "ESCITALOPRAM", LEXAPRO: "ESCITALOPRAM", ZOLOFT: "SERTRALINE", LUSTRAL: "SERTRALINE",
+    SEROXAT: "PAROXETINE", PAXIL: "PAROXETINE", FAVERIN: "FLUVOXAMINE", CYMBALTA: "DULOXETINE",
+    EFFEXOR: "VENLAFAXINE", PRISTIQ: "DESVENLAFAXINE", REMERON: "MIRTAZAPINE",
+    TRYPTIZOL: "AMITRIPTYLINE", ANAFRANIL: "CLOMIPRAMINE", TOFRANIL: "IMIPRAMINE", BRINTELLIX: "VORTIOXETINE", TRINTELLIX: "VORTIOXETINE",
+    ABILIFY: "ARIPIPRAZOLE", RISPERDAL: "RISPERIDONE", INVEGA: "PALIPERIDONE", ZYPREXA: "OLANZAPINE",
+    SEROQUEL: "QUETIAPINE", CLOZARIL: "CLOZAPINE", HALDOL: "HALOPERIDOL", LARGACTIL: "CHLORPROMAZINE", REAGILA: "CARIPRAZINE",
+    RITALIN: "METHYLPHENIDATE", CONCERTA: "METHYLPHENIDATE", STRATTERA: "ATOMOXETINE", PROVIGIL: "MODAFINIL",
+    BOTOX: "BOTULINUM", LIORESAL: "BACLOFEN", SIRDALUD: "TIZANIDINE", ZANAFLEX: "TIZANIDINE",
+    DANTRIUM: "DANTROLENE", MESTINON: "PYRIDOSTIGMINE", ROBINUL: "GLYCOPYRROLATE",
+    // anesthesia / ICU / emergency
+    DIPRIVAN: "PROPOFOL", ULTIVA: "REMIFENTANIL", PRECEDEX: "DEXMEDETOMIDINE",
+    KETALAR: "KETAMINE", SPRAVATO: "ESKETAMINE", SEVORANE: "SEVOFLURANE",
+    ESMERON: "ROCURONIUM", NIMBEX: "CISATRACURIUM", BRIDION: "SUGAMMADEX",
+    MARCAINE: "BUPIVACAINE", XYLOCAINE: "LIDOCAINE",
+    NARCAN: "NALOXONE", ANEXATE: "FLUMAZENIL",
+    ADRENALINE: "EPINEPHRINE", EPIPEN: "EPINEPHRINE", NORADRENALINE: "NOREPINEPHRINE", LEVOPHED: "NOREPINEPHRINE",
+    DOBUTREX: "DOBUTAMINE", PRIMACOR: "MILRINONE", PITRESSIN: "VASOPRESSIN", GLYPRESSIN: "TERLIPRESSIN",
+    CARNITOR: "CARNITINE", NICORETTE: "NICOTINE", CHAMPIX: "VARENICLINE", CHANTIX: "VARENICLINE",
+    // eye / skin
+    EYLEA: "AFLIBERCEPT", LUCENTIS: "RANIBIZUMAB",
+    XALATAN: "LATANOPROST", TRAVATAN: "TRAVOPROST", LUMIGAN: "BIMATOPROST",
+    AZOPT: "BRINZOLAMIDE", TRUSOPT: "DORZOLAMIDE", ALPHAGAN: "BRIMONIDINE", TIMOPTIC: "TIMOLOL",
+    DIAMOX: "ACETAZOLAMIDE", PATANOL: "OLOPATADINE", RESTASIS: "CYCLOSPORINE", ZADITEN: "KETOTIFEN",
+    VIGAMOX: "MOXIFLOXACIN", TOBREX: "TOBRAMYCIN", ZYMAR: "GATIFLOXACIN", MAXIDEX: "DEXAMETHASONE",
+    FUCIDIN: "FUSIDIC", BACTROBAN: "MUPIROCIN", DERMOVATE: "CLOBETASOL", ELOCON: "MOMETASONE",
+    BETNOVATE: "BETAMETHASONE", DIPROSONE: "BETAMETHASONE", LOCOID: "HYDROCORTISONE",
+    SOLUMEDROL: "METHYLPREDNISOLONE", DEPOMEDROL: "METHYLPREDNISOLONE", SOLUCORTEF: "HYDROCORTISONE",
+    PROTOPIC: "TACROLIMUS", ELIDEL: "PIMECROLIMUS", DAIVONEX: "CALCIPOTRIOL",
+    ROACCUTANE: "ISOTRETINOIN", ACCUTANE: "ISOTRETINOIN", DIFFERIN: "ADAPALENE", RETINA: "TRETINOIN", NEOTIGASON: "ACITRETIN",
+    DAKTARIN: "MICONAZOLE", CANESTEN: "CLOTRIMAZOLE", NIZORAL: "KETOCONAZOLE", EURAX: "CROTAMITON",
+    // urology
+    OMNIC: "TAMSULOSIN", FLOMAX: "TAMSULOSIN", XATRAL: "ALFUZOSIN", VESICARE: "SOLIFENACIN",
+    BETMIGA: "MIRABEGRON", MYRBETRIQ: "MIRABEGRON", DITROPAN: "OXYBUTYNIN",
+    PROSCAR: "FINASTERIDE", PROPECIA: "FINASTERIDE", AVODART: "DUTASTERIDE",
+    // supplements / misc
+    NEUROBION: "VITAMIN B", VENOFER: "IRON",
+    // common Arabic spellings (alef variants are normalized by synKey)
+    "بنادول": "PARACETAMOL", "ادول": "PARACETAMOL", "فيفادول": "PARACETAMOL",
+    "بروفين": "IBUPROFEN", "فولتارين": "DICLOFENAC", "اوجمنتين": "AMOXICILLIN",
+    "فنتولين": "SALBUTAMOL", "نكسيوم": "ESOMEPRAZOLE", "كونكور": "BISOPROLOL",
+    "لازكس": "FUROSEMIDE", "لازيكس": "FUROSEMIDE", "كلكسان": "ENOXAPARIN",
+    "زاريلتو": "RIVAROXABAN", "اوزمبك": "SEMAGLUTIDE", "اوزيمبك": "SEMAGLUTIDE",
+    "سكايريزي": "RISANKIZUMAB", "رينفوك": "UPADACITINIB", "هيوميرا": "ADALIMUMAB",
+    "بلافكس": "CLOPIDOGREL", "ليريكا": "PREGABALIN", "تجريتول": "CARBAMAZEPINE"
+  };
+  /* Brand keys are looked up on a normalized form: lowercase, alef variants
+     unified, separators stripped — so "solu medrol", "Solu-Medrol" and
+     "سولوميدرول"-style inputs land on the same key. */
+  function synKey(s) {
+    return String(s == null ? "" : s).toLowerCase().replace(/[أإآ]/g, "ا").replace(/[^a-z0-9؀-ۿ]+/g, "");
+  }
+  var SYN_INDEX = (function () {
+    var idx = {};
+    Object.keys(TRADE_SYNONYMS).forEach(function (k) {
+      var v = TRADE_SYNONYMS[k];
+      idx[synKey(k)] = { brand: k, stems: Array.isArray(v) ? v : [v] };
+    });
+    return idx;
+  })();
+  /* Expansions for the typed search terms: an exact brand key wins; a typed
+     prefix of at least 4 characters also matches (so "rinv" finds RINVOQ),
+     capped to avoid flooding the table from a too-short prefix. */
+  function synExpansions(terms) {
+    var out = [], seen = {};
+    terms.forEach(function (q) {
+      var k = synKey(q);
+      if (k.length < 3) return;
+      var hits = [];
+      if (SYN_INDEX[k]) hits.push(k);
+      else if (k.length >= 4) {
+        for (var key in SYN_INDEX) { if (key.indexOf(k) === 0) { hits.push(key); if (hits.length >= 3) break; } }
+      }
+      hits.forEach(function (h) { if (!seen[h]) { seen[h] = 1; out.push(SYN_INDEX[h]); } });
+    });
+    return out;
+  }
+  function synStems(terms) {
+    var stems = [];
+    synExpansions(terms).forEach(function (s) { s.stems.forEach(function (g) { stems.push(g.toLowerCase()); }); });
+    return stems;
+  }
+  /* One shared matcher for the loaded-rows search and the catalog fallback:
+     a row matches when any typed term OR any expanded generic stem hits the
+     code + description + identifiers haystack. */
+  function matchesSearch(hay, terms, stems) {
+    return terms.some(function (q) { return hay.indexOf(q) !== -1; })
+      || stems.some(function (q) { return hay.indexOf(q) !== -1; });
+  }
+
   /* ---------- catalog-wide search ----------
      A name the planner searches for may exist in the saved identifiers MAP yet
      have no movement and no stock in the uploaded files (the "Skyrizi returned
@@ -969,6 +1195,7 @@
   }
   function catalogMatches(terms) {
     if (!MAP || !MAP.byCode || !terms.length) return [];
+    var stems = synStems(terms);
     var loaded = {};
     STATE.rows.forEach(function (r) { loaded[r.code] = 1; });
     var out = [];
@@ -976,7 +1203,7 @@
       if (loaded[code]) return;
       var m = MAP.byCode[code];
       var hay = (code + " " + [m.trade, m.sci, m.hosp, m.msd, m.cls].filter(Boolean).join(" ")).toLowerCase();
-      if (terms.some(function (q) { return hay.indexOf(q) !== -1; })) out.push(code);
+      if (matchesSearch(hay, terms, stems)) out.push(code);
     });
     return out.slice(0, 50);
   }
@@ -1286,12 +1513,15 @@
     });
     if (STATE.search) {
       // Multi-item search: comma/plus/newline-separated terms, a row matches if ANY term hits
-      // its code, generic description, or alternate identifiers/trade name.
-      var terms = STATE.search.toLowerCase().split(/[,،;؛+\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
-      if (terms.length) rows = rows.filter(function (r) {
-        var hay = (r.code + " " + r.desc + " " + (r.alt || "")).toLowerCase();
-        return terms.some(function (q) { return hay.indexOf(q) !== -1; });
-      });
+      // its code, generic description, or alternate identifiers/trade name — or any generic
+      // stem the trade-name synonyms layer expanded from a typed brand (Xarelto → rivaroxaban).
+      var terms = searchTerms();
+      if (terms.length) {
+        var stems = synStems(terms);
+        rows = rows.filter(function (r) {
+          return matchesSearch((r.code + " " + r.desc + " " + (r.alt || "")).toLowerCase(), terms, stems);
+        });
+      }
     }
     var k = STATE.sort.key, dir = STATE.sort.dir === "asc" ? 1 : -1;
     rows.sort(function (a, b) { var va = a[k], vb = b[k]; if (k === "cov") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "trendPct" || k === "unitPrice" || k === "stockValue") { var nullDir = dir === 1 ? Infinity : -Infinity; va = va == null ? nullDir : va; vb = vb == null ? nullDir : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
@@ -1572,9 +1802,18 @@
     if (STATE.view === "averages") return { key: "avg", dir: "desc" };
     return { key: "stock", dir: "desc" };
   }
-  function tableCard(head, body, shown, total) {
+  function tableCard(head, body, shown, total, topHtml) {
     var sortKey = SORT_LABEL[STATE.sort.key] ? t(SORT_LABEL[STATE.sort.key]) : STATE.sort.key;
-    return '<div class="tablecard"><div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + sortKey + " " + (STATE.sort.dir === "asc" ? "↑" : "↓") + "</span></div></div>";
+    return '<div class="tablecard">' + (topHtml || "") + '<div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + sortKey + " " + (STATE.sort.dir === "asc" ? "↑" : "↓") + "</span></div></div>";
+  }
+  /* The brand = generic mappings applied to the current search, shown above
+     the results so a planner can verify what their typed trade name matched. */
+  function synHintHtml() {
+    if (!STATE.search) return "";
+    var sx = synExpansions(searchTerms());
+    if (!sx.length) return "";
+    var parts = sx.map(function (s) { return "<b>" + esc(s.brand) + "</b> = " + esc(s.stems.join(" / ")); });
+    return '<div class="syn-hint">' + ICON.search + "<span>" + t("syn_note") + " " + parts.join(" · ") + "</span></div>";
   }
 
   // ---------- views ----------
@@ -1619,7 +1858,7 @@
         }
       }
     }
-    return tableCard(head, body, shown, base.length);
+    return tableCard(head, body, shown, base.length, synHintHtml());
   }
   function renderPlanning(base, c) {
     var s = decisionStats(base);
