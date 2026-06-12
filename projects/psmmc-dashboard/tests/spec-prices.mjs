@@ -164,12 +164,19 @@ try {
   R.ok(rowVal != null && rowVal !== "—" && rowVal !== "", `at-risk batch rows carry a value (got "${rowVal}")`);
 
   // ---- persistence: reload keeps the prices ----------------------------------
-  // file:// localStorage occasionally needs a moment to flush under suite
-  // load (same environment flake spec-seasonal hardens against): give the
-  // write a beat and retry the reload check before judging.
+  // Confirm the price map actually LANDED in localStorage before reloading —
+  // the big price file's saveMap can still be in flight, and reloading before
+  // the write completes loses it (a file:// flush quirk under suite load).
+  let wrote = 0;
+  for (let i = 0; i < 80; i++) {
+    wrote = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem("psmmc_idmap_v1") || "{}").priced || 0; } catch (e) { return 0; } });
+    if (wrote > 500) break;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  R.ok(wrote > 500, `price map written to localStorage before reload (${wrote})`);
   let priced = 0;
-  for (let attempt = 0; attempt < 3 && priced <= 500; attempt++) {
-    await new Promise((r) => setTimeout(r, 600));
+  for (let attempt = 0; attempt < 4 && priced <= 500; attempt++) {
+    await new Promise((r) => setTimeout(r, 500));
     await page.reload({ waitUntil: "load" });
     await page.waitForSelector("#btnSample");
     priced = await page.evaluate(() => {

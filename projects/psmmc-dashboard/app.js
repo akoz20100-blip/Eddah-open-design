@@ -23,7 +23,14 @@
   var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
-  var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1";
+  var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1", LEDGER_KEY = "psmmc_orders_ledger_v1";
+  // Order-status semantics for the procurement ledger (Arabic NUPCO statuses
+  // + English fallbacks): rejected/cancelled rows are dropped on import, an
+  // "open order" is anything not rejected and not yet delivered.
+  var MONTHS3 = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+  function isOrderRejected(s) { return /إلغاء|ملغ|رفض|مرفوض|إرجاع|cancel|reject|return/i.test(String(s || "")); }
+  function isOrderDelivered(s) { return /تسليم|سلّم|سُلّم|delivered/i.test(String(s || "")); }
+  function isOrderOpen(s) { return !isOrderRejected(s) && !isOrderDelivered(s); }
 
   // ---------- i18n ----------
   var T = {
@@ -148,6 +155,13 @@
       po_loaded: "{n} order lines saved",
       po_last: "last order",
       po_intransit: "In transit — ordered, not yet in stock",
+      ledger_loaded: "{a} new orders added ({n} in file)",
+      po_orders_title: "Procurement orders",
+      po_open_badge: "Order placed",
+      po_open_tip: "Open order {no} · placed {d}",
+      f_covered_order: "Ordered (under 6 mo)",
+      bw_order_no: "Order no.",
+      qr_rejected: "rejected/cancelled order — excluded",
       oo_mark: "Mark as ordered",
       oo_badge: "On order",
       oo_since: "on order since {d} · {q} units",
@@ -337,6 +351,13 @@
       po_loaded: "تم حفظ {n} سطر طلب",
       po_last: "آخر طلب",
       po_intransit: "قيد التوريد — مطلوب ولم يظهر في المخزون بعد",
+      ledger_loaded: "أُضيف {a} طلبًا جديدًا ({n} في الملف)",
+      po_orders_title: "طلبات الشراء",
+      po_open_badge: "عليه طلب",
+      po_open_tip: "طلب قائم {no} · بتاريخ {d}",
+      f_covered_order: "عليها طلب (تحت ٦ أشهر)",
+      bw_order_no: "رقم الطلب",
+      qr_rejected: "طلب ملغى/مرفوض — مستبعد",
       oo_mark: "وضع علامة: تم الطلب",
       oo_badge: "تم طلبه",
       oo_since: "تم طلبه في {d} · {q} وحدة",
@@ -1489,7 +1510,7 @@
   }
 
   /* ---------- budget runway / PO ledger / on-order flags / thresholds ---------- */
-  var BUDGET = null, PO = null, ORDERS = null, THRESH = null;
+  var BUDGET = null, PO = null, ORDERS = null, THRESH = null, LEDGER = null;
   function loadJson(key, check) { try { var v = JSON.parse(localStorage.getItem(key)); return v && check(v) ? v : null; } catch (e) { return null; } }
   /* ---------- watchlist (ROADMAP step 3) ----------
      The planner stars critical items; pins persist on this device like the
@@ -1600,6 +1621,97 @@
       setTimeout(function () { toast(tFmt("oo_cleared", { n: fmtInt(cleared) })); }, 3000);
     }
   }
+  /* Order-date parser for the procurement exports: the framework file dates
+     read "Wed Dec 31 13:25:14 AST 2025" — V8's Date rejects the AST zone, so
+     pull month/day/year out directly (timezone-independent), then fall back
+     to the general parseDate for ISO / D-M-Y shapes. */
+  function parseOrderDate(v) {
+    if (v instanceof Date && !isNaN(v)) return v;
+    var s = String(v == null ? "" : v).trim();
+    var m = s.match(/[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+[\d:]+\s+(?:[A-Z]{2,4}\s+)?(\d{4})/);
+    if (m && MONTHS3[m[1].toLowerCase()] != null) return new Date(+m[3], MONTHS3[m[1].toLowerCase()], +m[2]);
+    return parseDate(v);
+  }
+  /* ---------- procurement orders ledger (owner spec v3 wave 4) ----------
+     A persistent, append-only ledger fed by the framework-agreement export
+     (and later the tender / direct-purchase exports — same shape, tagged by
+     `source`). Identity is Child order + drug code, so re-uploading a report
+     adds only genuinely new orders. Rejected/cancelled rows never enter. The
+     ledger survives an order completing, so the budget views keep the spend
+     history. The NUPCO CODE column is composite (code_tradecode_supplier);
+     the drug code is its first underscore-delimited part. */
+  function isFrameworkOrders(H) {
+    return findCol(H, ["Framework Agreement Number", "Child order", "Eitmad Reference Number"]) >= 0
+      && findCol(H, ["NUPCO CODE", "NUPCO Code"]) >= 0;
+  }
+  function parseOrdersLedger(aoa, source) {
+    if (!aoa || !aoa.length) throw new Error("empty");
+    var H = aoa[0];
+    var oi = findCol(H, ["Child order", "Store Order ID", "Order Number", "Order No", "رقم الطلب"]),
+      ci = findCol(H, ["NUPCO CODE", "NUPCO Code", "NUPCO Material", "NUPCO", "نبكو"]),
+      di = findCol(H, ["Order Date", "Ordered Date", "تاريخ الطلب", "التاريخ"]),
+      si = findCol(H, ["Status", "الحالة"]),
+      qi = findCol(H, ["Quantity", "Order Qty", "Qty", "الكمية"]),
+      ai = findCol(H, ["Framework Agreement Number", "Agreement Number", "رقم الاتفاقية"]),
+      pi = findCol(H, ["PO Number", "Purchase Order", "رقم أمر الشراء"]),
+      vi = findCol(H, ["Supplier name + code", "Supplier name", "Supplier", "Vendor", "المورد"]),
+      ipi = findCol(H, ["Item Price", "سعر البند"]),
+      tvi = findCol(H, ["Item Total Value", "Total Order Value", "القيمة الإجمالية"]);
+    if (oi < 0 || ci < 0) throw new Error("cols:Child order/NUPCO CODE");
+    var entries = {}, n = 0, qTotal = 0, qNonDrug = 0, qRejected = 0;
+    function txt(idx, row) { return idx >= 0 && row[idx] != null ? String(row[idx]).trim() : ""; }
+    for (var r = 1; r < aoa.length; r++) {
+      var row = aoa[r]; if (!row) continue;
+      qTotal++;
+      var code = normCode(String(row[ci] == null ? "" : row[ci]).split("_")[0]);
+      if (!isDrug(code)) { qNonDrug++; continue; }
+      var status = txt(si, row);
+      if (isOrderRejected(status)) { qRejected++; continue; }
+      var orderNo = txt(oi, row) || ("row" + r);
+      var d = parseOrderDate(row[di]);
+      entries[orderNo + "·" + code] = {
+        orderNo: orderNo, code: code, codeRaw: txt(ci, row), date: d ? isoDate(d) : null,
+        qty: num(row[qi]), status: status, agreementNo: txt(ai, row), poNumber: txt(pi, row),
+        supplier: txt(vi, row), itemPrice: ipi >= 0 ? num(row[ipi]) : null,
+        totalValue: tvi >= 0 ? num(row[tvi]) : null, source: source || "framework"
+      };
+      n++;
+    }
+    if (!n) throw new Error("empty-orders");
+    var quality = {
+      total: qTotal, accepted: n,
+      rejects: qreasons({ qr_nondrug: qNonDrug, qr_rejected: qRejected }),
+      warns: [],
+      cols: qcols(H, [["bw_order_no", oi], ["c_code", ci], ["qs_date", di], ["c_status", si], ["qs_qty", qi], ["c_value", tvi]])
+    };
+    return { entries: entries, count: n, quality: quality };
+  }
+  /* Cache of ledger entries grouped by code (newest first), rebuilt whenever
+     the ledger object identity changes — keeps lookups O(1) without
+     persisting a redundant index. */
+  var _ledgerIdx = null, _ledgerIdxFor = null;
+  function ledgerByCode() {
+    if (!LEDGER) return {};
+    if (_ledgerIdxFor === LEDGER) return _ledgerIdx;
+    var idx = {};
+    Object.keys(LEDGER.entries || {}).forEach(function (k) {
+      var e = LEDGER.entries[k];
+      (idx[e.code] || (idx[e.code] = [])).push(e);
+    });
+    Object.keys(idx).forEach(function (c) { idx[c].sort(function (a, b) { return (a.date || "") < (b.date || "") ? 1 : (a.date || "") > (b.date || "") ? -1 : 0; }); });
+    _ledgerIdx = idx; _ledgerIdxFor = LEDGER;
+    return idx;
+  }
+  function ordersForCode(code) { return ledgerByCode()[code] || null; }
+  /* The most recent OPEN order for a code (not rejected, not delivered) — the
+     signal that an item under pressure is already being procured. */
+  function openOrderFor(code) {
+    var list = ordersForCode(code);
+    if (!list) return null;
+    for (var i = 0; i < list.length; i++) if (isOrderOpen(list[i].status)) return list[i];
+    return null;
+  }
+  function loadLedger() { return loadJson(LEDGER_KEY, function (v) { return v.entries; }); }
   /* ---------- previous-orders (PO) file ----------
      Tolerant headers; per code we keep the most recent few orders only —
      enough for "last order" + the in-transit signal without growing storage. */
@@ -2022,11 +2134,17 @@
     if (STATE.view === "averages") return STATE.rows.filter(function (r) { return r.moved || monthlySeriesFor(r.code); });
     return STATE.rows;
   }
-  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, excess: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0 }; base.forEach(function (r) { if (r.status === "order_now") c.order_now++; else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; else if (r.status === "excess") c.excess++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
+  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, excess: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0, covered_order: 0 }; base.forEach(function (r) { if (r.status === "order_now") { c.order_now++; if (openOrderFor(r.code)) c.covered_order++; } else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; else if (r.status === "excess") c.excess++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
   function applyFilter(base) {
     var f = STATE.filter;
     var rows = base.filter(function (r) {
-      if (STATE.view === "planning") { return f === "all" ? true : f === "watchlist" ? isPinned(r.code) : r.status === f; }
+      if (STATE.view === "planning") {
+        if (f === "all") return true;
+        if (f === "watchlist") return isPinned(r.code);
+        // "Tight but covered": would-be order_now items with a live order.
+        if (f === "covered_order") return r.status === "order_now" && !!openOrderFor(r.code);
+        return r.status === f;
+      }
       if (STATE.view === "averages") {
         if (f === "rising") return r.trendPct != null && r.trendPct > 0.10;
         if (f === "falling") return r.trendPct != null && r.trendPct < -0.10;
@@ -2281,8 +2399,9 @@
   /* Order candidates ranked by urgency: moving items by ascending coverage
      (not-in-stock counts as zero), high consumers first inside a tie. */
   function orderCandidates(base) {
-    // Items already marked "on order" are excluded until the order lands.
-    return base.filter(function (r) { return r.moved && r.sug > 0 && !onOrderInfo(r.code); })
+    // Items already on order — either manually marked or carrying an open
+    // procurement order in the ledger — are excluded until that order lands.
+    return base.filter(function (r) { return r.moved && r.sug > 0 && !onOrderInfo(r.code) && !openOrderFor(r.code); })
       .map(function (r) { var c = !r.inStock ? 0 : (r.cov == null ? Infinity : r.cov); return { r: r, covEff: c }; })
       .sort(function (a, b) { return a.covEff - b.covEff || b.r.avg - a.r.avg; });
   }
@@ -2332,6 +2451,11 @@
     var th = thresholdFor(r.code);
     if (th) extra += ' <span class="th-flag num" title="' + esc(tFmt("th_mark", { m: fmt1(th) })) + '">⚑' + fmt1(th) + '</span>';
     if (onOrderInfo(r.code)) extra += ' <span class="pill onorder">' + t("oo_badge") + '</span>';
+    // An open procurement order on a tight item (owner spec v3): it reads as
+    // "under pressure but already being procured" — the planner should not
+    // re-order it. The badge carries the order number for traceability.
+    var oo = openOrderFor(r.code);
+    if (oo) extra += ' <span class="pill onorder" title="' + esc(tFmt("po_open_tip", { no: oo.orderNo, d: prettyDate(oo.date) })) + '">' + t("po_open_badge") + "</span>";
     return pill(r.status) + extra;
   }
   /* Watchlist star: filled when pinned. Lives inside the copyable code cell,
@@ -2468,7 +2592,8 @@
         s.momPct == null ? "" : ' <span class="kdelta ' + (s.momPct >= 0 ? "up" : "down") + ' num" title="' + esc(tFmt("vs_prev_month", { a: ymLabel(s.momA + "-01") || s.momA, b: ymLabel(s.momB + "-01") || s.momB })) + '">' + (s.momPct >= 0 ? "▲ +" : "▼ ") + (s.momPct * 100).toFixed(0) + "%</span>")
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
+    var coveredChip = c.covered_order > 0 ? fchip("covered_order", t("f_covered_order"), c.covered_order, ICON.truck || ICON.box) : "";
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
@@ -2900,6 +3025,25 @@
       expiredBlock = '<div class="expired-block"><div class="di-title">' + t("dt_expired_batches") + ' <b class="num" style="color:var(--coral)">' + fmtInt(r.expiredQty) + "</b></div>" + erows + eMore + "</div>";
     }
     var catNote = r.catalogOnly ? '<p class="dt-note">' + esc(t("cat_note")) + '</p>' : "";
+    // Procurement ledger: every order on this item (newest first) with its
+    // number, date, qty, status and supplier; open orders are highlighted so
+    // the planner sees at a glance that a tight item is already being procured.
+    var ledgerBlock = "";
+    var ledList = ordersForCode(r.code);
+    if (ledList && ledList.length) {
+      var ledRows = ledList.slice(0, 6).map(function (o) {
+        var open = isOrderOpen(o.status);
+        return '<div class="ledger-row' + (open ? " is-open" : "") + '">'
+          + '<b class="num" data-copy="' + esc(o.orderNo) + '" role="button" tabindex="0" title="' + esc(t("cp_copied")) + '">' + esc(o.orderNo) + "</b>"
+          + '<span class="num">' + prettyDate(o.date) + "</span>"
+          + '<span class="num">' + fmtInt(o.qty) + " " + t("units_word") + "</span>"
+          + '<i>' + esc(o.status || "—") + "</i>"
+          + (o.supplier ? '<u>' + esc(o.supplier) + "</u>" : "")
+          + "</div>";
+      }).join("");
+      ledgerBlock = '<div class="ledger-block"><div class="di-title">' + t("po_orders_title")
+        + (openOrderFor(r.code) ? ' <span class="pill onorder">' + t("po_open_badge") + "</span>" : "") + "</div>" + ledRows + "</div>";
+    }
     // Previous-orders ledger: last order + in-transit signal.
     var poBlock = "";
     var poList = PO && PO.byCode[r.code];
@@ -2938,7 +3082,7 @@
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + projStats + ooBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote + stats + projStats + ooBlock + ledgerBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;
@@ -3420,8 +3564,9 @@
     THRESH = loadThresh();
     WATCH = loadWatch();
     PLANNERS = loadPlanners();
+    LEDGER = loadLedger();
     if (PLANNERS && $("lblPl")) $("lblPl").classList.add("is-baseline");
-    if (PO && $("lblPo")) $("lblPo").classList.add("is-baseline");
+    if ((PO || LEDGER) && $("lblPo")) $("lblPo").classList.add("is-baseline");
     // PWA: register the cache-first service worker (https only — file:// and
     // the double-clicked standalone build skip it safely).
     if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
@@ -3527,6 +3672,31 @@
       if (!f) return;
       readWorkbook(f, function (err, aoa) {
         if (err) { toast(t("err_po")); return; }
+        // The framework-agreement / tender / direct-purchase exports go to the
+        // persistent procurement ledger (dedupe by order number, keep history
+        // for the budget views); the legacy previous-orders shape still feeds
+        // the in-transit badge. Detect by the framework columns.
+        if (aoa && aoa.length && isFrameworkOrders(aoa[0])) {
+          try {
+            var src = /tender|مناقص/i.test(f.name) ? "tender" : /direct|مباشر/i.test(f.name) ? "direct" : "framework";
+            var parsedL = parseOrdersLedger(aoa, src);
+            var ent = (LEDGER && LEDGER.entries) || {};
+            var added = 0;
+            Object.keys(parsedL.entries).forEach(function (k) { if (!ent[k]) { ent[k] = parsedL.entries[k]; added++; } });
+            LEDGER = { v: 1, entries: ent, name: f.name, savedAt: new Date().toISOString() };
+            persist(LEDGER_KEY, LEDGER);
+            _ledgerIdxFor = null; // invalidate the by-code cache
+            STATE.quality = STATE.quality || {};
+            STATE.quality.po = { name: f.name, q: parsedL.quality };
+            STATE.qualityDismissed = false;
+            $("lblPo").classList.remove("is-baseline");
+            $("lblPo").classList.add("is-loaded");
+            applyStatic();
+            if (STATE.rows.length) render();
+            toast(tFmt("ledger_loaded", { a: fmtInt(added), n: fmtInt(parsedL.count) }));
+          } catch (ex) { toast(t("err_po") + colsHint(ex)); }
+          return;
+        }
         try {
           var parsed = parsePO(aoa);
           // Merge into the saved ledger (per code), newest first, capped — so
