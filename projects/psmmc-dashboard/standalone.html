@@ -1427,7 +1427,11 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var H = aoa[0];
     var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
       ti = findCol(H, ["Trade Name", "Brand Name", "Brand", "Commercial Name", "Trade", "الاسم التجاري", "الاسم التجارى", "اسم تجاري"]),
-      gi = findCol(H, ["Scientific Name", "Generic Name", "Scientific", "الاسم العلمي", "اسم علمي", "المادة الفعالة"]),
+      // The MODHS unified catalog carries no "Scientific Name" header; its
+      // item descriptions ARE the generic names planners search by (incl.
+      // Saudi-common spellings like ADRENALINE for EPINEPHRINE), so they
+      // join the scientific-name candidates after the explicit headers.
+      gi = findCol(H, ["Scientific Name", "Generic Name", "Scientific", "الاسم العلمي", "اسم علمي", "المادة الفعالة", "MODHS Item Description", "NUPCO Item Description"]),
       hi = findCol(H, ["Hospital Code", "Hospital Item Number", "Hospital Number", "Local Code", "Hospital", "كود المستشفى", "رقم المستشفى"]),
       mi = findCol(H, ["MODHS-CODE", "MODHS CODE", "MSD Code", "MSD Number", "MSD", "الكود الموحد"]),
       cl = findCol(H, ["Classification", "التصنيف"]),
