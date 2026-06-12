@@ -1,5 +1,29 @@
 # state.md — Dash project loop state
 
+## Routine v2 — Round 2 (2026-06-12) — owner bug + ROADMAP steps 1–3
+
+- Baseline HEAD: `b78b8e6` (merge of PR #12) · suite 19/19 green before changes.
+- Branch: `claude/beautiful-wright-0zzwws`, sequential PRs (each merged at green
+  CI before the next step starts, per ROADMAP rule 3).
+
+### Shipped
+
+| PR | Item | Proof |
+|----|------|-------|
+| #13 (merged `0233730`) | Owner bug (recurring): searching a COMMERCIAL name found nothing — no file carries the planner's brand (MODHS catalog has no trade column; warehouse stocks VAROXA while planner types Xarelto; sample names synthetic). Fix: curated `TRADE_SYNONYMS` (~280 brands incl. Arabic spellings, stems validated against the real MODHS catalog) expanding search terms in rows + catalog fallback, applied mapping shown above results. | red spec first (`spec-tradename`, 4 red assertions on main), suite 19→20 green; standalone +18 KB (the dictionary) |
+| step 1 PR | ROADMAP step 1 — expiry intelligence: stock-file `Expiry Date`+`Lot No/Batch` → per-code batches, FEFO walk vs monthly avg from stock-as-of → earliest-expiry column (sortable) in planning, at-risk flag with effective coverage + units-at-risk tooltip, digest callout (fires on first upload), batches block + effective figures in item sheet, expiry columns in order-sheet export/print; withdrawals-file `Expiry Date`/`Batch No` used as ≈fallback when stock has no batches. | `spec-expiry` red (10 asserts) → green against an independent FEFO mirror (`expectedExpiryFromRealFiles`); real-file anchor BISOPROLOL 5MG cov 69.5 → eff 16.7 mo, 633,977 units at risk; 199 flagged items; suite 21/21 |
+
+### Lessons
+
+- Headless chromium starves in-page rAF/timers on idle file:// pages: the
+  150 ms search debounce can take seconds and `waitForFunction` (raf polling)
+  freezes; `--disable-background-timer-throttling` does NOT help. Robust spec
+  pattern: poll from Node via `page.evaluate` (each round-trip wakes the
+  renderer). Used by `spec-tradename`/`spec-expiry`.
+- Search-assertion predicates must prove the table is FILTERED (small row
+  count) before matching rows, or the unfiltered 1,000-row table satisfies
+  any regex.
+
 ## Routine v2 — Round 1 (2026-06-12) — Phase 0 + design track
 
 - Baseline HEAD: `27042d1` (merge of PR #8) · suite 16/16 green before changes.

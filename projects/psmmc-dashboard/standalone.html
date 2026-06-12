@@ -206,6 +206,20 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 /* ---- table ---- */
 .tablecard{overflow:hidden; margin:0 2px; border-radius:var(--r-xl); background:var(--card);
   border:1px solid var(--card-edge); box-shadow:var(--shadow)}
+/* ---- expiry intelligence (ROADMAP step 1) ---- */
+.expcell{white-space:nowrap}
+.expcell .exp-risk{color:var(--coral); font-weight:800; cursor:help}
+.os-row .exp-tag{font-style:normal; font-size:10.5px; font-weight:800; color:var(--muted); white-space:nowrap; margin-inline-start:8px}
+.os-row .exp-tag.is-risk{color:var(--coral)}
+.exp-block{margin-top:16px}
+.batch-row{display:flex; gap:14px; align-items:baseline; padding:7px 2px; font-size:12.5px; font-weight:600; border-bottom:1px dashed var(--line)}
+.batch-row b{min-width:96px}
+.batch-row i{font-style:normal; color:var(--muted)}
+.batch-row u{text-decoration:none; color:var(--muted); margin-inline-start:auto; font-size:11px}
+.batch-row.is-expired, .batch-row.is-expired i{color:var(--coral)}
+.exp-stats{margin-top:12px}
+#printSheet td.exp-risk{color:#b3261e; font-weight:700}
+
 /* Brand = generic mapping applied to the current search (trade-name synonyms). */
 .syn-hint{display:flex; align-items:center; gap:8px; padding:10px 16px; font-size:12.5px;
   font-weight:600; color:var(--muted); background:#f4f6ff; border-bottom:1px solid var(--line)}
@@ -818,6 +832,14 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       dg_new: "new items",
       dg_recovered: "recovered",
       dg_dismiss: "Dismiss",
+      c_expiry: "Expiry (mo)",
+      exp_risk_tip: "≈ {u} units may expire before they can be used at the current rate · effective coverage {m} mo",
+      exp_expired: "expired",
+      exp_approx_tip: "approximate — from the latest dispatch batch in the withdrawals file",
+      dg_expiry: "coverage outlives expiry",
+      dt_batches: "Batches & expiry",
+      dt_exp_eff: "effective coverage after expiry (mo)",
+      dt_exp_risk: "units at risk of expiry",
       th_title: "Custom alert threshold",
       th_ph: "months",
       th_save: "Save",
@@ -937,6 +959,14 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       dg_new: "أصناف جديدة",
       dg_recovered: "تعافت",
       dg_dismiss: "إغلاق",
+      c_expiry: "الصلاحية (شهر)",
+      exp_risk_tip: "≈ {u} وحدة قد تنتهي صلاحيتها قبل صرفها بالمعدل الحالي · التغطية الفعلية {m} شهر",
+      exp_expired: "منتهية الصلاحية",
+      exp_approx_tip: "تقريبي — من آخر دفعة صرف في ملف السحوبات",
+      dg_expiry: "التغطية تتجاوز مدة الصلاحية",
+      dt_batches: "الدفعات والصلاحية",
+      dt_exp_eff: "التغطية الفعلية بعد الصلاحية (شهر)",
+      dt_exp_risk: "وحدات مهددة بانتهاء الصلاحية",
       th_title: "حد تنبيه مخصص",
       th_ph: "أشهر",
       th_save: "حفظ",
@@ -1162,7 +1192,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       qi = findCol(H, ["Order Qty", "Quantity", "Qty"]),
       di = findCol(H, ["Delivery Date", "Ordered Date", "Date"]),
       si = findCol(H, ["Status"]), ui = findCol(H, ["UOM", "Unit"]),
-      de = findCol(H, ["Description", "Item Description", "Generic Item description"]);
+      de = findCol(H, ["Description", "Item Description", "Generic Item description"]),
+      xi = findCol(H, ["Expiry Date", "Expiry"]), bi = findCol(H, ["Batch No", "Batch"]);
     if (ci < 0 || qi < 0) throw new Error("cols:NUPCO Material/Order Qty");
     var byCode = {}, monthlyByCode = {}, minD = null, maxD = null, badDates = 0;
     for (var r = 1; r < aoa.length; r++) {
@@ -1183,6 +1214,18 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
           var ym = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2);
           var mc = monthlyByCode[code] || (monthlyByCode[code] = {});
           mc[ym] = (mc[ym] || 0) + q;
+          // Expiry fallback signal: warehouses pick earliest-expiry-first, so
+          // the latest dispatch's batch expiry approximates the front of the
+          // remaining stock queue when the stock file carries no expiry.
+          if (xi >= 0) {
+            var xd = parseDate(row[xi]);
+            var dIso = isoDate(d);
+            if (xd && (!rec.lastD || dIso >= rec.lastD)) {
+              rec.lastD = dIso;
+              rec.lastExp = isoDate(xd);
+              if (bi >= 0 && row[bi]) rec.lastBatch = String(row[bi]).trim();
+            }
+          }
         } else if (cell != null && String(cell).trim() !== "") {
           // A non-empty cell we could not read: surfaced to the user so a
           // mistyped/locale-mangled date is not silently dropped from the period.
@@ -1205,6 +1248,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         dst.qty += src.qty;
         if (!dst.desc) dst.desc = src.desc;
         if (!dst.uom) dst.uom = src.uom;
+        if (src.lastD && (!dst.lastD || src.lastD >= dst.lastD)) {
+          dst.lastD = src.lastD; dst.lastExp = src.lastExp; dst.lastBatch = src.lastBatch || null;
+        }
       });
       Object.keys(p.monthlyByCode).forEach(function (c) {
         var src = p.monthlyByCode[c], dst = monthlyByCode[c] || (monthlyByCode[c] = {});
@@ -2028,7 +2074,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       ti = findCol(H, ["Trade Item description", "Trade Item Description", "Trade Description", "Trade Name", "Brand Name", "Brand"]),
       vi = findCol(H, ["Vendor Name", "Agent Name", "Supplier Name", "اسم الوكيل", "الوكيل", "Vendor", "Agent", "Supplier", "Manufacturer"]),
       gi = findCol(H, ["Scientific Name", "Scientific"]),
-      mi = findCol(H, ["MSD Code", "MSD"]);
+      mi = findCol(H, ["MSD Code", "MSD"]),
+      xi = findCol(H, ["Expiry Date", "Expiry", "تاريخ الصلاحية"]),
+      bi = findCol(H, ["Lot No/Batch", "Batch No", "Lot No", "Batch", "Lot"]);
     if (ci < 0) throw new Error("cols:Generic Item Number");
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
@@ -2037,19 +2085,77 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       var row = aoa[r]; if (!row) continue;
       var code = normCode(row[ci]); if (!isDrug(code)) continue;
       var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, trade: null, agent: null, sci: null, msd: null });
-      rec.qty += num(row[ai]);
+      var q = num(row[ai]);
+      rec.qty += q;
       if (!rec.desc && de >= 0 && row[de]) rec.desc = String(row[de]).trim();
       if (!rec.trade) rec.trade = txt(row, ti);
       if (!rec.agent) rec.agent = txt(row, vi);
       if (!rec.sci) rec.sci = txt(row, gi);
       if (!rec.msd) rec.msd = txt(row, mi);
+      // Batch line: rows with available units and a readable expiry feed the
+      // expiry intelligence; same-date batches merge so the FEFO walk stays
+      // small even when a code spans many warehouse rows.
+      if (xi >= 0 && q > 0) {
+        var xd = parseDate(row[xi]);
+        if (xd) {
+          var key = isoDate(xd);
+          var bm = rec.expByDate || (rec.expByDate = {});
+          var slot = bm[key] || (bm[key] = { q: 0, b: null });
+          slot.q += q;
+          if (!slot.b && bi >= 0 && row[bi] != null && row[bi] !== "") slot.b = String(row[bi]).trim();
+        }
+      }
     }
+    Object.keys(byCode).forEach(function (code) {
+      var rec = byCode[code];
+      if (!rec.expByDate) return;
+      rec.batches = Object.keys(rec.expByDate).sort().map(function (e) {
+        return { e: e, q: rec.expByDate[e].q, b: rec.expByDate[e].b };
+      });
+      delete rec.expByDate;
+    });
     var asOf = dateFromFilename(filename);
     if (!asOf && wb && wb.Props && wb.Props.ModifiedDate) asOf = new Date(wb.Props.ModifiedDate);
     return { byCode: byCode, stock_as_of: isoDate(asOf) };
   }
 
   // ---------- compute ----------
+  /* ---------- expiry intelligence (ROADMAP step 1) ----------
+     FEFO (first-expiry-first-out) walk over a code's stock batches: batches
+     are consumed earliest-expiry-first at the item's monthly average from
+     the stock-as-of date; whatever a batch cannot contribute before its own
+     expiry is waste ("units at risk"). Effective coverage = usable ÷ avg —
+     the "stock covers 10 months but expiry ends it after 4" number. */
+  function expiryStats(batches, avg, stock, asOfIso, approx) {
+    if (!batches || !batches.length) return null;
+    var asOf = parseIsoLocal(asOfIso) || new Date();
+    var consumed = 0, waste = 0;
+    for (var i = 0; i < batches.length; i++) {
+      var b = batches[i];
+      var d = parseIsoLocal(b.e);
+      var tMo = d ? Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH) : 0;
+      if (avg > 0) {
+        var can = Math.max(0, avg * tMo - consumed);
+        var use = Math.min(b.q, can);
+        waste += b.q - use;
+        consumed += use;
+      }
+    }
+    var first = parseIsoLocal(batches[0].e);
+    return {
+      firstExp: batches[0].e,
+      expMonths: first ? (first - asOf) / 86400000 / DAYS_PER_MONTH : null,
+      expWaste: avg > 0 ? waste : 0,
+      expCov: avg > 0 ? (stock - waste) / avg : null,
+      expApprox: !!approx,
+      batches: batches
+    };
+  }
+  /* The ROADMAP-1 alert predicate: at least one unit would expire unused AND
+     that loss shortens the flat coverage by a month or more. */
+  function expiryRisk(r) {
+    return !!(r.moved && r.expWaste >= 1 && r.cov != null && r.expCov != null && r.cov - r.expCov >= 1);
+  }
   /* Status thresholds: the 6-month rule, unless the planner set a per-item
      override (e.g. alert a critical drug already at 8 months). Watch is always
      one month above the alert line. */
@@ -2073,7 +2179,12 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       var total = w ? w.qty : 0, avg = w ? total / months : 0;
       var inStock = !!s, stock = inStock ? s.qty : 0;
       var cov = avg > 0 ? stock / avg : null;
-      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null });
+      // Expiry: real batches from the stock file win; otherwise the latest
+      // dispatch batch from the withdrawals file approximates the queue front.
+      var es = null;
+      if (s && s.batches) es = expiryStats(s.batches, avg, stock, st.stock_as_of, false);
+      else if (inStock && stock > 0 && w && w.lastExp) es = expiryStats([{ e: w.lastExp, q: stock, b: w.lastBatch || null }], avg, stock, st.stock_as_of, true);
+      rows.push({ code: code, desc: (w && w.desc) || (s && s.desc) || "", alt: "", uom: (w && w.uom) || "", total: total, avg: avg, stock: stock, cov: cov, qty9: avg * ORDER_COVER_MONTHS, sug: Math.max(0, avg * ORDER_COVER_MONTHS - stock), status: statusOf(cov == null ? 0 : cov, avg, inStock, code), inStock: inStock, moved: avg > 0, trend: null, trendPct: null, trade: (s && s.trade) || null, agent: (s && s.agent) || null, sci: (s && s.sci) || null, msd: (s && s.msd) || null, expFirst: es ? es.firstExp : null, expMonths: es ? es.expMonths : null, expWaste: es ? es.expWaste : 0, expCov: es ? es.expCov : null, expApprox: es ? es.expApprox : false, batches: es ? es.batches : null });
     });
     return rows;
   }
@@ -2117,9 +2228,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
      Compared against the previous upload's snapshot, surfaced once per upload
      as a dismissible card at the top of the Planning tab. */
   function buildDigest(rows, prev) {
-    if (!prev) { STATE.digest = null; return; }
-    var prevStatus = prev.statusByCode || null;
-    var d = { danger: [], spikes: [], fresh: [], recovered: [] };
+    // Status/trend deltas need a previous snapshot, but the expiry callout is
+    // a property of THIS upload alone — it must fire on the very first one.
+    var prevStatus = prev ? (prev.statusByCode || null) : null;
+    var d = { danger: [], spikes: [], fresh: [], recovered: [], expiry: [] };
     rows.forEach(function (r) {
       var bad = r.status === "order_now" || (r.status === "not_in_stock" && r.moved);
       if (prevStatus && prevStatus[r.code]) {
@@ -2130,8 +2242,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       }
       if (r.trend && r.trend.type === "delta" && r.trend.pct > 0.30) d.spikes.push(r);
       if (r.trend && r.trend.type === "new" && r.moved) d.fresh.push(r);
+      if (expiryRisk(r)) d.expiry.push(r);
     });
-    STATE.digest = (d.danger.length || d.spikes.length || d.fresh.length || d.recovered.length) ? d : null;
+    d.expiry.sort(function (a, b) { return b.expWaste - a.expWaste; });
+    STATE.digest = (d.danger.length || d.spikes.length || d.fresh.length || d.recovered.length || d.expiry.length) ? d : null;
   }
 
   // ---------- ingest ----------
@@ -2216,7 +2330,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       }
     }
     var k = STATE.sort.key, dir = STATE.sort.dir === "asc" ? 1 : -1;
-    rows.sort(function (a, b) { var va = a[k], vb = b[k]; if (k === "cov") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "trendPct" || k === "unitPrice" || k === "stockValue") { var nullDir = dir === 1 ? Infinity : -Infinity; va = va == null ? nullDir : va; vb = vb == null ? nullDir : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
+    rows.sort(function (a, b) { var va = a[k], vb = b[k]; if (k === "cov" || k === "expMonths") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "trendPct" || k === "unitPrice" || k === "stockValue") { var nullDir = dir === 1 ? Infinity : -Infinity; va = va == null ? nullDir : va; vb = vb == null ? nullDir : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
     return rows;
   }
 
@@ -2445,8 +2559,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var cand = orderCandidates(base), top = cand.slice(0, 7);
     var rows = top.map(function (x, i) {
       var r = x.r;
+      var expTag = r.expMonths == null ? "" : '<i class="exp-tag' + (expiryRisk(r) ? " is-risk" : "") + '" title="' + esc(expiryRisk(r) ? tFmt("exp_risk_tip", { u: fmtM(r.expWaste), m: fmt1(r.expCov) }) : t("c_expiry")) + '">' + (expiryRisk(r) ? "⚠ " : "") + (r.expApprox ? "≈" : "") + fmt1(r.expMonths) + " " + t("mo") + "</i>";
       return '<div class="os-row" data-code="' + esc(r.code) + '"><span class="os-rank num">' + (i + 1) + '</span>'
-        + '<span class="os-main"><b>' + esc(r.desc) + '</b>' + codeChip(r.code) + '</span>'
+        + '<span class="os-main"><b>' + esc(r.desc) + '</b>' + codeChip(r.code) + expTag + '</span>'
         + '<span class="os-cov"><b class="num" style="color:' + (x.covEff < 1 ? "var(--coral)" : "var(--ink)") + '">' + fmt1(x.covEff === Infinity ? 0 : x.covEff) + '</b><i>' + t("os_cov_left") + '</i></span>'
         + '<span class="os-sug"><b class="num">' + fmtM(r.sug) + '</b><i>' + t("os_suggested") + '</i></span></div>';
     }).join("");
@@ -2464,6 +2579,17 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   // ---------- table pieces ----------
   var STATUS_COLOR = { order_now: "var(--coral)", warning: "var(--amber)", ok: "var(--blue)", no_movement: "var(--muted-2)", not_in_stock: "var(--indigo)" };
   function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--blue)") + '"></i></span>'; }
+  /* Expiry column: earliest batch expiry in months from the stock date.
+     Flagged red when coverage outlives expiry (units would expire unused);
+     "≈" marks the withdrawals-file fallback estimate. */
+  function expCell(r) {
+    if (r.expMonths == null) return '<td class="expcell"><span class="muted">—</span></td>';
+    var risk = expiryRisk(r);
+    var label = (r.expApprox ? "≈" : "") + (r.expMonths < 0 ? t("exp_expired") : fmt1(r.expMonths));
+    var tip = risk ? tFmt("exp_risk_tip", { u: fmtM(r.expWaste), m: fmt1(r.expCov) }) : (r.expApprox ? t("exp_approx_tip") : "");
+    if (risk || r.expMonths < 0) return '<td class="expcell"><span class="exp-risk num" title="' + esc(tip) + '">⚠ ' + label + "</span></td>";
+    return '<td class="expcell"><span class="num"' + (tip ? ' title="' + esc(tip) + '"' : "") + ">" + label + "</span></td>";
+  }
   function trendCell(r) { if (!r.trend) return '<span class="trend flat">—</span>'; if (r.trend.type === "new") return '<span class="trend new">' + t("trend_new") + "</span>"; var p = r.trend.pct, cls = p > 0.001 ? "up" : p < -0.001 ? "down" : "flat", arr = p > 0.001 ? "▲" : p < -0.001 ? "▼" : "▬"; return '<span class="trend ' + cls + '" title="' + t("prev_avg") + " " + fmt1(r.trend.prev) + t("per_mo") + '">' + arr + " " + (p >= 0 ? "+" : "") + (p * 100).toFixed(0) + "%</span>"; }
   function pill(status) { return '<span class="pill ' + status + '">' + t("s_" + status) + "</span>"; }
   /* Status pill plus planner marks: custom alert threshold flag + on-order badge. */
@@ -2488,7 +2614,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; var ariaSort = on ? ' aria-sort="' + (s.dir === "asc" ? "ascending" : "descending") + '"' : ""; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '"' + ariaSort + '>' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
   function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
-  var SORT_LABEL = { code: "c_code", desc: "c_desc", total: "c_total", avg: "c_avg", stock: "c_stock", cov: "c_cov", qty9: "c_qty9", sug: "c_sug", trendPct: "c_delta", unitPrice: "pr_unit_price", stockValue: "c_value" };
+  var SORT_LABEL = { code: "c_code", desc: "c_desc", total: "c_total", avg: "c_avg", stock: "c_stock", cov: "c_cov", expMonths: "c_expiry", qty9: "c_qty9", sug: "c_sug", trendPct: "c_delta", unitPrice: "pr_unit_price", stockValue: "c_value" };
   function defaultSort() {
     if (STATE.view === "planning") return { key: "cov", dir: "asc" };
     if (STATE.view === "averages") return { key: "avg", dir: "desc" };
@@ -2529,8 +2655,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + statusCell(r) + "</td></tr>";
       }).join("");
     } else {
-      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
-      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td><td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + th("expMonths", t("c_expiry")) + "<th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
+      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
     }
     var shown = rows.length;
     // Catalog fallback: a search that misses every loaded row also scans the
@@ -2588,6 +2714,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '<button type="button" class="btn-soft" id="dgDismiss">' + t("dg_dismiss") + '</button></div>'
       + dgLine("dg_danger", d.danger, "var(--coral)")
       + dgLine("dg_spike", d.spikes, "var(--amber)")
+      + dgLine("dg_expiry", d.expiry || [], "var(--coral)")
       + dgLine("dg_new", d.fresh, "var(--blue)")
       + dgLine("dg_recovered", d.recovered, "var(--blue)")
       + "</div>";
@@ -2754,6 +2881,31 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       chart = '<div class="barchart" style="padding:22px;text-align:center;color:var(--muted);font-size:12.5px;font-weight:700">' + t("dt_no_history") + '</div>';
     }
     if (r.seasonal) note += '<p class="dt-note">' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '</p>';
+    // Batches & expiry: every stock batch with its expiry date and months
+    // from the stock-as-of date; when coverage outlives expiry the effective
+    // figures (usable coverage + units at risk) are called out.
+    var expBlock = "";
+    if (r.batches && r.batches.length) {
+      var asOfD = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
+      var brows = r.batches.slice(0, 6).map(function (b) {
+        var bd = parseIsoLocal(b.e);
+        var mo = bd ? (bd - asOfD) / 86400000 / DAYS_PER_MONTH : null;
+        var expired = mo != null && mo < 0;
+        return '<div class="batch-row' + (expired ? " is-expired" : "") + '">'
+          + '<b class="num">' + prettyDate(b.e) + '</b>'
+          + '<span class="num">' + fmtInt(b.q) + " " + t("units_word") + '</span>'
+          + '<i class="num">' + (expired ? t("exp_expired") : mo == null ? "—" : fmt1(mo) + " " + t("mo")) + '</i>'
+          + (b.b ? '<u class="num">' + esc(b.b) + '</u>' : "")
+          + '</div>';
+      }).join("");
+      var bMore = r.batches.length > 6 ? '<p class="dt-note">+' + fmtInt(r.batches.length - 6) + '</p>' : "";
+      var effLine = expiryRisk(r)
+        ? '<div class="statgrid exp-stats">'
+          + '<span class="stat"><b class="num" style="color:var(--coral)">' + fmt1(r.expCov) + '</b><i>' + t("dt_exp_eff") + '</i></span>'
+          + '<span class="stat"><b class="num">' + fmtInt(r.expWaste) + '</b><i>' + t("dt_exp_risk") + '</i></span></div>'
+        : "";
+      expBlock = '<div class="exp-block"><div class="di-title">' + t("dt_batches") + (r.expApprox ? ' <i class="muted" title="' + esc(t("exp_approx_tip")) + '">≈</i>' : "") + '</div>' + brows + bMore + effLine + '</div>';
+    }
     var catNote = r.catalogOnly ? '<p class="dt-note">' + esc(t("cat_note")) + '</p>' : "";
     // Previous-orders ledger: last order + in-transit signal.
     var poBlock = "";
@@ -2792,7 +2944,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '<span class="ktxt"><div class="dt-title">' + esc(r.desc) + (r.trade ? ' <i class="tradename">' + esc(r.trade) + (r.sci && r.sci !== r.desc ? " · " + esc(r.sci) : "") + '</i>' : (r.sci && r.sci !== r.desc ? ' <i class="tradename">' + esc(r.sci) + '</i>' : '')) + '</div>'
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + ooBlock + poBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote + stats + ooBlock + poBlock + expBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;
@@ -2995,10 +3147,13 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     if (!STATE.rows.length) return;
     var cand = orderCandidates(STATE.rows);
     var priceCols = hasPrices() ? [t("pr_unit_price")] : [];
-    var aoa = [[t("c_code"), t("c_desc"), t("c_trade"), t("c_uom"), t("c_avg"), t("c_stock"), t("c_cov"), t("c_sug")].concat(priceCols)];
+    var anyExp = cand.some(function (x) { return x.r.expMonths != null; });
+    var expCols = anyExp ? [t("c_expiry"), t("dt_exp_risk")] : [];
+    var aoa = [[t("c_code"), t("c_desc"), t("c_trade"), t("c_uom"), t("c_avg"), t("c_stock"), t("c_cov"), t("c_sug")].concat(expCols, priceCols)];
     cand.forEach(function (x) {
       var r = x.r;
-      aoa.push([r.code, r.desc, r.trade || "", r.uom, Math.round(r.avg * 10) / 10, Math.round(r.stock), Math.round((x.covEff === Infinity ? 0 : x.covEff) * 10) / 10, Math.round(r.sug)].concat(hasPrices() ? [r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100] : []));
+      var expVals = anyExp ? [r.expMonths == null ? "" : Math.round(r.expMonths * 10) / 10, r.expWaste >= 1 ? Math.round(r.expWaste) : ""] : [];
+      aoa.push([r.code, r.desc, r.trade || "", r.uom, Math.round(r.avg * 10) / 10, Math.round(r.stock), Math.round((x.covEff === Infinity ? 0 : x.covEff) * 10) / 10, Math.round(r.sug)].concat(expVals, hasPrices() ? [r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100] : []));
     });
     var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "OrderSheet");
@@ -3055,13 +3210,15 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     div.id = "printSheet";
     div.className = "print-sheet";
     div.dir = LANG === "ar" ? "rtl" : "ltr";
+    var anyExp = cand.some(function (x) { return x.r.expMonths != null; });
     var rowsHtml = cand.map(function (x, i) {
       var r = x.r;
-      return "<tr><td>" + (i + 1) + "</td><td class=\"num\">" + esc(r.code) + "</td><td>" + esc(r.desc) + (r.trade ? " — " + esc(r.trade) : "") + "</td><td>" + esc(r.uom || "") + "</td><td class=\"num\">" + fmt1(r.avg) + "</td><td class=\"num\">" + fmtInt(r.stock) + "</td><td class=\"num\">" + fmt1(x.covEff === Infinity ? 0 : x.covEff) + "</td><td class=\"num\"><b>" + fmtInt(r.sug) + "</b></td>" + (hasPrices() ? "<td class=\"num\">" + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "") + "</tr>";
+      var expTd = anyExp ? "<td class=\"num" + (expiryRisk(r) ? " exp-risk" : "") + "\">" + (r.expMonths == null ? "—" : (expiryRisk(r) ? "⚠ " : "") + (r.expApprox ? "≈" : "") + fmt1(r.expMonths)) + "</td>" : "";
+      return "<tr><td>" + (i + 1) + "</td><td class=\"num\">" + esc(r.code) + "</td><td>" + esc(r.desc) + (r.trade ? " — " + esc(r.trade) : "") + "</td><td>" + esc(r.uom || "") + "</td><td class=\"num\">" + fmt1(r.avg) + "</td><td class=\"num\">" + fmtInt(r.stock) + "</td><td class=\"num\">" + fmt1(x.covEff === Infinity ? 0 : x.covEff) + "</td>" + expTd + "<td class=\"num\"><b>" + fmtInt(r.sug) + "</b></td>" + (hasPrices() ? "<td class=\"num\">" + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "") + "</tr>";
     }).join("");
     div.innerHTML = "<h1>" + t("app_sub") + "</h1><h2>" + t("prn_title") + " — " + t("em_order") + " " + fmtInt(s.orderCount + s.notStockCount) + "</h2>"
       + "<p>" + t("prn_date") + ": " + prettyDate(isoDate(new Date())) + " · " + t("prn_period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")</p>"
-      + "<table><thead><tr><th>#</th><th>" + t("c_code") + "</th><th>" + t("c_desc") + "</th><th>" + t("c_uom") + "</th><th>" + t("c_avg") + "</th><th>" + t("c_stock") + "</th><th>" + t("c_cov") + "</th><th>" + t("c_sug") + "</th>" + (hasPrices() ? "<th>" + t("pr_unit_price") + "</th>" : "") + "</tr></thead><tbody>" + rowsHtml + "</tbody></table>"
+      + "<table><thead><tr><th>#</th><th>" + t("c_code") + "</th><th>" + t("c_desc") + "</th><th>" + t("c_uom") + "</th><th>" + t("c_avg") + "</th><th>" + t("c_stock") + "</th><th>" + t("c_cov") + "</th>" + (anyExp ? "<th>" + t("c_expiry") + "</th>" : "") + "<th>" + t("c_sug") + "</th>" + (hasPrices() ? "<th>" + t("pr_unit_price") + "</th>" : "") + "</tr></thead><tbody>" + rowsHtml + "</tbody></table>"
       + "<p class=\"sign\"><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_sign_name") + "</span><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_sign_sig") + "</span><span class=\"sign-col\"><span class=\"sign-line\"></span>" + t("prn_date") + "</span></p>";
     document.body.appendChild(div);
     window.print();
