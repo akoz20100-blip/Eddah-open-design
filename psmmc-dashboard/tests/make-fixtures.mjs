@@ -115,6 +115,76 @@ const stXss = [
 ];
 writeAoa(resolve(FIX, "stock-xss.xlsx"), stXss);
 
+// ---- round 3 fixtures -----------------------------------------------------
+// stock-trade: same stock picture as stock-basic but the stock file itself
+// carries a trade name for 5000001 — the fallback source applyMap must keep
+// only until an identifiers upload overrides it.
+const stTrade = [
+  ["Generic Item Number", "Total Available Qty", "Generic Item description", "Trade Item description"],
+  ["5000001", 1200, "Paracetamol 500mg", "StockTradeName"],
+];
+writeAoa(resolve(FIX, "stock-trade.xlsx"), stTrade);
+
+// map-trade: identifiers upload with a DIFFERENT trade name for 5000001 (must
+// win over the stock-file name) plus a catalog-only drug (the "Skyrizi" case:
+// in the saved catalog, no movement and no stock in the uploaded files).
+const mapTrade = [
+  ["NUPCO Code", "Trade Name", "Scientific Name", "Hospital Code"],
+  ["5000001", "MapTradeName", "PARACETAMOL", "H-1001"],
+  ["5777001", "Skyrizi", "RISANKIZUMAB 150MG INJ", "H-7777"],
+];
+writeAoa(resolve(FIX, "map-trade.xlsx"), mapTrade);
+
+// map-notrade: links codes but has NO trade/scientific column — the app must
+// say out loud that name search stays limited.
+const mapNoTrade = [
+  ["NUPCO Code", "Hospital Code"],
+  ["5000001", "H-1001"],
+];
+writeAoa(resolve(FIX, "map-notrade.xlsx"), mapNoTrade);
+
+// map-prices: activates the budget runway (pack 100 SAR / 10 units = 10 SAR
+// per dispensing unit for 5000001).
+const mapPrices = [
+  ["NUPCO Code", "Pack Price", "Units per Pack"],
+  ["5000001", 100, 10],
+];
+writeAoa(resolve(FIX, "map-prices.xlsx"), mapPrices);
+
+// po-basic: previous-orders ledger. The newest order is dated TODAY so it is
+// always within the in-transit window regardless of when the suite runs; the
+// older DELIVERED one proves "last order" picks the most recent.
+const today = new Date();
+const poBasic = [
+  ["NUPCO Code", "Order Date", "Order Qty", "Status"],
+  ["5000001", new Date(today.getFullYear(), today.getMonth(), today.getDate()), 500, "APPROVED"],
+  ["5000001", new Date(2026, 3, 5), 300, "DELIVERED"],
+];
+writeAoa(resolve(FIX, "po-basic.xlsx"), poBasic);
+
+// withdrawals-q2: a follow-up quarter (Apr–Jun 2026) for the digest spec —
+// 5000001 spikes (vs the 6-month-override Q1 average of 100/mo), 5000005 is
+// brand new.
+const wdQ2 = [
+  WD_HEADERS,
+  ["5000001", 400, new Date(2026, 3, 1), "DISPATCHED", "TAB", "Paracetamol 500mg"],
+  ["5000001", 400, new Date(2026, 4, 15), "APPROVED", "TAB", "Paracetamol 500mg"],
+  ["5000001", 400, new Date(2026, 5, 30), "DISPATCHED", "TAB", "Paracetamol 500mg"],
+  ["5000002", 60, new Date(2026, 3, 10), "DISPATCHED", "BT", "Amoxicillin syrup"],
+  ["5000002", 60, new Date(2026, 5, 20), "APPROVED", "BT", "Amoxicillin syrup"],
+  ["5000005", 90, new Date(2026, 4, 9), "DISPATCHED", "VIAL", "Insulin glargine pen"],
+];
+writeAoa(resolve(FIX, "withdrawals-q2.xlsx"), wdQ2);
+
+// stock-covering: a later stock picture where 5000002 has arrived — used to
+// verify a covering stock upload clears the on-order flag.
+const stCovering = [
+  ["Generic Item Number", "Total Available Qty", "Generic Item description"],
+  ["5000001", 1200, "Paracetamol 500mg"],
+  ["5000002", 1000, "Amoxicillin syrup"],
+];
+writeAoa(resolve(FIX, "stock-covering.xlsx"), stCovering);
+
 // ---- expected.json --------------------------------------------------------
 const startBasic = new Date(2026, 0, 1);
 const endBasic = new Date(2026, 2, 31);

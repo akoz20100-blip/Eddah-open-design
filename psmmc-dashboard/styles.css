@@ -477,3 +477,27 @@ th.sortable:focus-visible{
   .fchip:active{transform:none}
   .os-row::before{transition:opacity .18s var(--ease);transform:scaleY(1)}
 }
+
+/* ---- round 3: catalog search, drug info, budget runway, PO, order tracking,
+   seasonal tag, digest, per-item threshold ---- */
+.cat-row .cat-note{color:var(--muted);font-size:12px;font-weight:700}
+.cat-row td{background:var(--inset)}
+.pill.onorder{background:#e8f0ff;color:#2456f5}
+.th-flag{display:inline-flex;align-items:center;border-radius:999px;background:#fdeee9;color:var(--coral);font-size:10.5px;font-weight:800;padding:2px 7px;vertical-align:middle}
+.seasonal-tag{font-style:normal;font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:999px;padding:2px 7px;vertical-align:middle}
+.di-block,.th-block{margin-top:16px;background:var(--inset);border-radius:var(--r-md);padding:14px 16px}
+.di-title{font-size:12.5px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.di-text{margin:0 0 10px;font-size:13.5px;font-weight:700;line-height:1.5}
+.di-links{display:flex;gap:8px;flex-wrap:wrap}
+.di-links a{text-decoration:none}
+.oo-block{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.oo-block input{border:1px solid var(--line);border-radius:var(--r-md);padding:9px 10px;font-size:13px;font-weight:700;width:110px;text-align:center;outline-color:var(--blue)}
+.oo-since{font-size:12px;font-weight:700;color:var(--muted)}
+.po-block{margin-top:10px}
+.po-transit{background:#fdf3e4;color:#9a6a17}
+.budgetcard .br-row{display:flex;gap:8px;margin:8px 0 12px}
+.budgetcard .br-row input{flex:1;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;font-size:13.5px;font-weight:700;outline-color:var(--blue);min-width:0}
+.digest .dg-line{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;font-weight:700}
+.digest .dg-line:first-of-type{border-top:0}
+.digest .dg-line>b{font-size:16px;min-width:22px;text-align:center}
+.digest .dg-line span b{color:var(--ink)}
