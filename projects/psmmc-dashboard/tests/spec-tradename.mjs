@@ -13,6 +13,7 @@ import {
   open,
   uploadFiles,
   confirmDetectedPeriod,
+  setSearch,
   makeReporter,
 } from "./helpers.mjs";
 import { REAL_WD, REAL_ST, REAL_MAP } from "./real-data-expected.mjs";
@@ -23,13 +24,16 @@ const R = makeReporter("spec-tradename");
    predicate must prove the table is actually FILTERED (small row count)
    before reading matches — otherwise the unfiltered 1,000-row table
    satisfies any row regex and the assertion is meaningless.
-   Polling runs on the NODE side via evaluate: headless chromium starves
-   in-page rAF/timer callbacks on an idle file:// page, which both delays
-   the app's debounce and freezes waitForFunction's raf polling; each
-   evaluate round-trip wakes the renderer so the debounce can fire. */
+   The term lands through a direct `input` event dispatch on the live
+   element — the exact event the production `oninput` handler listens for —
+   because Playwright's key-simulation path (page.fill) intermittently
+   loses the debounce under suite load on this headless chromium (rAF/timer
+   starvation on idle file:// pages), and this spec exists to verify the
+   synonyms layer, not keystroke plumbing. Polling stays on the NODE side
+   via evaluate for the same reason. */
 async function searchFinds(page, term, regexSource) {
-  await page.fill("#searchInput", term);
-  const deadline = Date.now() + 5000;
+  await setSearch(page, term);
+  const deadline = Date.now() + 10000;
   while (Date.now() < deadline) {
     const ok = await page.evaluate((src) => {
       const rows = [...document.querySelectorAll("table tbody tr[data-code]")];

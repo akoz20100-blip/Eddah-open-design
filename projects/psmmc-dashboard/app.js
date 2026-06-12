@@ -12,6 +12,7 @@
   var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
+  var WATCH_KEY = "psmmc_watch_v1";
 
   // ---------- i18n ----------
   var T = {
@@ -76,6 +77,9 @@
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
       dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
       f_watch: "Watch", f_rising: "Rising +10%", f_falling: "Falling −10%", f_new: "New", c_spark: "Recent months", c_delta: "Trend Δ%",
+      f_watchlist: "My watchlist",
+      pin_add: "Pin to my watchlist",
+      pin_remove: "Unpin from my watchlist",
       av_hist: "Saved history", av_moving: "Moving items", av_rising: "Rising", av_falling: "Falling", av_tap: "Tap any item to open its monthly report",
       em_subject: "PSMMC stock report", em_summary: "Summary", em_below1: "Items below 1 month of coverage:", em_more: "more items", em_full_sheet: "Full sheet: use the Export button in the dashboard.", em_order: "Need ordering", em_critical: "Critical", em_stocku: "Stock units", em_monthly: "Monthly use",
       pr_pack_price: "pack price", pr_units_per_pack: "units/pack", pr_unit_price: "unit price (system)", pr_eff_price: "effective after bonus qty", pr_stock_value: "item stock value", pr_total_value: "Total stock value (SAR)", pr_frozen: "Frozen capital", pr_frozen_sub: "no movement or >12 mo coverage", pr_priced: "priced items",
@@ -223,6 +227,9 @@
       os_title: "ورقة الطلب — الأكثر إلحاحًا", os_view_all: "عرض الكل في الجدول", os_export: "تصدير ورقة الطلب", os_email: "تقرير بالإيميل", os_wa: "واتساب", os_print: "طباعة", os_cov_left: "شهر تغطية", os_suggested: "كمية مقترحة",
       dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية",
       f_watch: "للمتابعة", f_rising: "صاعد +10٪", f_falling: "هابط −10٪", f_new: "جديد", c_spark: "الأشهر الأخيرة", c_delta: "الاتجاه Δ٪",
+      f_watchlist: "متابعتي",
+      pin_add: "تثبيت في قائمة متابعتي",
+      pin_remove: "إزالة من قائمة متابعتي",
       av_hist: "سجل محفوظ", av_moving: "أصناف متحركة", av_rising: "صاعد", av_falling: "هابط", av_tap: "اضغط أي صنف لفتح تقريره الشهري",
       em_subject: "تقرير مخزون صيدلية PSMMC", em_summary: "الملخص", em_below1: "أصناف تحت شهر تغطية:", em_more: "صنفًا آخر", em_full_sheet: "الورقة الكاملة: زر التصدير داخل اللوحة.", em_order: "يحتاج طلبًا", em_critical: "حرج", em_stocku: "وحدات المخزون", em_monthly: "الاستهلاك الشهري",
       pr_pack_price: "سعر العلبة", pr_units_per_pack: "وحدة/علبة", pr_unit_price: "سعر الوحدة (السيستم)", pr_eff_price: "السعر الفعلي بعد المجانية", pr_stock_value: "قيمة مخزون الصنف", pr_total_value: "قيمة المخزون الكلية (ر.س)", pr_frozen: "رأس المال المجمّد", pr_frozen_sub: "بدون حركة أو تغطية تفوق 12 شهرًا", pr_priced: "صنف مسعّر",
@@ -1347,6 +1354,20 @@
   /* ---------- budget runway / PO ledger / on-order flags / thresholds ---------- */
   var BUDGET = null, PO = null, ORDERS = null, THRESH = null;
   function loadJson(key, check) { try { var v = JSON.parse(localStorage.getItem(key)); return v && check(v) ? v : null; } catch (e) { return null; } }
+  /* ---------- watchlist (ROADMAP step 3) ----------
+     The planner stars critical items; pins persist on this device like the
+     rest of the saved state, sort first in the planning table, and back the
+     "My watchlist" filter chip — the morning review is one tap, not a
+     repeated search. */
+  var WATCH = null;
+  function loadWatch() { return loadJson(WATCH_KEY, function (v) { return v.byCode; }); }
+  function isPinned(code) { return !!(WATCH && WATCH.byCode[code]); }
+  function togglePin(code) {
+    WATCH = WATCH || { byCode: {} };
+    if (WATCH.byCode[code]) delete WATCH.byCode[code];
+    else WATCH.byCode[code] = 1;
+    persist(WATCH_KEY, WATCH);
+  }
   function loadBudget() { return loadJson(BUDGET_KEY, function (v) { return typeof v.amount === "number"; }); }
   function loadPO() { return loadJson(PO_KEY, function (v) { return v.byCode; }); }
   function loadOrders() { return loadJson(ORD_KEY, function (v) { return v.byCode; }); }
@@ -1715,11 +1736,11 @@
     if (STATE.view === "averages") return STATE.rows.filter(function (r) { return r.moved || monthlySeriesFor(r.code); });
     return STATE.rows;
   }
-  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, instock: 0, outstock: 0, newitem: 0 }; base.forEach(function (r) { if (r.status === "order_now") c.order_now++; else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; }); return c; }
+  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0 }; base.forEach(function (r) { if (r.status === "order_now") c.order_now++; else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
   function applyFilter(base) {
     var f = STATE.filter;
     var rows = base.filter(function (r) {
-      if (STATE.view === "planning") { return f === "all" ? true : r.status === f; }
+      if (STATE.view === "planning") { return f === "all" ? true : f === "watchlist" ? isPinned(r.code) : r.status === f; }
       if (STATE.view === "averages") {
         if (f === "rising") return r.trendPct != null && r.trendPct > 0.10;
         if (f === "falling") return r.trendPct != null && r.trendPct < -0.10;
@@ -1743,7 +1764,10 @@
       }
     }
     var k = STATE.sort.key, dir = STATE.sort.dir === "asc" ? 1 : -1;
-    rows.sort(function (a, b) { var va = a[k], vb = b[k]; if (k === "cov" || k === "expMonths") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "trendPct" || k === "unitPrice" || k === "stockValue") { var nullDir = dir === 1 ? Infinity : -Infinity; va = va == null ? nullDir : va; vb = vb == null ? nullDir : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
+    // Pinned items lead the planning table inside whatever sort is active —
+    // the morning review reads top-down.
+    var pinnedFirst = STATE.view === "planning";
+    rows.sort(function (a, b) { if (pinnedFirst) { var pa = isPinned(a.code) ? 0 : 1, pb = isPinned(b.code) ? 0 : 1; if (pa !== pb) return pa - pb; } var va = a[k], vb = b[k]; if (k === "cov" || k === "expMonths") { va = va == null ? Infinity : va; vb = vb == null ? Infinity : vb; } if (k === "trendPct" || k === "unitPrice" || k === "stockValue") { var nullDir = dir === 1 ? Infinity : -Infinity; va = va == null ? nullDir : va; vb = vb == null ? nullDir : vb; } if (k === "desc" || k === "code") { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); return va < vb ? -dir : va > vb ? dir : 0; } return (va - vb) * dir; });
     return rows;
   }
 
@@ -1768,7 +1792,8 @@
     print: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 8V4h10v4"/><rect x="4" y="8" width="16" height="8" rx="2"/><rect x="7" y="14" width="10" height="6"/></svg>',
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
     list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
-    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.8-5.3-2.8-5.3 2.8 1.1-5.8-4.3-4.1 5.9-.8L12 3.5z"/></svg>'
   };
 
   // ---------- chart primitives (pure SVG strings, data from the files) ----------
@@ -2013,9 +2038,15 @@
     if (onOrderInfo(r.code)) extra += ' <span class="pill onorder">' + t("oo_badge") + '</span>';
     return pill(r.status) + extra;
   }
+  /* Watchlist star: filled when pinned. Lives inside the copyable code cell,
+     so its click handler must stop propagation (no copy, no drill-down). */
+  function pinBtn(r) {
+    var on = isPinned(r.code);
+    return '<button type="button" class="pin-btn' + (on ? " is-on" : "") + '" data-pin="' + esc(r.code) + '" aria-pressed="' + (on ? "true" : "false") + '" title="' + esc(t(on ? "pin_remove" : "pin_add")) + '">' + (on ? "★" : "☆") + "</button>";
+  }
   function codeCell(r) {
     var sub = [r.hosp, r.msd].filter(Boolean).join(" · ");
-    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
+    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
   }
   function descCell(r) {
     // Table rows stay lean: description + trade name only. The classification,
@@ -2108,7 +2139,7 @@
       + cardStream(t("k_monthly_title"), STATE.monthly)
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
@@ -2414,6 +2445,7 @@
     return '<div class="dt-head"><span class="tile tile-lav tile-lg">' + ICON.pulse + '</span>'
       + '<span class="ktxt"><div class="dt-title">' + esc(r.desc) + (r.trade ? ' <i class="tradename">' + esc(r.trade) + (r.sci && r.sci !== r.desc ? " · " + esc(r.sci) : "") + '</i>' : (r.sci && r.sci !== r.desc ? ' <i class="tradename">' + esc(r.sci) + '</i>' : '')) + '</div>'
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
+      + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
       + catNote + stats + ooBlock + poBlock + expBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
   }
@@ -2423,6 +2455,12 @@
     openModal(renderDetail(code), "modal-sheet");
     var x = $("dtClose");
     if (x) x.onclick = closeModal;
+    var dp = $("dtPin");
+    if (dp) dp.onclick = function () {
+      togglePin(code);
+      render();
+      openDetail(code);
+    };
     wireCopyChips($("modalCard"));
     var mk = $("ooMark");
     if (mk) mk.onclick = function () {
@@ -2484,6 +2522,15 @@
   function wireTable(root) {
     root = root || document;
     root.querySelectorAll("th.sortable").forEach(function (h) { h.onclick = function () { var k = this.dataset.sort; if (STATE.sort.key === k) STATE.sort.dir = STATE.sort.dir === "asc" ? "desc" : "asc"; else STATE.sort = { key: k, dir: (k === "desc" || k === "code") ? "asc" : "desc" }; renderTableOnly(); }; });
+    // Watchlist stars: toggle without copying the code or opening the sheet.
+    // Full render keeps the chip count in sync with the new pin state.
+    root.querySelectorAll("[data-pin]").forEach(function (el) {
+      el.onclick = function (ev) {
+        ev.stopPropagation();
+        togglePin(this.getAttribute("data-pin"));
+        render();
+      };
+    });
     wireCopyChips(root);
     root.querySelectorAll("[data-code]").forEach(function (el) {
       el.onclick = function (ev) {
@@ -2797,6 +2844,7 @@
     PO = loadPO();
     ORDERS = loadOrders();
     THRESH = loadThresh();
+    WATCH = loadWatch();
     if (PO && $("lblPo")) $("lblPo").classList.add("is-baseline");
     // PWA: register the cache-first service worker (https only — file:// and
     // the double-clicked standalone build skip it safely).
