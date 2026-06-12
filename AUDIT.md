@@ -1,29 +1,30 @@
-# AUDIT — PSMMC Pharmacy Dashboard (`projects/psmmc-dashboard/`)
+# AUDIT — PSMMC Pharmacy Dashboard (`psmmc-dashboard/`)
 
 Focus: the Dash project — the PSMMC pharmacy stock & reorder dashboard (its app code,
 build pipeline, sample data, publish workflow). The surrounding Open Design monorepo
 fork is out of scope except where it touches the dashboard (`docs/index.html`,
 `.github/workflows/psmmc-pages.yml`).
 
-## Routine v2 · Round 1 (2026-06-12)
+## Routine v2 — Round 1 (2026-06-12)
 
-North star adopted: evolve the dashboard into a complete pharmacy inventory
-MANAGEMENT system validated against the real hospital files in
-`projects/psmmc-dashboard/real-data/` every round.
+Project moved to `projects/psmmc-dashboard/` (Phase 0.2). English is the
+factory-default language with a persisted Arabic RTL toggle (Phase 0.1).
+Vendored subset type system landed (Inter + IBM Plex Sans Arabic, inlined at
+build, tabular numerals); sample-data now carries raw facts only and the demo
+derives every figure through production formulas. Suite 16 → 18 specs
+(spec-lang with enforced en/ar parity, spec-typography). Built standalone
+1602 → 1696 KB (fonts +179 KB / data −85 KB); load→interactive 733 → 785 ms
+at 4x throttle. Blocked, needs owner: repo rename to `all-dashboard` (no
+rename capability in session scope). Path references in this file predate
+the `projects/` move.
 
-- Shipped: English-default UI (Arabic toggle intact, parity 233/233 automated),
-  relocation to `projects/psmmc-dashboard/`, vendored Inter + IBM Plex Sans
-  Arabic typography (subsetted woff2, inlined into the single-file build),
-  real-file validation harness (`spec-realdata` + independent expectation
-  mirror), and a red-spec-first fix making the real MODHS catalog's item
-  descriptions searchable (the ADRENALINE→EPINEPHRINE class of search misses).
-- Suite: 16 → 19 specs, all green. `pnpm guard` + `pnpm typecheck` green.
-- Performance: built page 1602 → 1802 KB raw (gzip 476 → 627 KB) — entirely
-  the mandated self-hosted fonts; TTI proxy unchanged (235 → 237 ms
-  unthrottled, ~0.95 s at 4× CPU throttle, iPhone viewport).
-- Blocked: repository rename to `all-dashboard` (no rename capability in this
-  environment's GitHub toolset; owner action — Settings → General → Rename;
-  GitHub Pages URLs do NOT redirect, installed PWAs must be re-installed).
+PR #11 (reconciled on top of PR #10) closed the real-data gap: the three
+sanitized hospital files now live in `projects/psmmc-dashboard/real-data/`,
+`spec-realdata` drives them through the actual upload slots every run
+(1,005 medicines · 5.3-month period · 63.3M units, asserted against an
+independent mirror of the parse rules), and a red-spec-first parser fix made
+the real MODHS catalog's item descriptions searchable (ADRENALINE →
+EPINEPHRINE class of misses). Suite 18 → 19 specs.
 
 ## Snapshot
 

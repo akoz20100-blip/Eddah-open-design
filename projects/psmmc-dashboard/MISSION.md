@@ -6,7 +6,7 @@ available (Fable tier, latest)**; mechanical tasks may use cheaper tiers. Be
 token-frugal: read only `AUDIT.md`, `state.md`, `projects/psmmc-dashboard/README.md` and this
 file up front; use grep for everything else; never re-read large files whole.
 
-**Project:** `projects/psmmc-dashboard/` — bilingual (AR-default, RTL) client-side pharmacy
+**Project:** `projects/psmmc-dashboard/` — bilingual (EN-default; full Arabic RTL via the toggle) client-side pharmacy
 stock & reorder dashboard. Live: https://akoz20100-blip.github.io/Eddah-open-design/psmmc/
 Stack: single ES5 IIFE `app.js`, `styles.css`, vendored SheetJS, `build.py` →
 `standalone.html` + `docs/index.html`, gh-pages workflow publishes on main pushes.
@@ -65,7 +65,7 @@ Stretch (only if the above lands green and budget remains): "what changed since 
 upload" summary toast/card; per-item custom alert threshold overriding the 6-month rule.
 
 ## Phase 3 — Close
-Full suite green (old + new specs) → `python3 projects/projects/psmmc-dashboard/build.py` → commit waves
+Full suite green (old + new specs) → `python3 projects/psmmc-dashboard/build.py` → commit waves
 separately → push → open PR (body: inventory table + what shipped + validation) →
 **merge to main automatically when CI is green**. Update AUDIT.md statuses + state.md
 (lessons, recommended next run). Final report ≤ 15 lines.

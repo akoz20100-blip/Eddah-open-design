@@ -1,43 +1,81 @@
 # state.md — Dash project loop state
 
-## Routine v2 · Round 1 (2026-06-12) — Phase 0 + design track + real-data harness
+## Routine v2 — Round 1 (2026-06-12) — Phase 0 + design track
 
 - Baseline HEAD: `27042d1` (merge of PR #8) · suite 16/16 green before changes.
-- Real-data set landed from PR #9 head (`ad2ec16` cherry-pick): outbound (sanitized),
-  stock-on-hand `.xls`, MODHS catalog — now the round's primary validation evidence.
+- Branch: `claude/clever-pascal-flojyt` (single PR with one gated commit wave per
+  Phase 0 item — the session is restricted to one branch, so "each item its own
+  PR" became "each item its own green-gated commit wave"; deviation reported).
 
-### Shipped (commit waves, suite green between each)
+### Shipped (waves, suite green after each)
 
-| Wave | What | Proof |
-|------|------|-------|
-| 0.1 English default | First visit renders English/LTR; Arabic toggle + persistence intact; EN copy proofread; manifest + title follow language | `spec-lang` (default, toggle, persistence, T.en/T.ar parity 233/233) |
-| 0.2 Move to `projects/` | `psmmc-dashboard/` → `projects/psmmc-dashboard/`; build.py ROOT, publish workflow, guard allowlist updated | byte-identical build stamp before/after (`psmmc-75f9155fa8`); suite green from new path |
-| 0.3 Repo rename | **BLOCKED — tooling**: GitHub MCP toolset has no repository-rename API (no `gh` CLI either); session repo scope is pinned to the current name. Owner action documented in the round report | — |
-| Typography | Vendored Inter variable (latin subset) + IBM Plex Sans Arabic 400/600/700 (arabic subset); `html[lang=ar]` stack switch; tracking reset for Arabic; build.py inlines woff2 as data URIs | `spec-fonts` (files, data-URI inlining, FontFace resolution both languages, tabular-nums) |
-| Real-data harness | `tests/real-data-expected.mjs` (independent mirror of parse rules) + `spec-realdata` driving all three REAL files through the actual upload slots | rendered figures == mirror: 1,005 medicines · period 01 Jan→10 Jun 2026 = 5.3 mo · stock-as-of 04 Feb 2026 · 63.3M units |
-| Catalog-names fix | RED→GREEN: parseMapping now recognizes `MODHS ITEM DESCRIPTION`/`NUPCO ITEM DESCRIPTION` as name sources; "adrenaline" finds EPINEPHRINE rows, "acyclovir" finds ACICLOVIR | `spec-realdata` (was red on both before the one-line fix) |
+| Wave | Item | Commit | Proof |
+|------|------|--------|-------|
+| 1 | Phase 0.2 — move `psmmc-dashboard/` → `projects/psmmc-dashboard/` (build.py ROOT, spec-pwa, publish workflow, guard allowlist, docs) | `f21f8a3` | suite 16/16, byte-identical rebuild |
+| 2 | Phase 0.1 — English factory default (static shell EN, dict default EN, localized `document.title`, EN copy proofread; Arabic untouched) | `3c1dcb3` | new `spec-lang` (EN default, toggle persistence, en/ar parity 233/233 enforced by a string-aware dict scanner); suite 17/17 |
+| 3 | Design track — vendored type system (subset Inter 400/600 ~17 KB ea; IBM Plex Sans Arabic 400/500/700 ~32 KB ea; tabular numerals everywhere; AR drops Latin negative tracking, line-height 1.65) + sample-data slimming (raw facts only; loadSample derives avg/cov/qty9/sug/status through `statusOf` — demo can never drift from production math) | `b046cba` | new `spec-typography` (faces load from file://, stacks per language, no font url() left in standalone); suite 18/18 |
 
-### Part ownership log (found / improved / suggestions)
+### Measurements (4x CPU throttle ≈ mid phone, median of 3)
 
-| Part | Found | Improved this round | Top suggestions (→ proposals) |
-|------|-------|--------------------|-------------------------------|
-| Parsers | MODHS catalog name columns unrecognized → name search dead on the real identifiers file; warning toast fired on the owner's real file | Catalog descriptions feed the scientific-name slot (red spec first) | Per-upload data-quality report; expiry-date intake (real outbound carries `Expiry Date`/`Batch`); multi-warehouse split via `Supply WH` |
-| Calculation core | Figures verified against an independent mirror over real files — no drift found | Real-file regression net (`spec-realdata`) now guards every future change | Pure-function extraction for unit tests; ABC/VEN classification; forecasting |
-| i18n / copy | EN copy was solid but Arabic-first; several EN strings missing articles/sentence case | English default + proofread; static parity check automated | Localized number formatting toggle (Arabic-Indic digits opt-in) |
-| Design system | Font stack referenced Inter/Tajawal but vendored nothing — real devices fell back to system faces | Self-hosted subsetted type, Arabic heading rhythm, tabular numerals everywhere | Spacing-scale tokens; semantic status color audit; calmer card hierarchy (round-2 candidate) |
-| Tests | 16 specs, all synthetic fixtures | +3 specs (lang, fonts, realdata); real files are now primary evidence | Period-modal real-file override case; PO ledger real file once owner supplies one |
-| Build / PWA | build.py had no asset-inlining for fonts; size 1602 KB | Font data-URI inlining; size 1802 KB (+200 KB = the fonts, gzip 476→627 KB) | Minify app.js at build (≈−25% wire size); precompress for Pages |
-| Publish workflow | Path triggers pointed at old directory | Updated to `projects/`; URL unchanged | Auto-build standalone in CI instead of committing built artifacts |
+- Built standalone: 1602 → **1696 KB** (+94 KB: fonts +179 KB base64, sample data −85 KB).
+- load→interactive: 733 → 785 ms (+7%, font registration).
+- Sample full render: 674 → 713 ms (loadSample now derives fields). Table re-render (sort): 579 → 558 ms.
+- Conflict noted: the round-1 typography mandate (vendor + inline fonts) and the
+  "lighter every round" budget pull in opposite directions; offsets recovered 85 KB,
+  net +94 KB raw. Next-round levers: lazy sample data, leaner SheetJS build.
 
-### Round-1 lessons
+### Reconciliation (PR #11, merged after PR #10)
 
-- Google Fonts serves Inter as a single variable woff2 (~47 KB latin) — one file
-  covers 100–900, no per-weight downloads needed.
-- The real MODHS catalog headers differ from every synthetic fixture; round-3's
-  "names resolve" smoke claim was true only for codes/classification, not names.
-  Real-file specs catch what fixture specs cannot.
-- `page.click` on `#btnSample` times out in iPhone-viewport playwright (dock
-  overlay); `evaluate(() => btn.click())` is the reliable harness path.
+Two sessions executed round 1 concurrently. PR #10 landed first (move, English
+default, vendored type, sample slimming); PR #11 reconciled onto it, keeping
+its unique contributions:
+
+- **Real-data set landed** — `projects/psmmc-dashboard/real-data/` (cherry-pick of
+  PR #9 head `ad2ec16`): sanitized outbound Jan→10 Jun 2026 (10,130 rows),
+  stock-on-hand `.xls` (20,984 rows), MODHS catalog 07/2025 (1,462 active).
+  This clears former blocked item 1 below.
+- **Real-file validation harness** — `tests/real-data-expected.mjs` (independent
+  mirror of the documented parse rules) + `tests/spec-realdata.mjs` (uploads all
+  three real files through the actual UI slots in headless Chromium). Rendered
+  figures == mirror: **1,005 medicines · period 01 Jan→10 Jun 2026 = 5.3 mo ·
+  stock-as-of 04 Feb 2026 · 63.3M available units · zero page errors**.
+- **Catalog-names bug, red spec first** — parseMapping did not recognize the real
+  MODHS catalog's `MODHS ITEM DESCRIPTION`/`NUPCO ITEM DESCRIPTION` columns, so
+  the owner's real identifiers file linked codes but left name search dead
+  ("name search will stay limited" toast). Catalog descriptions now feed the
+  scientific-name slot: searching "adrenaline" finds the EPINEPHRINE rows,
+  "acyclovir" finds the ACICLOVIR row. `spec-realdata` was red on both, green
+  after the one-line fix.
+- Duplicated work (typography, English default, move) resolved in favor of the
+  already-merged PR #10 versions; PR #11's parallel implementations dropped.
+- Lesson: two routine sessions on one round duplicate ~80% of the work — round 2
+  should run as a single session (or partition parts explicitly up front).
+
+### Blocked (need owner action)
+
+1. ~~**Real data files absent**~~ — RESOLVED by PR #11 (see Reconciliation):
+   `real-data/` is now in the repo and `spec-realdata` validates against it
+   every run.
+2. **Phase 0.3 repo rename → `all-dashboard`** — the session's GitHub access has no
+   repository-rename capability (scope is pinned to `akoz20100-blip/eddah-open-design`).
+   Owner action: GitHub → Settings → rename to `all-dashboard`; Pages URL becomes
+   `https://akoz20100-blip.github.io/all-dashboard/psmmc/` (old Pages link dies;
+   installed PWAs must be re-installed). Git remotes keep redirecting.
+
+### Part-by-part audit log (found / improved / suggestions)
+
+- **parsers**: found solid tolerant matching (round 2/3 work holds) / improved: none this round / suggest: per-upload data-quality report (pool #5); explicit duplicate-column warning; unit-tests for Arabic header variants.
+- **calculation core**: found sample path bypassing production math / improved: loadSample now derives via `statusOf` + shared formulas / suggest: extract pure calc module for node-level tests; expiry-aware coverage (pool #2); forecasting (pool #3).
+- **three tabs**: found EN copy inconsistencies ("enable"/"activate") / improved: EN proofread + localized title / suggest: management-tab ABC view (pool #1); pinned watchlist (pool #15); per-tab empty-state CTAs.
+- **item sheet**: found OK (round-3 dvh/swipe work holds) / improved: typography (tabular nums, Plex Arabic) / suggest: expiry line per batch (pool #2); PO lead-time stat (pool #14); inline threshold editing affordance.
+- **storage & history**: found quota-safe persistence holding / improved: lang key default flip / suggest: sync bundle/QR export (pool #9); history compaction; storage usage indicator.
+- **export/share/print**: found OK / improved: tabular numerals in printed sheets via shared CSS / suggest: executive monthly report (pool #10); approval workflow stamps (pool #6); Arabic print headers audit.
+- **PWA & publishing**: found workflow paths fixed post-move / improved: spec-pwa root resolution / suggest: complete rename runbook (blocked item 2); cache-size guard spec; install-prompt UX.
+- **tests**: found 16 specs green / improved: +spec-lang +spec-typography (18), Arabic pinning isolated to helper / suggest: real-data specs once files land; perf spec with budget gates; visual-diff harness.
+- **sample data**: found 85 KB of derivable fields / improved: stripped to raw facts / suggest: regenerate from real files when attached; smaller monthlyByCode encoding; seasonal-pattern demo data.
+- **build.py**: found single-purpose inliner / improved: font inlining + repo-root fix / suggest: size budget assertion in build; optional minify pass; build provenance comment in output.
+- **design system**: found strong soft-card identity, weak type discipline / improved: full vendored type system / suggest: spacing-scale tokens; semantic status color audit (AA on tints); motion tokens for enter/exit per UI philosophy.
+
 
 ## Round 3 (2026-06-12) — owner request audit + planner features
 

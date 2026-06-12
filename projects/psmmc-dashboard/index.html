@@ -71,7 +71,7 @@
       <span class="filebtn-txt"><b data-i18n="file_po">Previous orders file</b><i id="poName" data-i18n="file_po_hint">optional · purchase orders · code + date + qty</i></span>
     </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">Load sample data</button>
-    <p class="upl-hint" id="uplHint">Drop both files to compute coverage and reorder suggestions. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.</p>
+    <p class="upl-hint" id="uplHint">Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.</p>
   </section>
 
   <main id="content" class="content">
@@ -80,7 +80,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h16"/><rect x="7" y="11" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="8" rx="1"/><rect x="17" y="5" width="3" height="11" rx="1"/></svg>
       </span>
       <h2 data-i18n="empty_title">No data loaded yet</h2>
-      <p data-i18n="empty_text">Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with realistic numbers.</p>
+      <p data-i18n="empty_text">Upload the withdrawals and stock-on-hand files, or click Load sample data to explore the dashboard with sample numbers.</p>
       <button class="btn-primary" type="button" data-i18n="empty_btn" onclick="document.getElementById('btnSample').click()">Load sample data</button>
     </div>
   </main>

@@ -28,9 +28,9 @@
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
-      upl_hint: "Drop both files to compute coverage and reorder suggestions. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO code starting with <b>5</b>) are included.",
+      upl_hint: "Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.",
       empty_title: "No data loaded yet",
-      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to preview the dashboard with realistic numbers.",
+      empty_text: "Upload the withdrawals and stock-on-hand files, or click Load sample data to explore the dashboard with sample numbers.",
       empty_btn: "Load sample data",
       foot: "Built for the PSMMC planning department · every calculation runs locally in your browser — no data leaves this page.",
       search_ph: "Search by code or name — separate items with commas…",
@@ -42,7 +42,7 @@
       k_watch: "Watch", k_nomove: "No movement", k_notstock: "Not in stock",
       k_instock: "Medicines in stock", k_units: "Total available units",
       k_out: "Out of stock", k_reorder: "Need reorder",
-      k_value: "Stock value (SAR)", k_value_sub: "add a price list to enable",
+      k_value: "Stock value (SAR)", k_value_sub: "add a price list to activate",
       k_withdrawn: "Total withdrawn", monthly_word: "per month",
       k_monthly_title: "Monthly consumption", lg_total: "Total",
       k_median: "Median coverage", of_analysed: "of analysed",
@@ -60,18 +60,18 @@
       s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
-      err_wd: "Could not read the withdrawals file", err_st: "Could not read the stock-on-hand file", no_sample: "Sample data is not available",
+      err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
       two_files: "2 files", files_word: "files",
       baseline_meta: "saved baseline", baseline_to: "to",
       tab_averages: "Averages",
-      pc_title: "Confirm the withdrawals period", pc_sub: "The period was detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the month count is correct.",
+      pc_title: "Confirm withdrawals period", pc_sub: "Period detected from the delivery dates inside the file. Each item's monthly average = quantity ÷ months, so make sure the months are right.",
       pc_detected: "detected automatically from the file", pc_use_detected: "Use detected", pc_months_3: "3 mo", pc_months_6: "6 mo", pc_custom_ph: "Custom…", pc_confirm: "Use", manual_mark: "manual",
       hist_quota: "Device storage is full — history trimmed to the last 12 months",
       dup_skipped: "Duplicate withdrawals file skipped — it was already counted once",
       save_failed: "Device storage is full — could not save on this device for next time",
       k_need_order: "Needs ordering now", k_need_order_sub: "Total suggested qty <b class=\"num\">{u}</b> units · <b>{n}</b> withdrawn but not in stock",
       k_critical: "Critical — out of stock", k_critical_sub: "Actively withdrawn items at zero balance — top priority",
-      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current consumption rate",
+      k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
       dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
@@ -115,7 +115,7 @@
       oo_badge: "On order",
       oo_since: "on order since {d} · {q} units",
       oo_clear: "Clear",
-      oo_cleared: "{n} on-order item(s) now covered by the new stock — flag cleared",
+      oo_cleared: "{n} on-order item(s) covered by the new stock — flag cleared",
       oo_qty_ph: "qty",
       ss_tag: "seasonal",
       ss_basis: "Seasonal suggestion — weighted by the same {n} upcoming month(s) from last year instead of the flat average",
@@ -252,9 +252,7 @@
       langName: "عربي"
     }
   };
-  // English is the default for first-time visitors; the toggle persists the
-  // choice per device. Only an explicit stored "ar"/"en" overrides it.
-  var LANG = (function () { try { var s = localStorage.getItem(LANG_KEY); return s === "ar" || s === "en" ? s : "en"; } catch (e) { return "en"; } })();
+  var LANG = (function () { try { return localStorage.getItem(LANG_KEY) || "en"; } catch (e) { return "en"; } })();
   function t(k) { return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
 
   // ---------- state ----------
@@ -1241,7 +1239,15 @@
   function nonNegOrNull(v) { var n = typeof v === "number" ? v : parseFloat(v); return isFinite(n) && n >= 0 ? n : null; }
   function loadSample() {
     var s = window.PSMMC_SAMPLE; if (!s) { toast(t("no_sample")); return; }
-    STATE.rows = s.rows.map(function (r) { return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: r.avg, stock: r.stock, cov: r.cov, qty9: r.qty9, sug: r.sug, status: r.status, inStock: r.inStock, moved: r.moved, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: posOrNull(r.packPrice), unitsPerPack: posOrNull(r.unitsPerPack), awardQty: posOrNull(r.awardQty), freeQty: nonNegOrNull(r.freeQty) }; });
+    // Sample rows carry raw facts only (total/stock/inStock + identity);
+    // every derived figure goes through the SAME formulas as a real upload,
+    // so the demo can never drift from production math.
+    STATE.rows = s.rows.map(function (r) {
+      var avg = s.actual_months > 0 ? r.total / s.actual_months : 0;
+      var cov = avg > 0 ? r.stock / avg : null;
+      var qty9 = avg * ORDER_COVER_MONTHS;
+      return { code: r.code, desc: r.desc, alt: "", uom: r.uom, total: r.total, avg: avg, stock: r.stock, cov: cov, qty9: qty9, sug: Math.max(0, qty9 - r.stock), status: statusOf(cov == null ? 0 : cov, avg, r.inStock, r.code), inStock: r.inStock, moved: avg > 0, trend: null, trendPct: null, trade: r.trade || null, hosp: r.hosp || null, msd: r.msd || null, agent: r.agent || null, cls: r.cls || null, prio: r.prio || null, packPrice: posOrNull(r.packPrice), unitsPerPack: posOrNull(r.unitsPerPack), awardQty: posOrNull(r.awardQty), freeQty: nonNegOrNull(r.freeQty) };
+    });
     applyMap(STATE.rows);
     STATE.meta = { period_start: s.period_start, period_end: s.period_end, actual_months: s.actual_months, stock_as_of: "2026-06-02", source: "sample" };
     STATE.monthly = s.monthly || null;
@@ -1997,9 +2003,9 @@
     return t("file_wd_hint");
   }
   function applyStatic() {
+    document.title = "PSMMC \u2014 " + t("app_title");
     document.documentElement.lang = LANG;
     document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
-    document.title = "PSMMC — " + t("app_title");
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
       var k = el.getAttribute("data-i18n");
       if (k === "upl_hint") return; // handled below (html)

@@ -47,21 +47,12 @@ export const SAMPLE_TEXT = "تحميل بيانات تجريبية";
  * Launch a chromium browser pinned to a timezone + locale.
  * Default timezone Asia/Riyadh pins the calendar invariant.
  */
-export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar", lang = "ar" } = {}) {
+export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar" } = {}) {
   const browser = await chromium.launch({
     executablePath: CHROME,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
   const context = await browser.newContext({ timezoneId, locale });
-  // The app's first-visit default is ENGLISH; the suite's assertions are
-  // written against the Arabic UI, so seed the persisted language choice
-  // before any page script runs. Pass `lang: null` to exercise the true
-  // first-visit default (see spec-lang.mjs).
-  if (lang) {
-    await context.addInitScript(
-      `try { localStorage.setItem("psmmc_lang", ${JSON.stringify(lang)}); } catch (e) {}`
-    );
-  }
   const page = await context.newPage();
 
   const pageErrors = [];
@@ -74,8 +65,19 @@ export async function launch({ timezoneId = "Asia/Riyadh", locale = "ar", lang =
   return { browser, context, page, pageErrors, consoleErrors };
 }
 
-/** Open the dashboard and wait for the app IIFE to wire up. */
-export async function open(page) {
+/** Open the dashboard and wait for the app IIFE to wire up.
+ *
+ * The app's factory default language is ENGLISH (Phase 0, routine v2), but the
+ * legacy specs assert Arabic UI strings — Arabic remains a first-class,
+ * fully-supported surface — so `open` pins the persisted language to "ar"
+ * before the page scripts run. Pass `{ lang: null }` to observe the true
+ * factory default (spec-lang does), or `{ lang: "en" }` to pin English. */
+export async function open(page, { lang = "ar" } = {}) {
+  if (lang) {
+    await page.addInitScript((l) => {
+      try { localStorage.setItem("psmmc_lang", l); } catch (e) {}
+    }, lang);
+  }
   await page.goto(INDEX_URL, { waitUntil: "load" });
   // app.js runs on DOMContentLoaded/immediately; the sample button onclick is
   // the last thing init() sets, so wait until it's wired.

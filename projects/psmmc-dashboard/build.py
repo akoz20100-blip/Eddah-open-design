@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Inline styles.css, app.js, vendor SheetJS, sample-data.js, vendored
-fonts and the crest into a single self-contained HTML file. Outputs:
+"""Inline styles.css, app.js, vendor SheetJS, sample-data.js and the crest
+into a single self-contained HTML file. Outputs:
   - projects/psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
   - docs/index.html                           (served by classic /docs GitHub Pages)
 Also stamps sw.js with the build hash (in place + docs/sw.js) and copies
@@ -11,25 +11,22 @@ Run:  python3 projects/psmmc-dashboard/build.py
 import base64, hashlib, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# repo root is two levels up: <root>/projects/psmmc-dashboard
-ROOT = os.path.dirname(os.path.dirname(HERE))
+ROOT = os.path.dirname(os.path.dirname(HERE))  # repo root: HERE is projects/psmmc-dashboard
 read = lambda p: open(os.path.join(HERE, p), encoding="utf-8").read()
 
 html  = read("index.html")
 css   = read("styles.css")
+# Vendored subset fonts -> base64 data URIs so the single file stays
+# self-contained and the offline PWA needs no CDN.
+def _inline_font(m):
+    raw = open(os.path.join(HERE, "vendor", "fonts", m.group(1)), "rb").read()
+    return 'url(data:font/woff2;base64,' + base64.b64encode(raw).decode("ascii") + ')'
+css = re.sub(r'url\("\./vendor/fonts/([\w.-]+\.woff2)"\)', _inline_font, css)
 appjs = read("app.js")
 xlsx  = read("vendor/xlsx.full.min.js")
 sample= read("sample-data.js")
 crest = read("assets/psmmc-crest.svg")
 crest_uri = "data:image/svg+xml;base64," + base64.b64encode(crest.encode("utf-8")).decode("ascii")
-
-# vendored woff2 fonts -> data URIs inside the stylesheet, so the single-file
-# build (and the offline PWA serving it) never fetches a font from anywhere.
-def _font_uri(m):
-    path = os.path.join(HERE, "vendor", "fonts", m.group(1))
-    with open(path, "rb") as fh:
-        return "url(data:font/woff2;base64," + base64.b64encode(fh.read()).decode("ascii") + ")"
-css = re.sub(r"url\(\./vendor/fonts/([^)]+)\)", _font_uri, css)
 
 # stylesheet -> inline <style>
 html = html.replace('<link rel="stylesheet" href="./styles.css" />', "<style>\n" + css + "\n</style>")

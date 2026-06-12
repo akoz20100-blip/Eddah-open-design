@@ -50,9 +50,9 @@ const pretty = (iso) =>
 const X = expectedFromRealFiles();
 R.ok(X.medicines > 900, `independent mirror computed ${X.medicines} medicines from the real files`);
 
-const { browser, page, pageErrors } = await launch({ lang: "en", locale: "en" });
+const { browser, page, pageErrors } = await launch({ locale: "en" });
 try {
-  await open(page);
+  await open(page, { lang: "en" });
 
   // ---- withdrawals (10,130 rows) -----------------------------------------
   await uploadFiles(page, "fileWithdrawals", REAL_WD);
