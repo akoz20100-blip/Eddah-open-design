@@ -94,11 +94,11 @@ try {
   R.ok(meta.stock.includes("04 Feb 2026"), `stock-as-of resolved from the filename (got "${meta.stock}")`);
   R.ok(meta.demoHidden, "demo-names badge is hidden with real uploads");
 
-  // ---- KPI: total available units equals the independent sum --------------
+  // ---- KPI: item census equals the independent counts ----------------------
   const cards = await page.$$eval(".kcard", (cs) => cs.map((c) => c.textContent.replace(/\s+/g, " ")));
-  const unitsCard = cards.find((c) => c.includes("Total available stock"));
-  R.ok(unitsCard && unitsCard.includes(fmtM(X.totalUnits)),
-    `total available stock card shows ${fmtM(X.totalUnits)} (card: "${unitsCard}")`);
+  const itemsCard = cards.find((c) => c.includes("Items") && !c.includes("Zero"));
+  R.ok(itemsCard && itemsCard.includes(fmtInt(X.medicines)),
+    `items-census card shows ${fmtInt(X.medicines)} (card: "${itemsCard}")`);
 
   // ---- identifiers: the real MODHS catalog -------------------------------
   await uploadFiles(page, "fileMap", REAL_MAP);

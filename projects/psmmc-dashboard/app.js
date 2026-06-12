@@ -70,6 +70,23 @@
       c_status: "Status", c_qty9: "Qty (9 mo)", c_sug: "Suggested Order",
       c_avail: "Available Stock", c_use: "Monthly Use", c_value: "Stock Value",
       s_order_now: "Order now", s_warning: "Watch", s_ok: "OK", s_excess: "Excess", s_no_movement: "No movement", s_not_in_stock: "Not in stock",
+      k_items: "Items", k_items_sub: "{a} with stock ({p}%) — the rest have zero balance",
+      k_zero: "Zero-stock items", k_zero_sub: "{p}% of all items have no available stock at the warehouse",
+      ex_open: "How is this computed?",
+      ex_need_order_t: "Needs ordering now", ex_need_order_b: "Items whose EFFECTIVE coverage is at or below the reorder line (6 months, or the item's custom threshold). Effective coverage counts only dispensable stock: expired batches, units that would expire before use, and hand-dispensed stock within 3 months of expiry are excluded.",
+      ex_critical_t: "Critical — out of stock", ex_critical_b: "Items with consumption in the analysis period but zero available stock right now. Every day without stock is a missed dispense.",
+      ex_items_t: "Items", ex_items_b: "Every item in the analysis — the union of the withdrawals file and the stock file. 'With stock' counts items whose available stock > 0; the rest are zero-balance items.",
+      ex_zero_t: "Zero-stock items", ex_zero_b: "Items whose available stock is 0 at the warehouse (whether or not they moved in the period). The percentage is out of all analysed items.",
+      ex_col_total_t: "Total withdrawn", ex_col_total_b: "Sum of DISPATCHED/APPROVED withdrawal quantities for this item across the whole analysis period.",
+      ex_col_avg_t: "Monthly average", ex_col_avg_b: "Total withdrawn ÷ the detected period in months (a month = 30.44 days). The period is read from the file's delivery dates, ignoring outlier-dated rows.",
+      ex_col_trend_t: "Trend", ex_col_trend_b: "This period's monthly average vs the previous saved average for the same item. 'New' marks items with no earlier history.",
+      ex_col_stock_t: "Current stock", ex_col_stock_b: "Total Available Qty from the stock file (NUPCO already moves expired stock to Hold, so this is physically available units).",
+      ex_col_cov_t: "Coverage (months)", ex_col_cov_b: "Dispensable stock ÷ monthly average. Dispensable excludes expired batches, units that would expire before they can be used (first-expiry-first-out), and — for hand-dispensed forms — anything within 3 months of expiry. Injections/vials count until expiry.",
+      ex_col_expiry_t: "Earliest expiry", ex_col_expiry_b: "Months from the stock-as-of date to the earliest batch expiry. ⚠ marks items losing a month or more of coverage to expiry; ≈ marks an estimate from the latest dispatch batch.",
+      ex_col_proj_t: "Stockout / reorder-by", ex_col_proj_b: "Stockout = stock date + (dispensable stock ÷ daily burn), daily burn = monthly average ÷ 30.44. Reorder-by = the date coverage drops to 6 months. ORDER NOW when that date has already passed.",
+      ex_col_status_t: "Status", ex_col_status_b: "From effective coverage: ≤6 months = order now · ≤7 = watch · >13 = excess (overstock) · OK otherwise. No movement = no withdrawals in the period; not in stock = zero balance.",
+      ex_col_qty9_t: "Qty (9 months)", ex_col_qty9_b: "Monthly average × 9 — the demand target the suggested order fills toward (seasonal items use prior-year same-month figures instead of the flat average).",
+      ex_col_sug_t: "Suggested order", ex_col_sug_b: "9-month demand target − dispensable stock (never below zero). Unusable at-risk stock is replaced, not counted.",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
@@ -238,6 +255,23 @@
       c_status: "الحالة", c_qty9: "كمية ٩ أشهر", c_sug: "الطلب المقترح",
       c_avail: "المخزون المتاح", c_use: "الاستهلاك الشهري", c_value: "قيمة المخزون",
       s_order_now: "اطلب الآن", s_warning: "للمتابعة", s_ok: "جيد", s_excess: "زائد", s_no_movement: "بدون حركة", s_not_in_stock: "غير متوفر",
+      k_items: "البنود", k_items_sub: "{a} لها مخزون ({p}%) — والباقي رصيده صفر",
+      k_zero: "البنود الصفرية", k_zero_sub: "{p}% من كل البنود بلا مخزون متاح في المستودع",
+      ex_open: "كيف حُسب هذا الرقم؟",
+      ex_need_order_t: "تحتاج طلبًا الآن", ex_need_order_b: "البنود التي تغطيتها الفعلية عند خط إعادة الطلب أو أقل (6 أشهر، أو الحد المخصص للبند). التغطية الفعلية تحسب المخزون القابل للصرف فقط: تُستبعد الدفعات المنتهية، والكميات التي ستنتهي قبل استهلاكها، ومخزون الأدوية اليدوية الذي بقي على صلاحيته 3 أشهر أو أقل.",
+      ex_critical_t: "حرج — رصيد صفر", ex_critical_b: "بنود لها استهلاك في فترة التحليل ومخزونها المتاح الآن صفر. كل يوم بلا مخزون صرفٌ ضائع.",
+      ex_items_t: "البنود", ex_items_b: "كل بند في التحليل — اتحاد ملف السحوبات وملف المخزون. «لها مخزون» تَعُدّ البنود التي مخزونها المتاح أكبر من صفر؛ والباقي بنود صفرية.",
+      ex_zero_t: "البنود الصفرية", ex_zero_b: "البنود التي مخزونها المتاح في المستودع صفر (تحركت في الفترة أو لم تتحرك). النسبة من إجمالي البنود المحلَّلة.",
+      ex_col_total_t: "إجمالي المسحوب", ex_col_total_b: "مجموع كميات السحب بحالة DISPATCHED/APPROVED لهذا البند عبر كامل فترة التحليل.",
+      ex_col_avg_t: "المتوسط الشهري", ex_col_avg_b: "إجمالي المسحوب ÷ الفترة المكتشفة بالأشهر (الشهر = 30.44 يومًا). الفترة تُقرأ من تواريخ التسليم داخل الملف مع استبعاد الصفوف ذات التواريخ الشاذة.",
+      ex_col_trend_t: "الاتجاه", ex_col_trend_b: "المتوسط الشهري لهذه الفترة مقابل آخر متوسط محفوظ لنفس البند. «جديد» تعني بندًا بلا سجل سابق.",
+      ex_col_stock_t: "المخزون الحالي", ex_col_stock_b: "عمود Total Available Qty من ملف المخزون (نبكو يحوّل المنتهي إلى Hold، فهذه وحدات متاحة فعليًا).",
+      ex_col_cov_t: "التغطية (شهر)", ex_col_cov_b: "المخزون القابل للصرف ÷ المتوسط الشهري. يُستبعد من القابل للصرف: الدفعات المنتهية، والكميات التي ستنتهي قبل استهلاكها (الأقرب انتهاءً يُصرف أولًا)، وللأدوية اليدوية كل ما بقي على صلاحيته 3 أشهر أو أقل. الحقن والفيال تُحسب حتى نهاية صلاحيتها.",
+      ex_col_expiry_t: "أقرب انتهاء", ex_col_expiry_b: "الأشهر من تاريخ ملف المخزون حتى أقرب انتهاء دفعة. ⚠ بند يخسر شهرًا أو أكثر من تغطيته بسبب الصلاحية؛ ≈ تقدير من دفعة آخر صرف.",
+      ex_col_proj_t: "النفاد / أعد الطلب قبل", ex_col_proj_b: "النفاد = تاريخ المخزون + (القابل للصرف ÷ الاستهلاك اليومي)، والاستهلاك اليومي = المتوسط الشهري ÷ 30.44. أعد الطلب قبل = اليوم الذي تهبط فيه التغطية إلى 6 أشهر. «اطلب الآن» إذا كان ذلك التاريخ قد مضى.",
+      ex_col_status_t: "الحالة", ex_col_status_b: "من التغطية الفعلية: ≤6 أشهر = اطلب الآن · ≤7 = للمتابعة · أكثر من 13 = زائد · جيد فيما عدا ذلك. بدون حركة = لا سحوبات في الفترة؛ غير متوفر = رصيد صفر.",
+      ex_col_qty9_t: "كمية 9 أشهر", ex_col_qty9_b: "المتوسط الشهري × 9 — هدف الطلب الذي يكمّل الاقتراحُ نحوه (البنود الموسمية تستخدم أشهر السنة الماضية المطابقة بدل المتوسط الثابت).",
+      ex_col_sug_t: "الطلب المقترح", ex_col_sug_b: "هدف 9 أشهر − المخزون القابل للصرف (لا ينزل تحت الصفر). الكميات المهددة بالانتهاء تُستبدل ولا تُحسب.",
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
@@ -1005,6 +1039,7 @@
       r.alt = [r.trade, r.sci, r.hosp, r.msd, r.cls, r.agent].filter(Boolean).join(" ");
       if (m) n++;
     });
+    applyPlannerCodes(rows);
     return n;
   }
   function hasPrices() { return !!(MAP && MAP.priced) || STATE.rows.some(function (r) { return r.packPrice; }); }
@@ -1489,6 +1524,21 @@
     return p || null;
   }
   function plannerName(r) { var p = plannerFor(r); return p ? p.name : null; }
+  /* The planner sheet also carries each item's hospital + MSD codes; they
+     fill any gaps the identifiers/stock files left so the table and card can
+     always show the full, copyable code set. */
+  function applyPlannerCodes(rows) {
+    if (!PLANNERS) return;
+    rows.forEach(function (r) {
+      var p = plannerFor(r);
+      if (!p) return;
+      if (!r.hosp && p.hosp) r.hosp = p.hosp;
+      if (!r.msd && p.msd) r.msd = p.msd;
+      // Searchable, idempotently (re-runs must not duplicate the haystack).
+      var extra = [r.hosp, r.msd].filter(function (v) { return v && (r.alt || "").indexOf(v) < 0; });
+      if (extra.length) r.alt = [r.alt].concat(extra).filter(Boolean).join(" ");
+    });
+  }
   /* ORDER NOW (FEATURE 2): the reorder-by date is today or already past. */
   function orderNowFlag(r) { return !!(r.reorderIso && r.reorderIso <= isoDate(new Date())); }
   function isPinned(code) { return !!(WATCH && WATCH.byCode[code]); }
@@ -2137,14 +2187,14 @@
       + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + value + '</span></span></div>'
       + '<div class="kbody">' + ECG_SVG + '<span class="kpill"><b class="num">' + pillVal + '</b><i>' + pillUnit + '</i></span></div></div>';
   }
-  function cardStream(title, monthly) {
+  function cardStream(title, monthly, deltaHtml) {
     if (!monthly || monthly.length < 2) {
       return '<div class="kcard"><div class="ktitle">' + title + '</div>'
         + '<div class="kbody stream"><div class="kchart-empty">' + esc(t("chart_nodates")) + '</div></div></div>';
     }
     var maxT = 0, minT = Infinity;
     monthly.forEach(function (m) { if (m.total > maxT) maxT = m.total; if (m.total < minT) minT = m.total; });
-    return '<div class="kcard"><div class="ktitle">' + title + '</div>'
+    return '<div class="kcard"><div class="ktitle">' + title + (deltaHtml || "") + '</div>'
       + '<div class="kbody stream"><span class="axis"><i class="num">' + fmtM(maxT) + '</i><span class="axis-line"></span><i class="num">' + fmtM(minT) + '</i></span>'
       + streamSVG(monthly) + '</div>'
       + '<div class="legend"><span><i style="background:#9db8ff"></i>' + t("s_order_now") + '</span>'
@@ -2162,20 +2212,30 @@
       + '<div class="kfoot"><b>' + bold + '</b><i>' + sub + '</i></div></div>';
   }
   /* Decision card: one large figure + a one-line supporting fact. */
-  function cardDecision(label, valueHtml, icon, tileCls, subHtml, bodyHtml) {
-    return '<div class="kcard span3"><div class="khead"><span class="tile ' + tileCls + '">' + icon + '</span>'
+  function cardDecision(label, valueHtml, icon, tileCls, subHtml, bodyHtml, explainKey) {
+    // explainKey makes the whole card a "how is this computed?" affordance
+    // (owner spec v3: every figure explains its own formula on tap).
+    var explain = explainKey ? ' data-explain="' + explainKey + '" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '"' : "";
+    return '<div class="kcard span3' + (explainKey ? " explainable" : "") + '"' + explain + '><div class="khead"><span class="tile ' + tileCls + '">' + icon + '</span>'
       + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + valueHtml + '</span></span></div>'
       + (bodyHtml || (subHtml ? '<div class="ksub">' + subHtml + '</div>' : '')) + '</div>';
+  }
+  /* One small modal per metric: title + plain-language formula (en/ar). */
+  function openExplainer(key) {
+    openModal('<h3 class="modal-title">' + t(key + "_t") + '</h3><p class="modal-sub" style="margin:0;line-height:1.7">' + t(key + "_b") + '</p>', "modal-explain");
   }
 
   /* The four figures the planner reads before anything else, shared by the
      planning cards, the email/WhatsApp report, and the print sheet. */
   function decisionStats(base) {
-    var s = { orderCount: 0, notStockCount: 0, orderUnits: 0, critical: 0, totalUnits: 0, sumAvg: 0, overallCov: null, momPct: null, momA: null, momB: null };
+    var s = { orderCount: 0, notStockCount: 0, orderUnits: 0, critical: 0, totalUnits: 0, sumAvg: 0, overallCov: null, momPct: null, momA: null, momB: null, itemsTotal: base.length, withStock: 0, zeroStock: 0 };
     base.forEach(function (r) {
       if (r.status === "order_now") { s.orderCount++; s.orderUnits += r.sug; }
       else if (r.status === "not_in_stock") { s.notStockCount++; s.orderUnits += r.sug; }
       if (r.moved && r.stock <= 0) s.critical++;
+      // Item counts (owner spec v3 KPI cards): an item is "with stock" when
+      // any available units exist; everything else is a zero-stock item.
+      if (r.stock > 0) s.withStock++; else s.zeroStock++;
       s.totalUnits += r.stock;
       s.sumAvg += r.avg;
     });
@@ -2263,9 +2323,15 @@
     var on = isPinned(r.code);
     return '<button type="button" class="pin-btn' + (on ? " is-on" : "") + '" data-pin="' + esc(r.code) + '" aria-pressed="' + (on ? "true" : "false") + '" title="' + esc(t(on ? "pin_remove" : "pin_add")) + '">' + (on ? "★" : "☆") + "</button>";
   }
+  /* Hospital + MSD codes render in FULL and copy individually (owner spec
+     v3): each subcode is its own copy target, separate from the NUPCO code
+     the cell itself copies. */
+  function subCodeChip(v) {
+    return v ? '<u class="copy-sub num" data-copy="' + esc(v) + '">' + esc(v) + "</u>" : "";
+  }
   function codeCell(r) {
-    var sub = [r.hosp, r.msd].filter(Boolean).join(" · ");
-    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode num">' + esc(sub) + "</span>" : "") + "</td>";
+    var sub = [subCodeChip(r.hosp), subCodeChip(r.msd)].filter(Boolean).join(" · ");
+    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode">' + sub + "</span>" : "") + "</td>";
   }
   /* Planner column (FEATURE 1): responsible planner from the join slot, or
      "Unassigned" until a planner-mapping file is provided. */
@@ -2290,7 +2356,13 @@
     var extra = r.trade || (r.sci && r.sci !== r.desc ? r.sci : null);
     return '<td class="desc">' + esc(r.desc) + (extra ? '<i class="tradename">' + esc(extra) + "</i>" : "") + "</td>";
   }
-  function th(key, label, right) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; var ariaSort = on ? ' aria-sort="' + (s.dir === "asc" ? "ascending" : "descending") + '"' : ""; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '"' + ariaSort + '>' + label + ' <span class="arrow">' + arrow + "</span></th>"; }
+  /* Small ⓘ affordance inside a header: opens the metric's formula modal.
+     Its click handler stops propagation so it never toggles the sort. */
+  function thInfo(explainKey) {
+    return explainKey ? ' <span class="thinfo" data-explain="' + explainKey + '" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '">ⓘ</span>' : "";
+  }
+  function th(key, label, right, explainKey) { var s = STATE.sort, on = s.key === key, arrow = on ? (s.dir === "asc" ? "▲" : "▼") : "↕"; var ariaSort = on ? ' aria-sort="' + (s.dir === "asc" ? "ascending" : "descending") + '"' : ""; return '<th class="sortable' + (on ? " sorted" : "") + (right ? " right" : "") + '" data-sort="' + key + '"' + ariaSort + '>' + label + thInfo(explainKey) + ' <span class="arrow">' + arrow + "</span></th>"; }
+  function thp(label, explainKey) { return "<th>" + label + thInfo(explainKey) + "</th>"; }
   function fchip(key, label, count, icon) { return '<button class="fchip' + (STATE.filter === key ? " is-active" : "") + '" data-filter="' + key + '">' + (icon ? '<span class="fic">' + icon + '</span>' : "") + label + ' <span class="badge num">' + fmtInt(count || 0) + "</span></button>"; }
   function toolbar(filters) { return '<div class="toolbar"><div class="search">' + ICON.search + '<input id="searchInput" type="search" placeholder="' + esc(t("search_ph")) + '" value="' + esc(STATE.search) + '"/></div>' + filters + "</div>"; }
   var SORT_LABEL = { code: "c_code", desc: "c_desc", total: "c_total", avg: "c_avg", stock: "c_stock", cov: "c_cov", expMonths: "c_expiry", qty9: "c_qty9", sug: "c_sug", trendPct: "c_delta", unitPrice: "pr_unit_price", stockValue: "c_value" };
@@ -2301,7 +2373,7 @@
   }
   function tableCard(head, body, shown, total, topHtml) {
     var sortKey = SORT_LABEL[STATE.sort.key] ? t(SORT_LABEL[STATE.sort.key]) : STATE.sort.key;
-    return '<div class="tablecard">' + (topHtml || "") + '<div class="tablewrap"><table>' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + sortKey + " " + (STATE.sort.dir === "asc" ? "↑" : "↓") + "</span></div></div>";
+    return '<div class="tablecard">' + (topHtml || "") + '<div class="tablewrap"><table class="t-main">' + head + "<tbody>" + (body || '<tr><td colspan="12" class="muted" style="padding:34px;text-align:center">' + t("no_rows") + "</td></tr>") + "</tbody></table></div><div class=\"tfoot\"><span>" + t("showing") + ' <b class="num">' + fmtInt(shown) + "</b> " + t("of") + ' <b class="num">' + fmtInt(total) + "</b> " + t("items") + "</span><span>" + t("sorted_by") + " " + sortKey + " " + (STATE.sort.dir === "asc" ? "↑" : "↓") + "</span></div></div>";
   }
   /* The brand = generic mappings applied to the current search, shown above
      the results so a planner can verify what their typed trade name matched. */
@@ -2321,7 +2393,7 @@
     var rows = applyFilter(base), head, body;
     if (view === "management") {
       var priceTh = hasPrices() ? th("unitPrice", t("pr_unit_price"), true) : "";
-      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true) + th("cov", t("c_cov")) + "<th>" + t("c_status") + "</th>" + th("avg", t("c_use"), true) + priceTh + th("stockValue", t("c_value"), true) + "</tr></thead>";
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_uom") + "</th>" + th("stock", t("c_avail"), true, "ex_col_stock") + th("cov", t("c_cov"), false, "ex_col_cov") + thp(t("c_status"), "ex_col_status") + th("avg", t("c_use"), true, "ex_col_avg") + priceTh + th("stockValue", t("c_value"), true) + "</tr></thead>";
       body = rows.map(function (r) {
         var priceTd = hasPrices() ? '<td class="right num">' + (r.unitPrice == null ? "—" : fmt2(r.unitPrice)) + "</td>" : "";
         var valTd = '<td class="right ' + (r.stockValue == null ? "muted" : "num") + '">' + (r.stockValue == null ? "—" : fmtInt(r.stockValue)) + "</td>";
@@ -2334,7 +2406,7 @@
         return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + statusCell(r) + "</td></tr>";
       }).join("");
     } else {
-      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_planner") + "</th><th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true) + th("avg", t("c_avg"), true) + "<th>" + t("c_trend") + "</th>" + th("stock", t("c_stock"), true) + th("cov", t("c_cov")) + th("expMonths", t("c_expiry")) + "<th>" + t("c_stockout") + "</th><th>" + t("c_status") + "</th>" + th("qty9", t("c_qty9"), true) + th("sug", t("c_sug"), true) + "</tr></thead>";
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_planner") + "</th><th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true, "ex_col_total") + th("avg", t("c_avg"), true, "ex_col_avg") + thp(t("c_trend"), "ex_col_trend") + th("stock", t("c_stock"), true, "ex_col_stock") + th("cov", t("c_cov"), false, "ex_col_cov") + th("expMonths", t("c_expiry"), false, "ex_col_expiry") + thp(t("c_stockout"), "ex_col_proj") + thp(t("c_status"), "ex_col_status") + th("qty9", t("c_qty9"), true, "ex_col_qty9") + th("sug", t("c_sug"), true, "ex_col_sug") + "</tr></thead>";
       body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + plannerCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + projCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
     }
     var shown = rows.length;
@@ -2359,19 +2431,24 @@
   }
   function renderPlanning(base, c) {
     var s = decisionStats(base);
-    var deltaBadge = s.momPct == null ? "" : '<span class="kdelta ' + (s.momPct >= 0 ? "up" : "down") + ' num">' + (s.momPct >= 0 ? "▲ +" : "▼ ") + (s.momPct * 100).toFixed(0) + "%</span>";
-    var consumptionBody = STATE.monthly && STATE.monthly.length > 1
-      ? '<div class="kbody">' + areaSVG(STATE.monthly.map(function (m) { return m.total; })) + '<span class="kinset"><b>' + (deltaBadge || '<span class="num">—</span>') + '</b><i>' + (s.momPct == null ? "" : esc(tFmt("vs_prev_month", { a: ymLabel(s.momA + "-01") || s.momA, b: ymLabel(s.momB + "-01") || s.momB }))) + '</i></span></div>'
-      : '<div class="ksub">' + t("chart_nodates") + '</div>';
+    // Owner spec v3: the planner reads ITEM COUNTS, not unit totals — the
+    // total-units and monthly-consumption cards are replaced by the item
+    // census (total / with stock / zero, with percentages). The monthly
+    // stream card below keeps the consumption trend visible.
+    var pctWith = s.itemsTotal ? Math.round((s.withStock / s.itemsTotal) * 100) : 0;
+    var pctZero = s.itemsTotal ? Math.round((s.zeroStock / s.itemsTotal) * 100) : 0;
     var cards = '<div class="cards">'
       + qualityCard()
       + digestCard()
-      + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }))
-      + cardDecision(t("k_critical"), fmtInt(s.critical) + ' <small>' + t("items_word") + '</small>', ICON.ban, "tile-coral", t("k_critical_sub"))
-      + cardDecision(t("k_total_units"), fmtM(s.totalUnits) + ' <small>' + t("units_word") + '</small>', ICON.box, "tile-lav", s.overallCov == null ? "—" : tFmt("k_overall_cov", { m: fmt1(s.overallCov) }))
-      + cardDecision(t("k_monthly_use"), fmtM(s.sumAvg) + '<small>' + t("per_mo") + '</small>', ICON.pulse, "tile-gray", null, consumptionBody)
+      + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order")
+      + cardDecision(t("k_critical"), fmtInt(s.critical) + ' <small>' + t("items_word") + '</small>', ICON.ban, "tile-coral", t("k_critical_sub"), null, "ex_critical")
+      + cardDecision(t("k_items"), fmtInt(s.itemsTotal) + ' <small>' + t("items_word") + '</small>', ICON.grid, "tile-lav", tFmt("k_items_sub", { a: fmtInt(s.withStock), p: pctWith }), null, "ex_items")
+      + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }), null, "ex_zero")
       + cardOrderSheet(base)
-      + cardStream(t("k_monthly_title"), STATE.monthly)
+      // The monthly stream keeps the consumption trend; the MoM badge of the
+      // retired consumption card moves into its title so the signal survives.
+      + cardStream(t("k_monthly_title"), STATE.monthly,
+        s.momPct == null ? "" : ' <span class="kdelta ' + (s.momPct >= 0 ? "up" : "down") + ' num" title="' + esc(tFmt("vs_prev_month", { a: ymLabel(s.momA + "-01") || s.momA, b: ymLabel(s.momB + "-01") || s.momB })) + '">' + (s.momPct >= 0 ? "▲ +" : "▼ ") + (s.momPct * 100).toFixed(0) + "%</span>")
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
@@ -2609,7 +2686,7 @@
         + '<td class="right ev-value muted">—</td></tr>';
     }).join("");
     var head = "<thead><tr><th>" + t("c_desc") + "</th><th>" + t("c_lot") + "</th><th>" + t("c_expdate") + "</th><th>" + t("ev_tte") + '</th><th class="right">' + t("ev_total_qty") + "</th><th>" + t("c_planner") + '</th><th class="right">' + t("c_value") + "</th></tr></thead>";
-    return summary + filters + '<div class="tablecard"><div class="tablewrap"><table>' + head + "<tbody>" + body + "</tbody></table></div></div>";
+    return summary + filters + '<div class="tablecard"><div class="tablewrap"><table class="t-exp">' + head + "<tbody>" + body + "</tbody></table></div></div>";
   }
 
   /* Item drill-down: full monthly bar history (seasonality), stats, prices
@@ -2859,6 +2936,16 @@
       };
     });
     wireCopyChips(root);
+    // "How is this computed?" affordances: KPI cards and header ⓘ icons.
+    root.querySelectorAll("[data-explain]").forEach(function (el) {
+      el.onclick = function (ev) { ev.stopPropagation(); openExplainer(this.getAttribute("data-explain")); };
+      el.onkeydown = function (ev) {
+        if (ev.key === "Enter" || ev.key === " " || ev.key === "Spacebar") {
+          ev.preventDefault(); ev.stopPropagation();
+          openExplainer(this.getAttribute("data-explain"));
+        }
+      };
+    });
     root.querySelectorAll("[data-code]").forEach(function (el) {
       el.onclick = function (ev) {
         // A click on a copy target inside the row is handled above.
@@ -3397,8 +3484,10 @@
           $("lblPl").classList.add("is-loaded");
           applyStatic();
           // The planner sheet's UOM column is the authoritative dosage form:
-          // re-grade every row so the 3-month hand-dispense grace follows it.
+          // re-grade every row so the 3-month hand-dispense grace follows it,
+          // and surface its hospital/MSD codes on the rows.
           recomputeEffective();
+          applyPlannerCodes(STATE.rows);
           if (STATE.rows.length) render();
           toast(tFmt("pl_loaded", { n: fmtInt(parsed.count) }));
         } catch (ex) { toast(t("err_pl") + colsHint(ex)); }
