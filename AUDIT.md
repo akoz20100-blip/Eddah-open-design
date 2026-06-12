@@ -26,6 +26,13 @@ fork is out of scope except where it touches the dashboard (`docs/index.html`,
 
 ## Backlog
 
+Status after autopilot routine 2026-06-11: **A1–A4, B1–B4, C1–C4, D1, D2 — all done**
+(waves: harden `d4e198b`+`7bd0a74`, evolve `47fa37e`+`1c8957c`, polish `335f223`).
+Future risks #1 (test harness), #2 (quota-safe persistence), #4 (history export/import)
+also closed; #3 partially (named-column errors landed; tolerant header report not).
+Remaining open: risk #5 (CI-built artifacts — recommendation only), budget runway
+(north-star move 3, owner-gated on real prices).
+
 - [A1] [P0] [FABLE] [5/5] [2/5] Demo shows negative SAR billions — 587/1,077 sample items have negative `packPrice`, 517 negative `awardQty`; `loadSample` bypasses the `>0` validation that `parseMapping` enforces, so the public demo's Management tab shows "Total stock value −2432M · frozen capital −1466.4M" — files: `psmmc-dashboard/sample-data.js`, `psmmc-dashboard/app.js` — AC: prices are sanitized at every ingestion boundary (sample load AND mapping/stock merge: non-positive price/units/award ⇒ null, negative free ⇒ null); sample dataset regenerated with positive values; Management tab on sample data shows positive total + frozen capital.
 - [A2] [P0] [FABLE] [4/5] [3/5] Local/UTC date mixing shifts period boundaries — `isoDate()` uses `toISOString()` (UTC) on local-midnight dates, so in Riyadh (UTC+3) every parsed date serializes as the *previous* day; monthly buckets use local `getFullYear/getMonth` while `period_start/end` use UTC, so `ymOf(period_end) !== last bucket ym` at month starts ⇒ partial-month detection and MoM comparison silently break, and `ymRange` history clearing can clear a wrong month — files: `psmmc-dashboard/app.js` (`isoDate`, `decisionStats`, `renderDetail`, `mergeHistory`) — AC: a local-date formatter replaces `toISOString` everywhere a calendar date is meant; a date parsed as 1 June serializes as `…-06-01` regardless of timezone; partial-month logic agrees with bucket keys.
 - [A3] [P0] [OPUS] [3/5] [1/5] `dateFromFilename` accepts any 8-digit run as DDMMYYYY — a `YYYYMMDD`-named stock file (e.g. `20260610`) yields month 26 → garbage "stock as of" year ~0610 displayed as truth — files: `psmmc-dashboard/app.js` — AC: month 1–12 and year 20xx validated; `YYYYMMDD` recognized; otherwise null (falls back to workbook modified date).

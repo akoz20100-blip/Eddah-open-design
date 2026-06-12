@@ -2,25 +2,19 @@
 
 - Last audit: 2026-06-11
 - Audit HEAD: 1dd690b (includes PR #5 round-2 merge)
-- Status: audit complete → routine (full) running
-- Backlog: P0:4 P1:4 P2:4 P3:2 | FABLE:3 OPUS:7 SONNET:4 (+6 future risks)
+- Status: routine (full) COMPLETE — all 14 backlog items + 3 of 6 future risks closed
+- Backlog remaining: 0 P0 · 0 P1 · 0 P2 · 0 P3 open; risks left: CI-built artifacts (recommendation), tolerant-header report (nice-to-have), budget runway (owner-gated)
 - Review: pre-approved (autopilot, full mode)
-- Lessons: -
-- Next: routine full — Wave 1 HARDEN (A1 A2 A3 A4 B1 B3 + test harness), Wave 2 EVOLVE (B2 B4 C1–C4 + history export), Wave 3 POLISH (D1 D2)
+- Lessons:
+  - Subagent narration drifts (two agents described their own fresh edits as "pre-existing"); verify artifacts via git diff + suite, never trust the prose.
+  - The period-confirm "Use detected" button applies the display-ROUNDED months value — future upload assertions must use the rounded value (documented in tests/make-fixtures.mjs).
+  - The vendored minified SheetJS UMD cannot WRITE {t:'d'} date cells from node; fixtures use ISO-string dates (identical app parse path).
+  - .claude/ config files cannot be committed from this environment (permission classifier); the autopilot system lives only in the session workspace.
+- Next: recommended run — "evolve" after the owner loads real prices (budget runway feature); re-audit only after the next feature round.
 
-## Routine plan (written before dispatch)
+## Routine result (2026-06-11)
 
-File-ownership tracks per wave (no two agents share a file in the same wave):
-
-- Wave 1 HARDEN
-  - fable-architect → `psmmc-dashboard/app.js` + `psmmc-dashboard/sample-data.js`: A1, A2, A3, A4, B1, B3 (fable tier)
-  - opus-qa → `psmmc-dashboard/tests/**` (new) only: e2e harness via playwright-core against the page; red-first asserts for A1/A2 where observable (opus tier)
-  - fable-futurist deferred to Wave 2 — its quota/persistence work shares app.js with fable-architect, so it runs next wave to keep ownership disjoint
-- Wave 2 EVOLVE
-  - opus-data (absorbing fable-futurist's storage items) → `psmmc-dashboard/app.js`: B2, B4, C1, C2, C4, storage-quota helper, history export/import
-  - opus-frontend → `psmmc-dashboard/styles.css` + `psmmc-dashboard/index.html`: C3 markup/styles, visual polish (no data logic)
-  - opus-research → skipped: audit Phase 5 already produced the research findings (SheetJS status); no separate dispatch needed
-- Wave 3 POLISH
-  - sonnet-runner → `psmmc-dashboard/README.md` (D1), `index.html` static hint (D2, after Wave 2 lands), rebuild standalone
-
-Test suite between waves: `node --check` on app/sample, `python3 build.py`, tests under `psmmc-dashboard/tests/` once Wave 1 lands.
+- Wave 1 HARDEN — fable-architect: A1 (negative demo prices — Management showed −2432M SAR), A2 (UTC/local calendar shift), A3 (filename-date validation), A4 (escape cell-sourced HTML), B1 (duplicate-file dedupe), B3 (save-failure toasts). opus-qa: 5-spec regression harness (sample figures, upload/period math, calendar TZ invariant, dedup, XSS) — verified 0/5 on pre-fix baseline, 5/5 post-fix. Commits d4e198b, 7bd0a74.
+- Wave 2 EVOLVE — opus-data: named missing-column errors, unreadable-date surfacing, word-boundary column matching, debounced table-only search re-render, modal focus management, aria-sort + keyboard copy, averages empty state, unified quota-safe persistence, history export/import. opus-frontend: focus-visible system, reduced-motion, AA contrast (--muted 2.82:1 → 5.19:1), table scroll cues, print refinement, shell aria/meta. Commits 47fa37e, 1c8957c. opus-research: skipped (audit Phase 5 covered it — SheetJS 0.20.3 confirmed current/safe).
+- Wave 3 POLISH — sonnet-runner: README round-2 reality, static hint sync, structured print signature, rebuild. Commit 335f223.
+- Final gate: i18n parity 191/191, build deterministic, suite 5/5, built standalone smoke-tested (Riyadh TZ period correct, no negatives, zero page errors).
