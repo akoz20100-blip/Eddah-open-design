@@ -23,9 +23,40 @@ export const REAL_DIR = resolve(__dirname, "..", "real-data");
 export const REAL_WD = resolve(REAL_DIR, "NUPCO_outbound_Jan2026to10_Jun2026.sanitized.xlsx");
 export const REAL_ST = resolve(REAL_DIR, "NUPCO_Stock_On_Hand_C100_MODPSMMC_04022026.xls");
 export const REAL_MAP = resolve(REAL_DIR, "MODDHS_MEDICATION_CATALOG_072025.xlsx");
+export const REAL_PLANNER = resolve(REAL_DIR, "PSMMC_planner_assignment_12062026.xlsx");
+export const REAL_PRICES = resolve(REAL_DIR, "NUPCO_net_unit_prices_12062026.xlsx");
+export const REAL_ORDERS = resolve(REAL_DIR, "NUPCO_framework_orders_asof_12062026.sanitized.xlsx");
 
 const DAYS_PER_MONTH = 30.44;
 const STATUS_OK = { DISPATCHED: 1, APPROVED: 1 };
+const REORDER_MONTHS = 6;
+
+/* ---------- effective-stock rules (owner spec v3, 2026-06-12) ----------
+   - Expired stock and FEFO-unreachable (at-risk) stock must NOT count toward
+     coverage, stockout/reorder projection, suggested qty, or status.
+   - Hand-dispensed dosage forms (anything handed to a patient: tablets,
+     syrups, tubes, sachets, pens, …) stop being dispensable GRACE_MONTHS
+     before their expiry (hospital policy: nothing with ≤ 3 months shelf life
+     leaves the pharmacy). Parenteral forms (vials, ampules, injections,
+     syringes, IV bags) are consumed in-hospital until expiry → no grace.
+   - UOM is the dosage-form source (owner decision): planner file UOM wins,
+     then the catalog UOM, then the withdrawals-file UOM. Unknown → no grace.
+   - Effective coverage > 13 months = "excess" (overstock) classification. */
+export const GRACE_MONTHS = 3;
+export const EXCESS_MONTHS = 13;
+const INJECTABLE_UOMS = new Set([
+  "VIAL", "VAIL", "VIA", "VL",
+  "AMP", "AMPULE", "AMPOULE", "AP",
+  "INJ", "IJ", "INJECTION",
+  "SYRINGE", "PFS", "PS",
+  "BAG", "BG", "INFUSION", "IV",
+]);
+export function handDispensedUom(uom) {
+  if (uom == null || uom === "") return false; // unknown form → no grace
+  const tok = String(uom).trim().toUpperCase().split("/")[0].trim();
+  if (!tok) return false;
+  return !INJECTABLE_UOMS.has(tok);
+}
 
 function aoaOf(path) {
   const XLSX = loadXLSX();
@@ -146,6 +177,168 @@ export function expectedFromRealFiles() {
 
 function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+/* ---------- effective-stock mirror (owner spec v3) ----------
+   Independently mirrors the full decision pipeline per product:
+     - monthly avg = total DISPATCHED/APPROVED qty ÷ ROUNDED detected months
+     - live batches = stock rows with available qty > 0 and expiry ≥ as-of,
+       merged per expiry date (same-date rows sum)
+     - grace months = 3 when the product's UOM is hand-dispensed (see
+       handDispensedUom), 0 for parenteral forms and unknown UOM
+     - FEFO walk with the grace cutoff: a batch contributes only what can be
+       consumed before (expiry − grace); the remainder is waste (at risk)
+     - usable = stock − waste; effective coverage = usable ÷ avg
+     - raw coverage = stock ÷ avg (kept for display transparency)
+     - status from EFFECTIVE coverage: not_in_stock / no_movement /
+       order_now (≤6) / warning (≤7) / excess (>13) / ok
+     - Stockout = as-of + effCov months; Reorder-By = as-of + (effCov − 6)
+       months; ORDER NOW when Reorder-By ≤ today
+     - products with no dated batches keep raw figures (degrade gracefully)
+   `withPlanner` mirrors the state after the real planner-assignment file is
+   uploaded (its UOM column overrides the withdrawals-file UOM). */
+export function expectedEffectiveFromRealFiles({ withPlanner = false } = {}) {
+  const base = expectedFromRealFiles();
+  const months = base.monthsRounded1;
+
+  // withdrawals: totals + UOM fallback per code
+  const wd = aoaOf(REAL_WD);
+  let H = wd[0];
+  let ci = findCol(H, ["NUPCO Material"]);
+  const qi = findCol(H, ["Order Qty"]);
+  const si = findCol(H, ["Status"]);
+  const ui = findCol(H, ["UOM"]);
+  const di = findCol(H, ["Delivery Date"]);
+  const tot = new Map();
+  const wdUom = new Map();
+  const monthly = new Map(); // code → Map(ym → qty), feeds the seasonal rule
+  for (let r = 1; r < wd.length; r++) {
+    const row = wd[r];
+    if (!row) continue;
+    if (!STATUS_OK[String(row[si] || "").trim().toUpperCase()]) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    tot.set(code, (tot.get(code) || 0) + num(row[qi]));
+    if (!wdUom.has(code) && ui >= 0 && row[ui] != null && String(row[ui]).trim() !== "") {
+      wdUom.set(code, String(row[ui]).trim());
+    }
+    const d = parseDateLikeApp(row[di]);
+    if (d) {
+      const ym = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      const m = monthly.get(code) || new Map();
+      m.set(ym, (m.get(ym) || 0) + num(row[qi]));
+      monthly.set(code, m);
+    }
+  }
+
+  // optional planner-file UOM override (the owner's authoritative dosage form)
+  const plUom = new Map();
+  if (withPlanner) {
+    const pl = aoaOf(REAL_PLANNER);
+    const HP = pl[0];
+    const pci = findCol(HP, ["Nupco"]);
+    const pui = findCol(HP, ["UOM"]);
+    for (let r = 1; r < pl.length; r++) {
+      const row = pl[r];
+      if (!row) continue;
+      const code = normCode(row[pci]);
+      if (!isDrug(code)) continue;
+      if (pui >= 0 && row[pui] != null && String(row[pui]).trim() !== "" && !plUom.has(code)) {
+        plUom.set(code, String(row[pui]).trim());
+      }
+    }
+  }
+
+  // stock: totals + live/expired date-merged batches per code
+  const st = aoaOf(REAL_ST);
+  H = st[0];
+  ci = findCol(H, ["Generic Item Number"]);
+  const ai = findCol(H, ["Total Available Qty"]);
+  const xi = findCol(H, ["Expiry Date"]);
+  const asOf = new Date(2026, 1, 4); // from the stock filename 04022026
+  const asOfIso = iso(asOf);
+  const stk = new Map();
+  const batchesBy = new Map();
+  for (let r = 1; r < st.length; r++) {
+    const row = st[r];
+    if (!row) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    const q = num(row[ai]);
+    stk.set(code, (stk.get(code) || 0) + q);
+    const d = parseDateLikeApp(row[xi]);
+    if (d && q > 0) {
+      const key = iso(d);
+      if (key >= asOfIso) {
+        const m = batchesBy.get(code) || new Map();
+        m.set(key, (m.get(key) || 0) + q);
+        batchesBy.set(code, m);
+      }
+    }
+  }
+
+  const todayIso = iso(new Date());
+  const addDays = (d, n) => iso(new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.round(n)));
+  const perCode = new Map();
+  const union = new Set([...tot.keys(), ...stk.keys()]);
+  for (const code of union) {
+    const avg = (tot.get(code) || 0) / months;
+    const inStock = stk.has(code);
+    const stock = stk.get(code) || 0;
+    const uom = plUom.get(code) || wdUom.get(code) || null;
+    const grace = handDispensedUom(uom) ? GRACE_MONTHS : 0;
+    const covRaw = avg > 0 ? stock / avg : null;
+    let waste = 0;
+    const m = batchesBy.get(code);
+    if (m && avg > 0) {
+      let consumed = 0;
+      for (const k of [...m.keys()].sort()) {
+        const d = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
+        const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH - grace);
+        const q = m.get(k);
+        const use = Math.min(q, Math.max(0, avg * tMo - consumed));
+        waste += q - use;
+        consumed += use;
+      }
+    }
+    const usable = stock - waste;
+    const covEff = avg > 0 ? usable / avg : null;
+    let status;
+    if (!inStock) status = "not_in_stock";
+    else if (avg === 0) status = "no_movement";
+    else if (covEff <= REORDER_MONTHS) status = "order_now";
+    else if (covEff <= REORDER_MONTHS + 1) status = "warning";
+    else if (covEff > EXCESS_MONTHS) status = "excess";
+    else status = "ok";
+    const stockoutIso = avg > 0 ? (usable > 0 ? addDays(asOf, covEff * DAYS_PER_MONTH) : asOfIso) : null;
+    const reorderIso = avg > 0 ? addDays(asOf, ((covEff == null ? 0 : covEff) - REORDER_MONTHS) * DAYS_PER_MONTH) : null;
+    // Seasonal suggestion (round-3 rule): with ≥6 months of history, the
+    // 9 upcoming months take their prior-year same-month figure when known
+    // (falling back to the flat avg); when ≥3 months matched, the suggestion
+    // becomes Σ(target) − dispensable stock.
+    let sug = Math.max(0, avg * 9 - usable);
+    let seasonal = 0;
+    const my = monthly.get(code);
+    if (my && avg > 0 && base.periodEndIso) {
+      const y0 = +base.periodEndIso.slice(0, 4);
+      const m0 = +base.periodEndIso.slice(5, 7);
+      let sum = 0, matched = 0;
+      for (let i = 1; i <= 9; i++) {
+        let mm = m0 + i, yy = y0;
+        while (mm > 12) { mm -= 12; yy++; }
+        const prior = (yy - 1) + "-" + String(mm).padStart(2, "0");
+        if (my.has(prior)) { sum += my.get(prior); matched++; }
+        else sum += avg;
+      }
+      if (matched >= 3) { sug = Math.max(0, sum - usable); seasonal = matched; }
+    }
+    perCode.set(code, {
+      avg, stock, usable, waste, covRaw, covEff, status, uom, grace,
+      stockoutIso, reorderIso, orderNow: !!(reorderIso && reorderIso <= todayIso), sug, seasonal,
+      hasBatches: !!m,
+    });
+  }
+  return { months, asOfIso, todayIso, perCode };
 }
 
 /* ---------- expiry-views mirror (FEATURE 3 + 4) ----------

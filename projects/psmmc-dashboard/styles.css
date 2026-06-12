@@ -24,6 +24,7 @@
   --coral:#ee5138; --coral-soft:#fdeeea;
   --amber:#d28f1d; --amber-soft:#fbf3e2;
   --indigo:#5560d8; --indigo-soft:#e9ebfb;
+  --violet:#7a5fc7; --violet-soft:#efeafb;
   --pink:#ff2d87; --pink-deep:#e4136e;
   --inset:#f4f5f7; --line:#eeeff2;
   --shadow:0 1px 2px rgba(16,18,24,.04), 0 12px 36px rgba(16,18,24,.07);
@@ -276,6 +277,8 @@ td.code .subcode{display:block; font-size:10px; color:var(--muted-2); margin-top
 .pill.ok{background:var(--blue-soft); color:var(--blue)}
 .pill.no_movement{background:var(--inset); color:var(--muted)}
 .pill.not_in_stock{background:var(--indigo-soft); color:var(--indigo)}
+/* Effective coverage above 13 months = overstock (owner spec v3). */
+.pill.excess{background:var(--violet-soft); color:var(--violet)}
 .covbar{position:relative; height:6px; width:70px; background:var(--inset); border-radius:999px; overflow:hidden;
   display:inline-block; vertical-align:middle; margin-inline-start:8px}
 .covbar i{position:absolute; inset-inline-start:0; top:0; bottom:0; border-radius:999px}
