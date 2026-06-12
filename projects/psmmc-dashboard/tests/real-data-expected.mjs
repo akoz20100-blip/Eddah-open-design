@@ -233,11 +233,13 @@ export function expectedEffectiveFromRealFiles({ withPlanner = false } = {}) {
 
   // optional planner-file UOM override (the owner's authoritative dosage form)
   const plUom = new Map();
+  const plName = new Map();
   if (withPlanner) {
     const pl = aoaOf(REAL_PLANNER);
     const HP = pl[0];
     const pci = findCol(HP, ["Nupco"]);
     const pui = findCol(HP, ["UOM"]);
+    const pni = findCol(HP, ["Planner"]);
     for (let r = 1; r < pl.length; r++) {
       const row = pl[r];
       if (!row) continue;
@@ -245,6 +247,9 @@ export function expectedEffectiveFromRealFiles({ withPlanner = false } = {}) {
       if (!isDrug(code)) continue;
       if (pui >= 0 && row[pui] != null && String(row[pui]).trim() !== "" && !plUom.has(code)) {
         plUom.set(code, String(row[pui]).trim());
+      }
+      if (pni >= 0 && row[pni] != null && String(row[pni]).trim() !== "" && !plName.has(code)) {
+        plName.set(code, String(row[pni]).trim());
       }
     }
   }
@@ -335,10 +340,30 @@ export function expectedEffectiveFromRealFiles({ withPlanner = false } = {}) {
     perCode.set(code, {
       avg, stock, usable, waste, covRaw, covEff, status, uom, grace,
       stockoutIso, reorderIso, orderNow: !!(reorderIso && reorderIso <= todayIso), sug, seasonal,
-      hasBatches: !!m,
+      hasBatches: !!m, planner: plName.get(code) || null,
     });
   }
   return { months, asOfIso, todayIso, perCode };
+}
+
+/* ---------- real per-unit price list ----------
+   The owner's price file carries the price PER DISPENSING UNIT directly
+   (`Generic Mat Code` + `Net Price/Per unit 1`) — no pack-size division. */
+export function realUnitPrices() {
+  const aoa = aoaOf(REAL_PRICES);
+  const H = aoa[0];
+  const ci = findCol(H, ["Generic Mat Code"]);
+  const pi = findCol(H, ["Net Price/Per unit 1"]);
+  const prices = new Map();
+  for (let r = 1; r < aoa.length; r++) {
+    const row = aoa[r];
+    if (!row) continue;
+    const code = normCode(row[ci]);
+    if (!isDrug(code)) continue;
+    const p = parseFloat(row[pi]);
+    if (Number.isFinite(p) && p > 0 && !prices.has(code)) prices.set(code, p);
+  }
+  return prices;
 }
 
 /* ---------- expiry-views mirror (FEATURE 3 + 4) ----------

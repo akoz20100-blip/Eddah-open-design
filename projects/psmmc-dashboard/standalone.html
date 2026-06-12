@@ -893,6 +893,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       ex_col_status_t: "Status", ex_col_status_b: "From effective coverage: ≤6 months = order now · ≤7 = watch · >13 = excess (overstock) · OK otherwise. No movement = no withdrawals in the period; not in stock = zero balance.",
       ex_col_qty9_t: "Qty (9 months)", ex_col_qty9_b: "Monthly average × 9 — the demand target the suggested order fills toward (seasonal items use prior-year same-month figures instead of the flat average).",
       ex_col_sug_t: "Suggested order", ex_col_sug_b: "9-month demand target − dispensable stock (never below zero). Unusable at-risk stock is replaced, not counted.",
+      ev_value_sar: "value (SAR)",
+      pr_paid_share: "paid share (units)", pr_free_share: "free share ({p}% free)",
+      bw_title: "Monthly order workload", bw_month: "Month", bw_orders: "Orders to raise", bw_value: "Value (SAR)", bw_now: "This month (incl. overdue)",
+      ex_workload_t: "Monthly order workload", ex_workload_b: "Each item lands in the month its Reorder-By date falls in (reorder-by = the day effective coverage drops to 6 months). Items already past that date count in the current month — they are today's workload. The planner split counts items assigned to each planner from the planner file; SAR value = Σ suggested qty × unit price for priced items.",
       trend_new: "New", prev_avg: "prev avg", per_mo: "/mo",
       sample_wd: "Sample · NUPCO outbound", sample_st: "Sample · NUPCO stock",
       err_wd: "Could not read withdrawals file", err_st: "Could not read stock file", no_sample: "Sample data not available",
@@ -1078,6 +1082,10 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       ex_col_status_t: "الحالة", ex_col_status_b: "من التغطية الفعلية: ≤6 أشهر = اطلب الآن · ≤7 = للمتابعة · أكثر من 13 = زائد · جيد فيما عدا ذلك. بدون حركة = لا سحوبات في الفترة؛ غير متوفر = رصيد صفر.",
       ex_col_qty9_t: "كمية 9 أشهر", ex_col_qty9_b: "المتوسط الشهري × 9 — هدف الطلب الذي يكمّل الاقتراحُ نحوه (البنود الموسمية تستخدم أشهر السنة الماضية المطابقة بدل المتوسط الثابت).",
       ex_col_sug_t: "الطلب المقترح", ex_col_sug_b: "هدف 9 أشهر − المخزون القابل للصرف (لا ينزل تحت الصفر). الكميات المهددة بالانتهاء تُستبدل ولا تُحسب.",
+      ev_value_sar: "القيمة (ريال)",
+      pr_paid_share: "الكمية المدفوعة (وحدة)", pr_free_share: "الكمية المجانية ({p}% مجاني)",
+      bw_title: "حِمل الطلبات الشهري", bw_month: "الشهر", bw_orders: "طلبات تُرفع", bw_value: "القيمة (ريال)", bw_now: "هذا الشهر (مع المتأخر)",
+      ex_workload_t: "حِمل الطلبات الشهري", ex_workload_b: "كل بند يقع في الشهر الذي يحلّ فيه تاريخ «أعد الطلب قبل» (وهو اليوم الذي تهبط فيه التغطية الفعلية إلى 6 أشهر). البنود التي تجاوزت ذلك التاريخ تُحسب في الشهر الحالي — فهي حِمل اليوم. توزيع المخططين يَعُدّ بنود كل مخطط من ملف المخططين؛ والقيمة بالريال = مجموع الكمية المقترحة × سعر الوحدة للبنود المسعّرة.",
       trend_new: "جديد", prev_avg: "المتوسط السابق", per_mo: "/شهر",
       sample_wd: "تجريبي · صادر نبكو", sample_st: "تجريبي · مخزون نبكو",
       err_wd: "تعذّر قراءة ملف السحوبات", err_st: "تعذّر قراءة ملف المخزون", no_sample: "البيانات التجريبية غير متوفرة",
@@ -1767,7 +1775,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function parseMapping(aoa) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
-    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
+    var ci = findCol(H, ["NUPCO Material", "NUPCO Code", "NUPCO", "Generic Mat Code", "Generic Item Number", "Material", "كود نبكو", "رقم نبكو", "نبكو"]),
       ti = findCol(H, ["Trade Name", "Brand Name", "Brand", "Commercial Name", "Trade", "الاسم التجاري", "الاسم التجارى", "اسم تجاري"]),
       // The MODHS unified catalog carries no "Scientific Name" header; its
       // item descriptions ARE the generic names planners search by (incl.
@@ -1779,11 +1787,18 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       cl = findCol(H, ["Classification", "التصنيف"]),
       uo = findCol(H, ["UOM", "Unit", "الوحدة"]),
       pl = findCol(H, ["Priorty Level", "Priority Level", "الأولوية"]),
-      pp = findCol(H, ["Pack Price", "Unit Pack Price", "سعر العلبة", "سعر العبوة", "Price"]),
+      pp = findCol(H, ["Pack Price", "Unit Pack Price", "سعر العلبة", "سعر العبوة"]),
+      // The owner's price list is per DISPENSING UNIT already ("Net Price/
+      // Per unit 1") — it must never be divided by a pack size.
+      np = findCol(H, ["Net Price/Per unit 1", "Net Price Per Unit", "Net Unit Price", "Net Price", "Unit Price", "سعر الوحدة", "السعر النهائي"]),
       up = findCol(H, ["Units per Pack", "Pack Size", "Units/Pack", "عدد الحبات", "عدد الوحدات"]),
       aq = findCol(H, ["Awarded Qty", "Award Quantity", "Tender Qty", "كمية الترسية"]),
       fq = findCol(H, ["Free Qty", "Free Quantity", "Bonus Qty", "Bonus", "الكمية المجانية"]);
-    if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0 && cl < 0 && pp < 0)) throw new Error("cols:NUPCO Material");
+    // Tolerant matching can bind both price slots to one header (e.g. the
+    // substring "Unit Price" inside "Unit Pack Price"); the pack column wins
+    // and the per-unit slot stands down rather than double-reading it.
+    if (np >= 0 && np === pp) np = -1;
+    if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0 && cl < 0 && pp < 0 && np < 0 && aq < 0 && fq < 0)) throw new Error("cols:NUPCO Material");
     var byCode = {}, n = 0, priced = 0;
     var qTotal = 0, qCode = 0, qNonDrug = 0, qEmpty = 0;
     function val(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
@@ -1797,11 +1812,11 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       var rec = {
         trade: val(row, ti), sci: val(row, gi), hosp: val(row, hi), msd: val(row, mi),
         cls: val(row, cl), prio: val(row, pl), uom: val(row, uo),
-        packPrice: numVal(row, pp), unitsPerPack: numVal(row, up), awardQty: numVal(row, aq), freeQty: fq < 0 ? null : (parseFloat(row[fq]) >= 0 ? parseFloat(row[fq]) : null)
+        packPrice: numVal(row, pp), netUnit: numVal(row, np), unitsPerPack: numVal(row, up), awardQty: numVal(row, aq), freeQty: fq < 0 ? null : (parseFloat(row[fq]) >= 0 ? parseFloat(row[fq]) : null)
       };
-      if (rec.trade || rec.sci || rec.hosp || rec.msd || rec.cls || rec.packPrice) {
+      if (rec.trade || rec.sci || rec.hosp || rec.msd || rec.cls || rec.packPrice || rec.netUnit || rec.awardQty || rec.freeQty != null) {
         byCode[code] = rec; n++;
-        if (rec.packPrice) priced++;
+        if (rec.packPrice || rec.netUnit) priced++;
       } else { qEmpty++; }
     }
     if (!n) throw new Error("empty-map");
@@ -1809,7 +1824,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       total: qTotal, accepted: qTotal - qCode - qNonDrug - qEmpty,
       rejects: qreasons({ qr_code: qCode, qr_nondrug: qNonDrug, qr_empty: qEmpty }),
       warns: [],
-      cols: qcols(H, [["c_code", ci], ["c_trade", ti], ["qs_sci", gi], ["c_hosp", hi], ["c_msd", mi], ["c_class", cl], ["dt_priority", pl], ["pr_pack_price", pp], ["pr_units_per_pack", up], ["qs_award", aq], ["qs_free", fq]])
+      cols: qcols(H, [["c_code", ci], ["c_trade", ti], ["qs_sci", gi], ["c_hosp", hi], ["c_msd", mi], ["c_class", cl], ["dt_priority", pl], ["pr_pack_price", pp], ["pr_unit_price", np], ["pr_units_per_pack", up], ["qs_award", aq], ["qs_free", fq]])
     };
     return { byCode: byCode, count: n, priced: priced, hasTrade: ti >= 0 || gi >= 0, quality: quality };
   }
@@ -1829,13 +1844,15 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       r.cls = (m && m.cls) || r.cls || null;
       r.prio = (m && m.prio) || r.prio || null;
       r.packPrice = (m && m.packPrice) || r.packPrice || null;
+      r.netUnit = (m && m.netUnit) || r.netUnit || null;
       r.unitsPerPack = (m && m.unitsPerPack) || r.unitsPerPack || null;
       var awardQty = (m && m.awardQty) || r.awardQty || null;
       var freeQty = (m && m.freeQty != null) ? m.freeQty : (r.freeQty != null ? r.freeQty : null);
       r.awardQty = awardQty; r.freeQty = freeQty;
-      // Government pricing is per smallest unit (pack price ÷ units per pack);
-      // the dashboard mirrors the hospital system's unit price exactly.
-      r.unitPrice = r.packPrice ? (r.unitsPerPack ? r.packPrice / r.unitsPerPack : r.packPrice) : null;
+      // The owner's net price is already PER DISPENSING UNIT and wins
+      // outright; otherwise government pack pricing divides by units/pack.
+      // Both match the unit the hospital counts in.
+      r.unitPrice = r.netUnit != null ? r.netUnit : (r.packPrice ? (r.unitsPerPack ? r.packPrice / r.unitsPerPack : r.packPrice) : null);
       r.effUnitPrice = (r.unitPrice && awardQty && freeQty != null) ? r.unitPrice * awardQty / (awardQty + freeQty) : null;
       // NUPCO quantities are counted in the dispensing UOM (TAB = tablets,
       // BT = bottles), i.e. the same smallest unit the unit price refers to.
@@ -1848,7 +1865,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     applyPlannerCodes(rows);
     return n;
   }
-  function hasPrices() { return !!(MAP && MAP.priced) || STATE.rows.some(function (r) { return r.packPrice; }); }
+  function hasPrices() { return !!(MAP && MAP.priced) || STATE.rows.some(function (r) { return r.packPrice || r.netUnit; }); }
 
   /* ---------- drug information (owner request: SFDA / what is it for) ----------
      Curated bilingual dictionary keyed by generic-name STEMS covering the most
@@ -3366,6 +3383,46 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '<button type="button" class="btn-soft" id="brSave">' + t("br_save") + "</button></div>"
       + body + "</div>";
   }
+  /* Monthly order workload (owner spec v3): for each upcoming month, how
+     many items hit their reorder-by date — i.e. how many orders the planner
+     will raise — and at which planners. Items already past their reorder
+     date collapse into the current month (they are TODAY's workload). SAR
+     value = Σ suggested qty × unit price over the bucket's priced items. */
+  function monthlyWorkload(rows) {
+    var todayIso = isoDate(new Date());
+    var nowYm = ymOf(todayIso);
+    var buckets = {};
+    rows.forEach(function (r) {
+      if (!r.reorderIso || r.avg <= 0) return;
+      var ym = r.reorderIso <= todayIso ? nowYm : ymOf(r.reorderIso);
+      var b = buckets[ym] || (buckets[ym] = { count: 0, val: 0, planners: {} });
+      b.count++;
+      if (r.unitPrice && r.sug > 0) b.val += r.sug * r.unitPrice;
+      var pn = plannerName(r) || t("planner_unassigned");
+      b.planners[pn] = (b.planners[pn] || 0) + 1;
+    });
+    return { nowYm: nowYm, buckets: buckets };
+  }
+  function workloadCard(base) {
+    var w = monthlyWorkload(base);
+    var yms = Object.keys(w.buckets).sort().slice(0, 12);
+    if (!yms.length) return "";
+    var priced = hasPrices();
+    var rows = yms.map(function (ym) {
+      var b = w.buckets[ym];
+      var planners = Object.keys(b.planners).sort(function (a, bb) { return b.planners[bb] - b.planners[a]; });
+      var chips = planners.slice(0, 4).map(function (pn) { return esc(pn) + ' <b class="num">' + fmtInt(b.planners[pn]) + "</b>"; }).join(" · ")
+        + (planners.length > 4 ? " +" + (planners.length - 4) : "");
+      return '<tr><td class="num">' + (ym === w.nowYm ? t("bw_now") : (ymLabel(ym + "-01") || ym)) + "</td>"
+        + '<td class="right num">' + fmtInt(b.count) + "</td>"
+        + '<td class="bw-planners">' + chips + "</td>"
+        + (priced ? '<td class="right num">' + (b.val > 0 ? fmtM(b.val) : "—") + "</td>" : "") + "</tr>";
+    }).join("");
+    return '<div class="kcard span12 workloadcard"><div class="ktitle-row"><span class="ktitle">' + t("bw_title")
+      + '</span><span class="thinfo" data-explain="ex_workload" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '">ⓘ</span></div>'
+      + '<div class="tablewrap"><table><thead><tr><th>' + t("bw_month") + '</th><th class="right">' + t("bw_orders") + "</th><th>" + t("c_planner") + "</th>" + (priced ? '<th class="right">' + t("bw_value") + "</th>" : "") + "</tr></thead>"
+      + "<tbody>" + rows + "</tbody></table></div></div>";
+  }
   function renderManagement(base, c) {
     var totalUnits = base.reduce(function (s, r) { return s + r.stock; }, 0);
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
@@ -3395,6 +3452,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + cardMini(t("k_reorder"), fmtInt(orderNow), "tile-amber", ICON.alert, t("re_value"), t("re_sub"), "span6")
       + valueCard
       + budgetCard()
+      // Workload spans ALL items (the management base hides zero-stock rows,
+      // but a zero-stock moving item is exactly an order to raise NOW).
+      + workloadCard(STATE.rows)
       + '</div>';
     var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + copyAllChip() + "</div>";
     return cards + toolbar(filters) + buildTableHTML("management", base);
@@ -3462,8 +3522,16 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   function renderExpiry() {
     var f = STATE.expiryFilter || "atrisk", counts = expiryCounts(), rows = expiryBatchRows();
     var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
-    var totalQty = 0, byPlanner = {};
-    rows.forEach(function (x) { totalQty += x.q; var pn = plannerName(x.r) || t("planner_unassigned"); byPlanner[pn] = (byPlanner[pn] || 0) + x.q; });
+    // SAR value per batch = qty × the item's unit price; total only counts
+    // priced items (unpriced rows keep "—" so the figure stays honest).
+    var priced = hasPrices();
+    var totalQty = 0, totalVal = 0, byPlanner = {};
+    rows.forEach(function (x) {
+      totalQty += x.q;
+      if (priced && x.r.unitPrice) totalVal += x.q * x.r.unitPrice;
+      var pn = plannerName(x.r) || t("planner_unassigned");
+      byPlanner[pn] = (byPlanner[pn] || 0) + x.q;
+    });
     var filters = '<div class="filters">'
       + fchipE("atrisk", t("ev_atrisk"), counts.atrisk, ICON.alert)
       + fchipE("expired", t("ev_expired"), counts.expired, ICON.ban)
@@ -3474,7 +3542,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var summary = '<div class="kcard span12 expiry-summary"><div class="ev-tot">'
       + '<span class="stat"><b class="num">' + fmtInt(rows.length) + '</b><i>' + t("ev_batches") + "</i></span>"
       + '<span class="stat"><b class="num ev-total-qty">' + fmtM(totalQty) + '</b><i>' + t("ev_total_qty") + "</i></span>"
-      + '<span class="stat"><b class="muted">—</b><i>' + t("ev_value_pending") + "</i></span>"
+      + (priced
+        ? '<span class="stat"><b class="num ev-total-val">' + fmtM(totalVal) + '</b><i>' + t("ev_value_sar") + "</i></span>"
+        : '<span class="stat"><b class="muted">—</b><i>' + t("ev_value_pending") + "</i></span>")
       + "</div>" + (plannerChips ? '<div class="ev-planners">' + plannerChips + "</div>" : "") + "</div>";
     if (!rows.length) {
       return summary + filters + '<div class="empty card"><span class="tile tile-lav">' + ICON.clock + '</span><h3>' + t("ev_empty") + "</h3></div>";
@@ -3489,7 +3559,9 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         + '<td class="num">' + esc(x.lot || "—") + "</td><td class=\"num\">" + prettyDate(x.e) + "</td><td>" + tte + "</td>"
         + '<td class="right num">' + fmtInt(x.q) + "</td>"
         + '<td class="plancell">' + (pn ? esc(pn) : '<span class="muted">' + t("planner_unassigned") + "</span>") + "</td>"
-        + '<td class="right ev-value muted">—</td></tr>';
+        + (priced && x.r.unitPrice
+          ? '<td class="right ev-value num">' + fmtInt(x.q * x.r.unitPrice) + "</td>"
+          : '<td class="right ev-value muted">—</td>') + "</tr>";
     }).join("");
     var head = "<thead><tr><th>" + t("c_desc") + "</th><th>" + t("c_lot") + "</th><th>" + t("c_expdate") + "</th><th>" + t("ev_tte") + '</th><th class="right">' + t("ev_total_qty") + "</th><th>" + t("c_planner") + '</th><th class="right">' + t("c_value") + "</th></tr></thead>";
     return summary + filters + '<div class="tablecard"><div class="tablewrap"><table class="t-exp">' + head + "<tbody>" + body + "</tbody></table></div></div>";
@@ -3548,15 +3620,31 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     /* The price slot is always present in the card: real figures when a
        prices file is loaded, an explicit "add prices to activate" hint
        otherwise — so planners know where the rial numbers will appear. */
+    // Free-goods split (owner spec v3): with an awarded/free ratio, the
+    // suggested order divides into a PAID share and a FREE share whose sum
+    // still covers the need (need 1,000 at 50% free → 500 paid + 500 free).
+    // Quantities, not prices — it renders even before a price file arrives.
+    var freeSplit = "";
+    if (r.awardQty && r.freeQty != null && r.freeQty > 0 && r.sug > 0) {
+      var freePct = r.freeQty / (r.awardQty + r.freeQty);
+      var freeShare = Math.round(r.sug * freePct);
+      var paidShare = Math.round(r.sug) - freeShare;
+      freeSplit = '<span class="pb-item"><b class="num">' + fmtInt(paidShare) + '</b><i>' + t("pr_paid_share") + '</i></span>'
+        + '<span class="pb-item"><b class="num" style="color:var(--blue)">' + fmtInt(freeShare) + '</b><i>' + tFmt("pr_free_share", { p: Math.round(freePct * 100) }) + '</i></span>';
+    }
     var priceBlock;
-    if (r.packPrice) {
+    if (r.unitPrice) {
       priceBlock = '<div class="priceblock">'
-        + '<span class="pb-item"><b class="num">' + fmt2(r.packPrice) + '</b><i>' + t("pr_pack_price") + '</i></span>'
+        + (r.packPrice ? '<span class="pb-item"><b class="num">' + fmt2(r.packPrice) + '</b><i>' + t("pr_pack_price") + '</i></span>' : "")
         + (r.unitsPerPack ? '<span class="pb-item"><b class="num">' + fmtInt(r.unitsPerPack) + '</b><i>' + t("pr_units_per_pack") + '</i></span>' : "")
         + '<span class="pb-item"><b class="num">' + fmt2(r.unitPrice) + '</b><i>' + t("pr_unit_price") + '</i></span>'
         + (r.effUnitPrice ? '<span class="pb-item"><b class="num" style="color:var(--blue)">' + fmt2(r.effUnitPrice) + '</b><i>' + t("pr_eff_price") + '</i></span>' : "")
         + (r.stockValue != null ? '<span class="pb-item"><b class="num">' + fmtM(r.stockValue) + '</b><i>' + t("pr_stock_value") + '</i></span>' : "")
+        + freeSplit
         + '</div>';
+    } else if (freeSplit) {
+      priceBlock = '<div class="priceblock">' + freeSplit
+        + '<span class="pb-hint">' + t("pr_hint") + '</span></div>';
     } else {
       priceBlock = '<div class="priceblock is-empty">'
         + '<span class="pb-item"><b>—</b><i>' + t("pr_pack_price") + '</i></span>'
@@ -4218,7 +4306,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
             Object.keys(src).forEach(function (k) { if (src[k] != null) dst[k] = src[k]; });
           });
           var count = Object.keys(byCode).length, priced = 0;
-          Object.keys(byCode).forEach(function (c) { if (byCode[c].packPrice) priced++; });
+          Object.keys(byCode).forEach(function (c) { if (byCode[c].packPrice || byCode[c].netUnit) priced++; });
           MAP = { byCode: byCode, count: count, priced: priced, name: f.name, savedAt: new Date().toISOString() };
           STATE.quality = STATE.quality || {};
           STATE.quality.mp = { name: f.name, q: parsed.quality };
