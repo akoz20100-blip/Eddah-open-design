@@ -8,9 +8,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "psmmc-dashboard/standalone.html"
-      - "psmmc-dashboard/sw.js"
-      - "psmmc-dashboard/manifest.webmanifest"
+      - "projects/psmmc-dashboard/standalone.html"
+      - "projects/psmmc-dashboard/sw.js"
+      - "projects/psmmc-dashboard/manifest.webmanifest"
       - ".github/workflows/psmmc-pages.yml"
   workflow_dispatch: {}
 
@@ -37,11 +37,11 @@ jobs:
       - name: Copy dashboard to /psmmc/
         run: |
           mkdir -p pages/psmmc
-          cp main/psmmc-dashboard/standalone.html pages/psmmc/index.html
+          cp main/projects/psmmc-dashboard/standalone.html pages/psmmc/index.html
           # PWA companions: the service worker and manifest must sit next to
           # the page for offline install from the permanent link.
-          cp main/psmmc-dashboard/sw.js pages/psmmc/sw.js
-          cp main/psmmc-dashboard/manifest.webmanifest pages/psmmc/manifest.webmanifest
+          cp main/projects/psmmc-dashboard/sw.js pages/psmmc/sw.js
+          cp main/projects/psmmc-dashboard/manifest.webmanifest pages/psmmc/manifest.webmanifest
 
       - name: Commit and push if changed
         working-directory: pages

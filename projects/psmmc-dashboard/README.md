@@ -100,16 +100,16 @@ tests/            headless Chromium test suite (see tests/README.md)
 To rebuild the single-file outputs after editing the source:
 
 ```bash
-python3 psmmc-dashboard/build.py
+python3 projects/psmmc-dashboard/build.py
 ```
 
 ## Tests
 
 ```bash
-node psmmc-dashboard/tests/run.mjs
+node projects/psmmc-dashboard/tests/run.mjs
 ```
 
-Runs a headless Chromium smoke suite. See `psmmc-dashboard/tests/README.md` for
+Runs a headless Chromium smoke suite. See `projects/psmmc-dashboard/tests/README.md` for
 details on what is covered and how to add cases.
 
 ## Deploy / share
@@ -125,5 +125,5 @@ https://akoz20100-blip.github.io/eddah-open-design/
 double-click, email it, or drag it onto Netlify Drop for an instant link.
 
 To use the official hospital logo, drop the PNG at
-`psmmc-dashboard/assets/psmmc-logo.png` and rebuild; the header picks it up
+`projects/psmmc-dashboard/assets/psmmc-logo.png` and rebuild; the header picks it up
 automatically (falling back to the bundled SVG emblem if absent).

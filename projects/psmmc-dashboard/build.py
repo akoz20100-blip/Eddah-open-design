@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Inline styles.css, app.js, vendor SheetJS, sample-data.js and the crest
 into a single self-contained HTML file. Outputs:
-  - psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
-  - docs/index.html                  (served by classic /docs GitHub Pages)
+  - projects/psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
+  - docs/index.html                           (served by classic /docs GitHub Pages)
 Also stamps sw.js with the build hash (in place + docs/sw.js) and copies
 manifest.webmanifest to docs/, so the PWA can install and work offline from
 the published copies.
-Run:  python3 psmmc-dashboard/build.py
+Run:  python3 projects/psmmc-dashboard/build.py
 """
 import base64, hashlib, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+ROOT = os.path.dirname(os.path.dirname(HERE))  # repo root: HERE is projects/psmmc-dashboard
 read = lambda p: open(os.path.join(HERE, p), encoding="utf-8").read()
 
 html  = read("index.html")
