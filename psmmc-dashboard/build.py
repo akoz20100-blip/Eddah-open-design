@@ -3,9 +3,12 @@
 into a single self-contained HTML file. Outputs:
   - psmmc-dashboard/standalone.html  (shareable / drag-to-host / open locally)
   - docs/index.html                  (served by classic /docs GitHub Pages)
+Also stamps sw.js with the build hash (in place + docs/sw.js) and copies
+manifest.webmanifest to docs/, so the PWA can install and work offline from
+the published copies.
 Run:  python3 psmmc-dashboard/build.py
 """
-import base64, os, re
+import base64, hashlib, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -35,5 +38,19 @@ with open(os.path.join(HERE, "standalone.html"), "w", encoding="utf-8") as f:
 with open(os.path.join(ROOT, "docs", "index.html"), "w", encoding="utf-8") as f:
     f.write(html)
 
+# Service worker: rewrite the cache stamp from the built HTML's content hash so
+# installed PWAs detect a changed sw.js and refresh their offline copy. The
+# stamped file is written back in place (the publish workflow copies it from
+# the repo) and mirrored to docs/ next to docs/index.html.
+stamp = hashlib.sha1(html.encode("utf-8")).hexdigest()[:10]
+sw = read("sw.js")
+sw = re.sub(r'var CACHE = "psmmc-[^"]*";', 'var CACHE = "psmmc-%s";' % stamp, sw, count=1)
+with open(os.path.join(HERE, "sw.js"), "w", encoding="utf-8") as f:
+    f.write(sw)
+with open(os.path.join(ROOT, "docs", "sw.js"), "w", encoding="utf-8") as f:
+    f.write(sw)
+with open(os.path.join(ROOT, "docs", "manifest.webmanifest"), "w", encoding="utf-8") as f:
+    f.write(read("manifest.webmanifest"))
+
 kb = round(len(html.encode("utf-8")) / 1024)
-print("built standalone.html and docs/index.html (%d KB each)" % kb)
+print("built standalone.html and docs/index.html (%d KB each) · sw stamp psmmc-%s" % (kb, stamp))

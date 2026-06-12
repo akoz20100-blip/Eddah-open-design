@@ -7,6 +7,11 @@
   <meta name="description" content="PSMMC pharmacy inventory analytics — coverage, reorder and budget planning, computed locally in your browser. تحليلات مخزون صيدلية مدينة الأمير سلطان الطبية العسكرية — التغطية وإعادة الطلب وتخطيط الميزانية، تُحتسب محليًا في متصفحك." />
   <title>PSMMC — تحليلات مخزون الصيدلية</title>
   <link rel="icon" href="./assets/psmmc-crest.svg" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="PSMMC" />
+  <link rel="apple-touch-icon" href="./assets/psmmc-crest.svg" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -33,6 +38,7 @@
     <span class="meta-chip num" id="metaPeriod">—</span>
     <span class="meta-chip num" id="metaStock">—</span>
     <span class="meta-chip num" id="metaCount" hidden>—</span>
+    <span class="meta-chip" id="metaDemo" hidden>—</span>
   </div>
 
   <section class="uploadbar card">
@@ -56,6 +62,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8L3 11z"/><circle cx="8" cy="8" r="1.6"/></svg>
       </span>
       <span class="filebtn-txt"><b data-i18n="file_mp">ملف الأسماء والمعرفات</b><i id="mpName" data-i18n="file_mp_hint">اختياري · أكواد المستشفى وMSD والاسم التجاري</i></span>
+    </label>
+    <label class="filebtn" id="lblPo">
+      <input type="file" id="filePo" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="11" rx="2"/><path d="M16 10h3l2 3v5h-5"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_po">ملف الطلبات السابقة</b><i id="poName" data-i18n="file_po_hint">اختياري · أوامر الشراء · الكود والتاريخ والكمية</i></span>
     </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">تحميل بيانات تجريبية</button>
     <p class="upl-hint" id="uplHint">أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).</p>

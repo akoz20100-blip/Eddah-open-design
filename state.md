@@ -1,5 +1,41 @@
 # state.md — Dash project loop state
 
+## Round 3 (2026-06-12) — owner request audit + planner features
+
+- Baseline HEAD: `80e6e63` (merge of PR #7) · suite 5/5 green before changes.
+
+### Phase 1 feature inventory (evidence-checked)
+
+| # | Owner request | Status | Evidence |
+|---|---------------|--------|----------|
+| 1a | AR+EN trade-name header recognition in identifiers parser | present | `app.js` `parseMapping` — Arabic candidates («كود نبكو», «الاسم التجاري», «الاسم العلمي», …) |
+| 1b | Warning when no trade-name column recognized | present | `app.js` map-upload handler toasts `mp_no_trade` when `!parsed.hasTrade` |
+| 1c | Real uploaded names override demo names (applyMap precedence) | partial → done | precedence chain `(m && m.trade) \|\| r.trade` existed; spec was missing → `tests/spec-identifiers.mjs`; demo-name badge added in sample mode |
+| 2 | Catalog-wide search (Skyrizi 0/1,077 root cause) | missing → built | search misses now scan saved MAP; catalog-only rows render with «in catalog · no movement/stock» note; spec `tests/spec-catalog.mjs` |
+| 3 | SFDA drug info + per-item SFDA/web links | missing → built | curated bilingual generic-stem dictionary + MODHS classification fallback in drill-down; `tests/spec-druginfo.mjs` |
+| 4 | iOS bottom sheet: close inside dvh viewport + swipe-down dismiss | present (PR #7) | `app.js` `wireSheetSwipe`, `styles.css` `@supports (height:1dvh)` + grab handle; verified by `tests/spec-sheet.mjs` |
+| 5 | Budget runway card (Management tab) | missing → built | budget input persisted, months-left = budget ÷ Σ(avg×unitPrice), run-out date; hint when no prices; `tests/spec-budget.mjs` |
+| 6 | Previous-orders (PO) upload + last order + in-transit badge | missing → built | 4th upload slot, tolerant headers, compact ledger via `persist()`; `tests/spec-po.mjs` |
+| 7 | Order tracking (mark as ordered, auto-clear on covering stock) | missing → built | per-item ordered flag persisted; excluded from order sheet; cleared by a later covering stock upload; `tests/spec-orders.mjs` |
+| 8 | Seasonal suggestion (≥6 mo history weighs prior-year same months) | missing → built | seasonal qty9 from prior-year upcoming months + badge; `tests/spec-seasonal.mjs` |
+| 9 | "What changed" digest after upload | missing → built | dismissible card: entered danger / spikes >30% / new / recovered; `tests/spec-digest.mjs` |
+| 10 | PWA (manifest + service worker, offline, installable) | missing → built | `manifest.webmanifest` + version-stamped cache-first `sw.js`, build.py emits both to `docs/`; `tests/spec-pwa.mjs` |
+| 11 | Per-item alert threshold override | missing → built | drill-down threshold action, persisted, marked in table; `tests/spec-threshold.mjs` |
+
+No real identifiers/catalog file exists under `psmmc-dashboard/` → demo names stay synthetic; bilingual "demo names are not real" badge shown in sample mode (item 1c).
+
+### Round-3 result
+
+- Waves: features `5e5a844`, PWA `5843e8f`, rebuild `f2228c9`, docs (this commit).
+- Suite: 5/5 before → **16/16 after** (10 new browser specs + node-level spec-pwa). i18n parity 233/233.
+- Boundary note: `.github/workflows/psmmc-pages.yml` extended (copy `sw.js` + `manifest.webmanifest` to `/psmmc/`) — the only edit outside the allowed paths, required for PWA-offline at the permanent link and explicitly in this audit's scope per AUDIT.md's header.
+- Lessons:
+  - Arabic substring assertions must ignore proclitics (`الصدفية` vs `للصدفية`) — assert the bare stem.
+  - Synthetic touch sequences via plain `Event` + a `touches` array test the swipe handler without a `hasTouch` context.
+  - `headless chromium maps dvh == vh`, so asserting the 88dvh branch needs the 84vh fallback to differ (560px cut-off at 660 viewport).
+  - The environment needs `playwright-core` installed at `/tmp/pwtest` (npm i playwright-core) before the suite runs; chromium ships at `/opt/pw-browsers/chromium-1194`.
+- Next recommended run: real-file validation with the owner (identifiers + PO exports), then the deferred repo reorganization (`projects/` layout) as its own PR/session.
+
 - Last audit: 2026-06-11
 - Audit HEAD: 1dd690b (includes PR #5 round-2 merge)
 - Status: routine (full) COMPLETE — all 14 backlog items + 3 of 6 future risks closed
