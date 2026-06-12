@@ -359,7 +359,9 @@ export function expectedExpiryViewsFromRealFiles() {
   let ci = findCol(H, ["NUPCO Material"]);
   const qi = findCol(H, ["Order Qty"]);
   const si = findCol(H, ["Status"]);
+  const ui = findCol(H, ["UOM"]);
   const tot = new Map();
+  const wdUom = new Map();
   for (let r = 1; r < wd.length; r++) {
     const row = wd[r];
     if (!row) continue;
@@ -367,6 +369,9 @@ export function expectedExpiryViewsFromRealFiles() {
     const code = normCode(row[ci]);
     if (!isDrug(code)) continue;
     tot.set(code, (tot.get(code) || 0) + num(row[qi]));
+    if (!wdUom.has(code) && ui >= 0 && row[ui] != null && String(row[ui]).trim() !== "") {
+      wdUom.set(code, String(row[ui]).trim());
+    }
   }
 
   const st = aoaOf(REAL_ST);
@@ -402,10 +407,11 @@ export function expectedExpiryViewsFromRealFiles() {
     for (const k of dates) if (k < asOfIso && m.get(k).tot > 0) { expBatches++; expQty += m.get(k).tot; }
     const avg = (tot.get(code) || 0) / months;
     if (avg <= 0) continue;
+    const grace = handDispensedUom(wdUom.get(code)) ? GRACE_MONTHS : 0;
     let consumed = 0;
     for (const k of dates.filter((x) => x >= asOfIso && m.get(x).av > 0)) {
       const d = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
-      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH);
+      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH - grace);
       const q = m.get(k).av;
       const use = Math.min(q, Math.max(0, avg * tMo - consumed));
       const risk = q - use;
@@ -435,54 +441,15 @@ export function expectedExpiryViewsFromRealFiles() {
        stock-as-of + (coverage − 6) months of consumption
      - ORDER NOW when Reorder-By Date ≤ today (≡ coverage ≤ 6 at as-of) */
 export function expectedProjectionFromRealFiles() {
-  const REORDER_MONTHS = 6;
-  const base = expectedFromRealFiles();
-  const months = base.monthsRounded1;
-
-  const wd = aoaOf(REAL_WD);
-  let H = wd[0];
-  let ci = findCol(H, ["NUPCO Material"]);
-  const qi = findCol(H, ["Order Qty"]);
-  const si = findCol(H, ["Status"]);
-  const tot = new Map();
-  for (let r = 1; r < wd.length; r++) {
-    const row = wd[r];
-    if (!row) continue;
-    if (!STATUS_OK[String(row[si] || "").trim().toUpperCase()]) continue;
-    const code = normCode(row[ci]);
-    if (!isDrug(code)) continue;
-    tot.set(code, (tot.get(code) || 0) + num(row[qi]));
-  }
-
-  const st = aoaOf(REAL_ST);
-  H = st[0];
-  ci = findCol(H, ["Generic Item Number"]);
-  const ai = findCol(H, ["Total Available Qty"]);
-  const stk = new Map();
-  for (let r = 1; r < st.length; r++) {
-    const row = st[r];
-    if (!row) continue;
-    const code = normCode(row[ci]);
-    if (!isDrug(code)) continue;
-    stk.set(code, (stk.get(code) || 0) + num(row[ai]));
-  }
-
-  const asOf = new Date(2026, 1, 4); // 04-02-2026 from the filename
-  const todayIso = isoFromDate(new Date());
-  const addDays = (d, n) => isoFromDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.round(n)));
+  // The projection rules are a projection of the effective-stock engine
+  // (owner spec v3): stockout/reorder dates run on DISPENSABLE stock. The
+  // effective mirror is the single source of those rules.
+  const X = expectedEffectiveFromRealFiles();
   const perCode = new Map();
-  for (const [code, stock] of stk) {
-    const avg = (tot.get(code) || 0) / months;
-    if (avg <= 0 || stock <= 0) {
-      perCode.set(code, { avg, stock, cov: avg > 0 ? stock / avg : null, stockoutIso: null, reorderIso: null, orderNow: avg > 0 });
-      continue;
-    }
-    const cov = stock / avg;
-    const stockoutIso = addDays(asOf, cov * DAYS_PER_MONTH);
-    const reorderIso = addDays(asOf, (cov - REORDER_MONTHS) * DAYS_PER_MONTH);
-    perCode.set(code, { avg, stock, cov, stockoutIso, reorderIso, orderNow: reorderIso <= todayIso });
+  for (const [code, v] of X.perCode) {
+    perCode.set(code, { avg: v.avg, stock: v.stock, cov: v.covEff, stockoutIso: v.stockoutIso, reorderIso: v.reorderIso, orderNow: v.orderNow });
   }
-  return { months, asOfIso: iso(asOf), todayIso, perCode };
+  return { months: X.months, asOfIso: X.asOfIso, todayIso: X.todayIso, perCode };
 }
 
 function isoFromDate(d) {
@@ -585,7 +552,9 @@ export function expectedExpiryFromRealFiles() {
   const ci = findCol(H, ["NUPCO Material"]);
   const qi = findCol(H, ["Order Qty"]);
   const si = findCol(H, ["Status"]);
+  const ui = findCol(H, ["UOM"]);
   const totals = new Map();
+  const wdUom = new Map();
   for (let r = 1; r < wd.length; r++) {
     const row = wd[r];
     if (!row) continue;
@@ -594,6 +563,9 @@ export function expectedExpiryFromRealFiles() {
     const code = normCode(row[ci]);
     if (!isDrug(code)) continue;
     totals.set(code, (totals.get(code) || 0) + num(row[qi]));
+    if (!wdUom.has(code) && ui >= 0 && row[ui] != null && String(row[ui]).trim() !== "") {
+      wdUom.set(code, String(row[ui]).trim());
+    }
   }
 
   const st = aoaOf(REAL_ST);
@@ -627,6 +599,7 @@ export function expectedExpiryFromRealFiles() {
   for (const [code, byDate] of batchesBy) {
     const avg = (totals.get(code) || 0) / months;
     const stock = stockBy.get(code) || 0;
+    const grace = handDispensedUom(wdUom.get(code)) ? GRACE_MONTHS : 0;
     const batches = [...byDate.entries()]
       .map(([e, q]) => ({ e, q }))
       .sort((a, b) => (a.e < b.e ? -1 : a.e > b.e ? 1 : 0));
@@ -634,7 +607,7 @@ export function expectedExpiryFromRealFiles() {
     let waste = 0;
     for (const b of batches) {
       const d = new Date(+b.e.slice(0, 4), +b.e.slice(5, 7) - 1, +b.e.slice(8, 10));
-      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH);
+      const tMo = Math.max(0, (d - asOf) / 86400000 / DAYS_PER_MONTH - grace);
       if (avg > 0) {
         const can = Math.max(0, avg * tMo - consumed);
         const use = Math.min(b.q, can);

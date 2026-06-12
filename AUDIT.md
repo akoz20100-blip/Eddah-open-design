@@ -5,6 +5,37 @@ build pipeline, sample data, publish workflow). The surrounding Open Design mono
 fork is out of scope except where it touches the dashboard (`docs/index.html`,
 `.github/workflows/psmmc-pages.yml`).
 
+## Owner spec v3 round (2026-06-12) — effective stock & calculation trust
+
+**Methods & assumptions chosen this round (spec requires documenting):**
+
+- **Effective (dispensable) stock** drives every decision figure: coverage,
+  status, stockout/reorder projection, suggested qty. FEFO walk where each
+  batch contributes only what can be consumed before `expiry − grace`;
+  `grace = 3 months` for hand-dispensed dosage forms, `0` for parenteral
+  forms. Raw coverage stays on the row (`covRaw`) and in the item sheet for
+  transparency. Items without batch data keep raw behavior.
+- **Dosage form = UOM** (owner decision 2026-06-12): parenteral token set
+  across the real exports' spellings is VIAL/VAIL/VIA/VL, AMP/AMPULE/
+  AMPOULE/AP, INJ/IJ/INJECTION, SYRINGE/PFS/PS, BAG/BG (+INFUSION/IV);
+  everything else (TAB/CAP/SYRUP/TUBE/SACHET/PEN/…) is hand-dispensed.
+  Unknown UOM → no grace (conservative raw behavior). Precedence: planner
+  file UOM → catalog UOM → withdrawals-file UOM.
+- **Excess** = effective coverage > 13 months (owner: «مخزون اكثر من 13
+  اشهر هو زايد»); covered-order auto-clear treats excess as covered.
+- **Dense-period detection**: edge months with < max(2, 0.5% of dated rows)
+  are outlier-dated; the period and monthly buckets use the dense span only,
+  outlier rows stay in consumption totals and are named on the quality card.
+  Root cause of the owner's live-dashboard screenshot (avg 43.8 = 2,860 ÷
+  ~65 months): one bad date stretches `(max−min)/30.44` arbitrarily.
+- **Full-table verification**: `spec-allitems` compares every product in the
+  exported Reorder sheet against an independent mirror (incl. the seasonal
+  suggestion rule and the ORDER-NOW display rule), so a formula regression on
+  any single drug (the FERINJECT class of complaint) turns the suite red.
+- **Owner data files**: orders export sanitized via `sanitize-orders.mjs`
+  (blanks `Order Placed By`, `Customer Comment`); planner first names are
+  operational data the dashboard renders, kept on purpose.
+
 ## Inventory-intelligence round (2026-06-12) — owner feature spec
 
 New owner spec: stockout/reorder projection, expired & expiry-risk handling,

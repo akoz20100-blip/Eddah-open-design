@@ -1522,7 +1522,7 @@
     rows.forEach(function (r) {
       var o = ORDERS.byCode[r.code];
       if (!o) return;
-      var covered = r.inStock && (r.status === "ok" || r.status === "warning");
+      var covered = r.inStock && (r.status === "ok" || r.status === "warning" || r.status === "excess");
       var later = !STATE.meta.stock_as_of || !o.d || STATE.meta.stock_as_of >= o.d;
       if (covered && later) { delete ORDERS.byCode[r.code]; cleared++; }
     });
