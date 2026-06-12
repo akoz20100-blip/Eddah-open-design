@@ -126,6 +126,26 @@
       dg_new: "new items",
       dg_recovered: "recovered",
       dg_dismiss: "Dismiss",
+      qc_title: "Data quality — last upload",
+      qc_rows: "rows",
+      qc_accepted: "accepted",
+      qc_rejected: "rejected",
+      qc_columns: "Matched columns",
+      qc_export: "Export report",
+      qr_status: "status not approved/dispatched",
+      qr_code: "missing item code",
+      qr_nondrug: "non-medicine code (does not start with 5)",
+      qr_empty: "no usable identifier fields",
+      qr_dup: "duplicate order line",
+      qr_baddate: "unreadable date — row counted in totals, excluded from monthly history",
+      qr_badexp: "unreadable expiry — excluded from expiry analysis",
+      qr_dupfile: "duplicate file skipped",
+      qs_qty: "quantity",
+      qs_date: "date",
+      qs_batch: "batch",
+      qs_sci: "scientific name",
+      qs_award: "awarded qty",
+      qs_free: "free qty",
       c_expiry: "Expiry (mo)",
       exp_risk_tip: "≈ {u} units may expire before they can be used at the current rate · effective coverage {m} mo",
       exp_expired: "expired",
@@ -253,6 +273,26 @@
       dg_new: "أصناف جديدة",
       dg_recovered: "تعافت",
       dg_dismiss: "إغلاق",
+      qc_title: "جودة البيانات — آخر رفعة",
+      qc_rows: "صف",
+      qc_accepted: "مقبول",
+      qc_rejected: "مرفوض",
+      qc_columns: "الأعمدة المطابقة",
+      qc_export: "تصدير التقرير",
+      qr_status: "الحالة غير معتمدة (ليست DISPATCHED/APPROVED)",
+      qr_code: "كود الصنف مفقود",
+      qr_nondrug: "كود غير دوائي (لا يبدأ بـ 5)",
+      qr_empty: "صف بلا حقول معرفات مفيدة",
+      qr_dup: "سطر طلب مكرر",
+      qr_baddate: "تاريخ غير مقروء — يُحتسب في الإجمالي ويُستبعد من السجل الشهري",
+      qr_badexp: "تاريخ صلاحية غير مقروء — مستبعد من تحليل الصلاحية",
+      qr_dupfile: "ملف مكرر تم تجاهله",
+      qs_qty: "الكمية",
+      qs_date: "التاريخ",
+      qs_batch: "الدفعة",
+      qs_sci: "الاسم العلمي",
+      qs_award: "كمية الترسية",
+      qs_free: "الكمية المجانية",
       c_expiry: "الصلاحية (شهر)",
       exp_risk_tip: "≈ {u} وحدة قد تنتهي صلاحيتها قبل صرفها بالمعدل الحالي · التغطية الفعلية {m} شهر",
       exp_expired: "منتهية الصلاحية",
@@ -280,7 +320,8 @@
     filter: "all", search: "", sort: { key: "cov", dir: "asc" },
     raw: { withdrawals: null, stock: null },
     wdName: null, stName: null, // null=hint, "sample", or filename
-    detail: null // NUPCO code currently open in the item drill-down sheet
+    detail: null, // NUPCO code currently open in the item drill-down sheet
+    quality: null, qualityDismissed: false // per-upload data-quality report (step 2)
   };
 
   // ---------- helpers ----------
@@ -479,6 +520,25 @@
     var m = msg.match(/^cols:(.+)$/);
     return m ? " · " + t("cols_hint") + ": " + m[1] : "";
   }
+  /* ---------- data-quality capture (ROADMAP step 2) ----------
+     Every parser also reports what it did with the file: how many rows it
+     accepted, how many it rejected per named reason, soft warnings, and
+     which file header each app column was matched to — so nothing is
+     excluded silently. Shape: { total, accepted, rejects: [{k,n}],
+     warns: [{k,n}], cols: [{k,h}] } where k is an i18n key. */
+  function qcols(H, pairs) {
+    var out = [];
+    pairs.forEach(function (p) {
+      if (p[1] >= 0 && H[p[1]] != null && String(H[p[1]]).trim() !== "") out.push({ k: p[0], h: String(H[p[1]]).trim() });
+    });
+    return out;
+  }
+  function qreasons(counts) {
+    var out = [];
+    Object.keys(counts).forEach(function (k) { if (counts[k] > 0) out.push({ k: k, n: counts[k] }); });
+    return out;
+  }
+
   function parseWithdrawals(aoa) {
     if (!aoa || !aoa.length) throw new Error("empty");
     var H = aoa[0];
@@ -490,10 +550,14 @@
       xi = findCol(H, ["Expiry Date", "Expiry"]), bi = findCol(H, ["Batch No", "Batch"]);
     if (ci < 0 || qi < 0) throw new Error("cols:NUPCO Material/Order Qty");
     var byCode = {}, monthlyByCode = {}, minD = null, maxD = null, badDates = 0;
+    var qTotal = 0, qStatus = 0, qCode = 0, qNonDrug = 0;
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
-      if (si >= 0) { var st = String(row[si] || "").trim().toUpperCase(); if (!STATUS_OK[st]) continue; }
-      var code = normCode(row[ci]); if (!isDrug(code)) continue;
+      qTotal++;
+      if (si >= 0) { var st = String(row[si] || "").trim().toUpperCase(); if (!STATUS_OK[st]) { qStatus++; continue; } }
+      var code = normCode(row[ci]);
+      if (code == null) { qCode++; continue; }
+      if (!isDrug(code)) { qNonDrug++; continue; }
       var q = num(row[qi]);
       var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, uom: null });
       rec.qty += q;
@@ -528,7 +592,13 @@
       }
     }
     var months = (minD && maxD) ? Math.max((maxD - minD) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months, badDates: badDates };
+    var quality = {
+      total: qTotal, accepted: qTotal - qStatus - qCode - qNonDrug,
+      rejects: qreasons({ qr_status: qStatus, qr_code: qCode, qr_nondrug: qNonDrug }),
+      warns: qreasons({ qr_baddate: badDates }),
+      cols: qcols(H, [["c_code", ci], ["qs_qty", qi], ["qs_date", di], ["c_status", si], ["c_desc", de], ["c_uom", ui], ["c_expiry", xi], ["qs_batch", bi]])
+    };
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: isoDate(minD), period_end: isoDate(maxD), actual_months: months, badDates: badDates, quality: quality };
   }
   /* Merge several parsed withdrawals files (e.g. one per warehouse) into one
      aggregate: quantities and monthly buckets sum per code, the analysis
@@ -554,7 +624,24 @@
       if (p.period_end && (!maxE || p.period_end > maxE)) maxE = p.period_end;
     });
     var months = (minS && maxE) ? Math.max((parseIsoLocal(maxE) - parseIsoLocal(minS)) / 86400000 / DAYS_PER_MONTH, 1.0) : 1.0;
-    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, badDates: badDates, files: parts.map(function (p) { return p.name; }) };
+    // Quality across the kept parts: totals sum, reasons merge by key, the
+    // column mapping comes from the first part (multi-file uploads share an
+    // export shape in practice).
+    var quality = null;
+    parts.forEach(function (p) {
+      if (!p.quality) return;
+      if (!quality) { quality = { total: 0, accepted: 0, rejects: [], warns: [], cols: p.quality.cols }; }
+      quality.total += p.quality.total;
+      quality.accepted += p.quality.accepted;
+      ["rejects", "warns"].forEach(function (slot) {
+        p.quality[slot].forEach(function (x) {
+          var hit = null;
+          quality[slot].forEach(function (y) { if (y.k === x.k) hit = y; });
+          if (hit) hit.n += x.n; else quality[slot].push({ k: x.k, n: x.n });
+        });
+      });
+    });
+    return { byCode: byCode, monthlyByCode: monthlyByCode, period_start: minS, period_end: maxE, actual_months: months, badDates: badDates, files: parts.map(function (p) { return p.name; }), quality: quality };
   }
   /* Renamed copies of the same export must not double-count: two parsed parts
      with the identical period AND the identical grand-total quantity are the
@@ -766,11 +853,15 @@
       fq = findCol(H, ["Free Qty", "Free Quantity", "Bonus Qty", "Bonus", "الكمية المجانية"]);
     if (ci < 0 || (ti < 0 && gi < 0 && hi < 0 && mi < 0 && cl < 0 && pp < 0)) throw new Error("cols:NUPCO Material");
     var byCode = {}, n = 0, priced = 0;
+    var qTotal = 0, qCode = 0, qNonDrug = 0, qEmpty = 0;
     function val(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
     function numVal(row, idx) { if (idx < 0) return null; var v = parseFloat(row[idx]); return isFinite(v) && v > 0 ? v : null; }
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
-      var code = normCode(row[ci]); if (!isDrug(code)) continue;
+      qTotal++;
+      var code = normCode(row[ci]);
+      if (code == null) { qCode++; continue; }
+      if (!isDrug(code)) { qNonDrug++; continue; }
       var rec = {
         trade: val(row, ti), sci: val(row, gi), hosp: val(row, hi), msd: val(row, mi),
         cls: val(row, cl), prio: val(row, pl),
@@ -779,10 +870,16 @@
       if (rec.trade || rec.sci || rec.hosp || rec.msd || rec.cls || rec.packPrice) {
         byCode[code] = rec; n++;
         if (rec.packPrice) priced++;
-      }
+      } else { qEmpty++; }
     }
     if (!n) throw new Error("empty-map");
-    return { byCode: byCode, count: n, priced: priced, hasTrade: ti >= 0 || gi >= 0 };
+    var quality = {
+      total: qTotal, accepted: qTotal - qCode - qNonDrug - qEmpty,
+      rejects: qreasons({ qr_code: qCode, qr_nondrug: qNonDrug, qr_empty: qEmpty }),
+      warns: [],
+      cols: qcols(H, [["c_code", ci], ["c_trade", ti], ["qs_sci", gi], ["c_hosp", hi], ["c_msd", mi], ["c_class", cl], ["dt_priority", pl], ["pr_pack_price", pp], ["pr_units_per_pack", up], ["qs_award", aq], ["qs_free", fq]])
+    };
+    return { byCode: byCode, count: n, priced: priced, hasTrade: ti >= 0 || gi >= 0, quality: quality };
   }
   function saveMap(map) { persist(MAP_KEY, map); }
   function loadMap() { try { var m = JSON.parse(localStorage.getItem(MAP_KEY)); return m && m.byCode ? m : null; } catch (e) { return null; } }
@@ -1297,21 +1394,31 @@
       si = findCol(H, ["Status", "PO Status", "Order Status", "الحالة"]);
     if (ci < 0 || di < 0 || qi < 0) throw new Error("cols:NUPCO Material/Order Date/Order Qty");
     var byCode = {}, n = 0;
+    var qTotal = 0, qCode = 0, qNonDrug = 0, qBadDate = 0, qDup = 0;
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
-      var code = normCode(row[ci]); if (!isDrug(code)) continue;
-      var d = parseDate(row[di]); if (!d) continue;
+      qTotal++;
+      var code = normCode(row[ci]);
+      if (code == null) { qCode++; continue; }
+      if (!isDrug(code)) { qNonDrug++; continue; }
+      var d = parseDate(row[di]); if (!d) { qBadDate++; continue; }
       var rec = { d: isoDate(d), q: num(row[qi]), s: si >= 0 && row[si] ? String(row[si]).trim().toUpperCase() : null };
       var list = byCode[code] || (byCode[code] = []);
       var dup = list.some(function (x) { return x.d === rec.d && x.q === rec.q; });
-      if (!dup) { list.push(rec); n++; }
+      if (!dup) { list.push(rec); n++; } else { qDup++; }
     }
     if (!n) throw new Error("empty-po");
     Object.keys(byCode).forEach(function (c) {
       byCode[c].sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; });
       byCode[c] = byCode[c].slice(0, 5);
     });
-    return { byCode: byCode, count: n };
+    var quality = {
+      total: qTotal, accepted: n,
+      rejects: qreasons({ qr_code: qCode, qr_nondrug: qNonDrug, qr_baddate: qBadDate, qr_dup: qDup }),
+      warns: [],
+      cols: qcols(H, [["c_code", ci], ["qs_date", di], ["qs_qty", qi], ["c_status", si]])
+    };
+    return { byCode: byCode, count: n, quality: quality };
   }
   var PO_DONE = { DELIVERED: 1, CLOSED: 1, COMPLETED: 1, CANCELLED: 1, CANCELED: 1, REJECTED: 1 };
   /* "In transit" = a recent order the current stock picture cannot reflect yet:
@@ -1375,9 +1482,13 @@
     if (ai < 0) ai = findCol(H, ["Total Qty", "Quantity"]);
     var byCode = {};
     function txt(row, idx) { if (idx < 0 || row[idx] == null || row[idx] === "") return null; var v = typeof row[idx] === "number" ? normCode(row[idx]) : String(row[idx]).trim(); return v || null; }
+    var qTotal = 0, qCode = 0, qNonDrug = 0, qBadExp = 0;
     for (var r = 1; r < aoa.length; r++) {
       var row = aoa[r]; if (!row) continue;
-      var code = normCode(row[ci]); if (!isDrug(code)) continue;
+      qTotal++;
+      var code = normCode(row[ci]);
+      if (code == null) { qCode++; continue; }
+      if (!isDrug(code)) { qNonDrug++; continue; }
       var rec = byCode[code] || (byCode[code] = { qty: 0, desc: null, trade: null, agent: null, sci: null, msd: null });
       var q = num(row[ai]);
       rec.qty += q;
@@ -1397,6 +1508,8 @@
           var slot = bm[key] || (bm[key] = { q: 0, b: null });
           slot.q += q;
           if (!slot.b && bi >= 0 && row[bi] != null && row[bi] !== "") slot.b = String(row[bi]).trim();
+        } else if (row[xi] != null && String(row[xi]).trim() !== "") {
+          qBadExp++;
         }
       }
     }
@@ -1410,7 +1523,13 @@
     });
     var asOf = dateFromFilename(filename);
     if (!asOf && wb && wb.Props && wb.Props.ModifiedDate) asOf = new Date(wb.Props.ModifiedDate);
-    return { byCode: byCode, stock_as_of: isoDate(asOf) };
+    var quality = {
+      total: qTotal, accepted: qTotal - qCode - qNonDrug,
+      rejects: qreasons({ qr_code: qCode, qr_nondrug: qNonDrug }),
+      warns: qreasons({ qr_badexp: qBadExp }),
+      cols: qcols(H, [["c_code", ci], ["c_avail", ai], ["c_desc", de], ["c_trade", ti], ["dt_agent", vi], ["qs_sci", gi], ["c_msd", mi], ["c_expiry", xi], ["qs_batch", bi]])
+    };
+    return { byCode: byCode, stock_as_of: isoDate(asOf), quality: quality };
   }
 
   // ---------- compute ----------
@@ -1979,6 +2098,7 @@
       ? '<div class="kbody">' + areaSVG(STATE.monthly.map(function (m) { return m.total; })) + '<span class="kinset"><b>' + (deltaBadge || '<span class="num">—</span>') + '</b><i>' + (s.momPct == null ? "" : esc(tFmt("vs_prev_month", { a: ymLabel(s.momA + "-01") || s.momA, b: ymLabel(s.momB + "-01") || s.momB }))) + '</i></span></div>'
       : '<div class="ksub">' + t("chart_nodates") + '</div>';
     var cards = '<div class="cards">'
+      + qualityCard()
       + digestCard()
       + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }))
       + cardDecision(t("k_critical"), fmtInt(s.critical) + ' <small>' + t("items_word") + '</small>', ICON.ban, "tile-coral", t("k_critical_sub"))
@@ -1994,6 +2114,63 @@
   function copyAllChip() {
     return '<button type="button" class="fchip" id="copyAllCodes"><span class="fic">' + ICON.copy + '</span>' + t("cp_copy_all") + '</button>';
   }
+  /* Per-upload data-quality card (ROADMAP step 2): nothing is excluded
+     silently — every upload reports accepted/rejected rows with named
+     reasons, soft warnings, and the file header each app column bound to.
+     Native <details> keeps each file's breakdown expandable with no extra
+     JS; the card belongs to real uploads only (sample mode hides it). */
+  function qualityCard() {
+    var Q = STATE.quality;
+    if (!Q || STATE.qualityDismissed || STATE.meta.source !== "upload") return "";
+    var blocks = "";
+    [["wd", "file_wd"], ["st", "file_st"], ["mp", "file_mp"], ["po", "file_po"]].forEach(function (kk) {
+      var e = Q[kk[0]];
+      if (!e || !e.q) return;
+      var q = e.q, rej = 0;
+      q.rejects.forEach(function (x) { rej += x.n; });
+      var lines = q.rejects.map(function (x) {
+        return '<div class="ql-line"><b class="num" style="color:var(--coral)">' + fmtInt(x.n) + '</b><span>' + t(x.k) + "</span></div>";
+      }).join("") + q.warns.map(function (x) {
+        return '<div class="ql-line is-warn"><b class="num" style="color:var(--amber)">' + fmtInt(x.n) + '</b><span>' + t(x.k) + "</span></div>";
+      }).join("");
+      var cols = q.cols && q.cols.length
+        ? '<div class="ql-cols"><b>' + t("qc_columns") + ":</b> " + q.cols.map(function (c) { return t(c.k) + " ← <b>" + esc(c.h) + "</b>"; }).join(" · ") + "</div>"
+        : "";
+      blocks += '<details class="ql-file" data-kind="' + kk[0] + '">'
+        + "<summary><b>" + t(kk[1]) + "</b><i>" + esc(e.name || "") + "</i>"
+        + '<span class="ql-sum num">' + fmtInt(q.total) + " " + t("qc_rows") + ' → <b style="color:var(--blue)">' + fmtInt(q.accepted) + "</b> " + t("qc_accepted")
+        + (rej ? ' · <b style="color:var(--coral)">' + fmtInt(rej) + "</b> " + t("qc_rejected") : "") + "</span></summary>"
+        + lines + cols + "</details>";
+    });
+    if (!blocks) return "";
+    return '<div class="kcard span12 qualitycard"><div class="ktitle-row"><span class="ktitle">' + t("qc_title") + "</span>"
+      + '<span class="ql-actions"><button type="button" class="btn-soft" id="qcExport">' + ICON.download + t("qc_export") + "</button>"
+      + '<button type="button" class="btn-soft" id="qcDismiss">' + t("dg_dismiss") + "</button></span></div>"
+      + blocks + "</div>";
+  }
+  /* Excel export of the quality report — an audit trail the planner can file
+     next to the monthly order sheet. */
+  function exportQuality() {
+    var Q = STATE.quality;
+    if (!Q) return;
+    var aoa = [];
+    [["wd", "file_wd"], ["st", "file_st"], ["mp", "file_mp"], ["po", "file_po"]].forEach(function (kk) {
+      var e = Q[kk[0]];
+      if (!e || !e.q) return;
+      var label = t(kk[1]) + (e.name ? " — " + e.name : "");
+      aoa.push([label, t("qc_rows"), e.q.total]);
+      aoa.push([label, t("qc_accepted"), e.q.accepted]);
+      e.q.rejects.forEach(function (x) { aoa.push([label, t("qc_rejected") + " · " + t(x.k), x.n]); });
+      e.q.warns.forEach(function (x) { aoa.push([label, t(x.k), x.n]); });
+      e.q.cols.forEach(function (c) { aoa.push([label, t("qc_columns") + " · " + t(c.k), c.h]); });
+      aoa.push(["", "", ""]);
+    });
+    if (!aoa.length) return;
+    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DataQuality");
+    XLSX.writeFile(wb, "PSMMC_data_quality_" + isoDate(new Date()) + ".xlsx");
+  }
+
   /* Dismissible per-upload digest: what moved between this upload and the last. */
   function digestCard() {
     var d = STATE.digest;
@@ -2338,6 +2515,8 @@
     var he = $("histExport"); if (he) he.onclick = exportHistory;
     var hi = $("histImport"); if (hi) hi.onclick = importHistory;
     var dg = $("dgDismiss"); if (dg) dg.onclick = function () { STATE.digest = null; render(); };
+    var qe = $("qcExport"); if (qe) qe.onclick = exportQuality;
+    var qd = $("qcDismiss"); if (qd) qd.onclick = function () { STATE.qualityDismissed = true; render(); };
     var bs = $("brSave");
     if (bs) {
       var saveBudget = function () {
@@ -2648,9 +2827,12 @@
           try { var p = parseWithdrawals(aoa); p.name = f.name; parts.push(p); }
           catch (ex) { failed = true; toast(t("err_wd") + ": " + f.name + colsHint(ex)); return; }
           if (--pending === 0) {
+            var beforeN = parts.length;
             parts = dedupeParts(parts, dupFiles);
+            var droppedFiles = dupFiles + (beforeN - parts.length);
             var wd = combineWithdrawals(parts);
             wd.source = "upload";
+            if (wd.quality && droppedFiles) wd.quality.warns.push({ k: "qr_dupfile", n: droppedFiles });
             // The chosen month count drives every monthly average, so the
             // user confirms (or overrides) it before anything is computed
             // or persisted.
@@ -2658,6 +2840,9 @@
               wd.actual_months = months;
               wd.months_source = src;
               STATE.raw.withdrawals = wd;
+              STATE.quality = STATE.quality || {};
+              STATE.quality.wd = { name: (wd.files || []).join(" + "), q: wd.quality };
+              STATE.qualityDismissed = false;
               saveBaseline(wd);
               mergeHistory(wd);
               STATE.wdName = null;
@@ -2673,7 +2858,7 @@
         });
       });
     };
-    $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); tryCompute(); } catch (ex) { toast(t("err_st") + colsHint(ex)); } }); };
+    $("fileStock").onchange = function (e) { var f = e.target.files[0]; e.target.value = ""; if (!f) return; STATE.stName = f.name; $("lblSt").classList.add("is-loaded"); applyStatic(); readWorkbook(f, function (err, aoa, wb) { if (err) { toast(t("err_st")); return; } try { STATE.raw.stock = parseStock(aoa, f.name, wb); STATE.quality = STATE.quality || {}; STATE.quality.st = { name: f.name, q: STATE.raw.stock.quality }; STATE.qualityDismissed = false; tryCompute(); } catch (ex) { toast(t("err_st") + colsHint(ex)); } }); };
     $("fileMap").onchange = function (e) {
       var f = e.target.files[0];
       e.target.value = "";
@@ -2693,6 +2878,9 @@
           var count = Object.keys(byCode).length, priced = 0;
           Object.keys(byCode).forEach(function (c) { if (byCode[c].packPrice) priced++; });
           MAP = { byCode: byCode, count: count, priced: priced, name: f.name, savedAt: new Date().toISOString() };
+          STATE.quality = STATE.quality || {};
+          STATE.quality.mp = { name: f.name, q: parsed.quality };
+          STATE.qualityDismissed = false;
           saveMap(MAP);
           $("lblMp").classList.remove("is-baseline");
           $("lblMp").classList.add("is-loaded");
@@ -2726,6 +2914,9 @@
             byCode[c] = merged.slice(0, 5);
           });
           PO = { byCode: byCode, name: f.name, savedAt: new Date().toISOString() };
+          STATE.quality = STATE.quality || {};
+          STATE.quality.po = { name: f.name, q: parsed.quality };
+          STATE.qualityDismissed = false;
           persist(PO_KEY, PO);
           $("lblPo").classList.remove("is-baseline");
           $("lblPo").classList.add("is-loaded");

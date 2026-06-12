@@ -148,6 +148,77 @@ function iso(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+/* ---------- data-quality mirror (ROADMAP step 2) ----------
+   Independently mirrors the parsers' accept/reject taxonomy so spec-quality
+   can assert the per-upload quality card against it:
+     withdrawals — checked in order: status not DISPATCHED/APPROVED →
+       missing code → non-drug code; accepted rows may still carry an
+       unreadable non-empty date (warning, row stays counted)
+     stock — missing code → non-drug; warning for qty>0 rows whose non-empty
+       expiry cell cannot be parsed
+     identifiers — missing code → non-drug → no usable identifier fields */
+export function expectedQualityFromRealFiles() {
+  const wd = aoaOf(REAL_WD);
+  let H = wd[0];
+  let ci = findCol(H, ["NUPCO Material"]);
+  const qi = findCol(H, ["Order Qty"]);
+  const di = findCol(H, ["Delivery Date"]);
+  const si = findCol(H, ["Status"]);
+  const W = { total: 0, status: 0, badCode: 0, nonDrug: 0, accepted: 0, badDate: 0 };
+  for (let r = 1; r < wd.length; r++) {
+    const row = wd[r];
+    if (!row) continue;
+    W.total++;
+    const st = String(row[si] || "").trim().toUpperCase();
+    if (!STATUS_OK[st]) { W.status++; continue; }
+    const code = normCode(row[ci]);
+    if (code == null) { W.badCode++; continue; }
+    if (!isDrug(code)) { W.nonDrug++; continue; }
+    W.accepted++;
+    const cell = row[di];
+    if (!parseDateLikeApp(cell) && cell != null && String(cell).trim() !== "") W.badDate++;
+  }
+
+  const st = aoaOf(REAL_ST);
+  H = st[0];
+  ci = findCol(H, ["Generic Item Number"]);
+  const ai = findCol(H, ["Total Available Qty"]);
+  const xi = findCol(H, ["Expiry Date"]);
+  const S = { total: 0, badCode: 0, nonDrug: 0, accepted: 0, badExp: 0 };
+  for (let r = 1; r < st.length; r++) {
+    const row = st[r];
+    if (!row) continue;
+    S.total++;
+    const code = normCode(row[ci]);
+    if (code == null) { S.badCode++; continue; }
+    if (!isDrug(code)) { S.nonDrug++; continue; }
+    S.accepted++;
+    const cell = row[xi];
+    if (num(row[ai]) > 0 && !parseDateLikeApp(cell) && cell != null && String(cell).trim() !== "") S.badExp++;
+  }
+
+  const mp = aoaOf(REAL_MAP);
+  H = mp[0];
+  ci = findCol(H, ["NUPCO Code", "NUPCO"]);
+  const gi = findCol(H, ["MODHS Item Description", "NUPCO Item Description"]);
+  const mi = findCol(H, ["MODHS-CODE"]);
+  const cl = findCol(H, ["Classification"]);
+  const has = (row, idx) => idx >= 0 && row[idx] != null && String(row[idx]).trim() !== "";
+  const M = { total: 0, badCode: 0, nonDrug: 0, empty: 0, accepted: 0 };
+  for (let r = 1; r < mp.length; r++) {
+    const row = mp[r];
+    if (!row) continue;
+    M.total++;
+    const code = normCode(row[ci]);
+    if (code == null) { M.badCode++; continue; }
+    if (!isDrug(code)) { M.nonDrug++; continue; }
+    if (!has(row, gi) && !has(row, mi) && !has(row, cl)) { M.empty++; continue; }
+    M.accepted++;
+  }
+
+  return { withdrawals: W, stock: S, mapping: M };
+}
+
 /* ---------- expiry intelligence mirror (ROADMAP step 1) ----------
    Independently mirrors the documented expiry rules so spec-expiry can
    assert the UI figures against them:
