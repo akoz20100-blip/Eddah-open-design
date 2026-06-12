@@ -21,6 +21,7 @@ import {
   open,
   uploadFiles,
   confirmDetectedPeriod,
+  setSearch,
   makeReporter,
 } from "./helpers.mjs";
 import { expectedExpiryFromRealFiles, REAL_WD, REAL_ST } from "./real-data-expected.mjs";
@@ -57,7 +58,7 @@ try {
 
   // Search down to the anchor row (node-side polling — headless chromium
   // starves in-page timers on idle file:// pages).
-  await page.fill("#searchInput", ANCHOR);
+  await setSearch(page, ANCHOR);
   let row = null;
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) {

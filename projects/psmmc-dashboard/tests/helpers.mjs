@@ -128,6 +128,20 @@ export async function periodText(page) {
   return page.$eval("#metaPeriod", (el) => el.textContent.trim());
 }
 
+/** Type into the table search box via a direct `input` event on the live
+ * element — the exact event the production `oninput` handler listens for.
+ * Playwright's key-simulation path intermittently loses the app's 150 ms
+ * debounce under suite load on this headless chromium (rAF/timer starvation
+ * on idle file:// pages); search specs verify search behavior, not
+ * keystroke plumbing, so they drive the same handler deterministically. */
+export async function setSearch(page, term) {
+  await page.evaluate((value) => {
+    const si = document.getElementById("searchInput");
+    si.value = value;
+    si.dispatchEvent(new Event("input", { bubbles: true }));
+  }, term);
+}
+
 /** Upload one or more files into a file input by id. */
 export async function uploadFiles(page, inputId, paths) {
   const arr = Array.isArray(paths) ? paths : [paths];

@@ -11,6 +11,7 @@
 | PR | Item | Proof |
 |----|------|-------|
 | #13 (merged `0233730`) | Owner bug (recurring): searching a COMMERCIAL name found nothing — no file carries the planner's brand (MODHS catalog has no trade column; warehouse stocks VAROXA while planner types Xarelto; sample names synthetic). Fix: curated `TRADE_SYNONYMS` (~280 brands incl. Arabic spellings, stems validated against the real MODHS catalog) expanding search terms in rows + catalog fallback, applied mapping shown above results. | red spec first (`spec-tradename`, 4 red assertions on main), suite 19→20 green; standalone +18 KB (the dictionary) |
+| step 3 PR | ROADMAP step 3 — watchlist: star button on every planning row (inside the copyable code cell, propagation-stopped) + in the item-sheet header; pins persist in `psmmc_watch_v1` via the shared `persist()` helper, sort first within the active planning sort, and back a "متابعتي/My watchlist" filter chip with live count. | `spec-watchlist` red → green on the real files incl. reload survival (baseline withdrawals auto-load + fresh stock upload); suite 23/23 twice consecutively |
 | step 2 PR | ROADMAP step 2 — per-upload data-quality report: every parser (withdrawals/stock/identifiers/PO) now returns `{total, accepted, rejects[], warns[], cols[]}`; an expandable bilingual quality card (native `<details>`) at the top of Planning names every rejection reason + the matched column headers, exports to xlsx, dismissible, never shown in sample mode. Real-file truth: withdrawals 10,130→5,913 accepted (4,217 non-drug), stock 20,984→1,528 (19,456 non-drug), catalog 1,462→1,447 (9 missing code + 6 non-drug). | `spec-quality` red (11 asserts) → green against `expectedQualityFromRealFiles` mirror; download-event assertion on the xlsx export; suite 22/22 |
 | step 1 PR | ROADMAP step 1 — expiry intelligence: stock-file `Expiry Date`+`Lot No/Batch` → per-code batches, FEFO walk vs monthly avg from stock-as-of → earliest-expiry column (sortable) in planning, at-risk flag with effective coverage + units-at-risk tooltip, digest callout (fires on first upload), batches block + effective figures in item sheet, expiry columns in order-sheet export/print; withdrawals-file `Expiry Date`/`Batch No` used as ≈fallback when stock has no batches. | `spec-expiry` red (10 asserts) → green against an independent FEFO mirror (`expectedExpiryFromRealFiles`); real-file anchor BISOPROLOL 5MG cov 69.5 → eff 16.7 mo, 633,977 units at risk; 199 flagged items; suite 21/21 |
 
@@ -18,9 +19,13 @@
 
 - Headless chromium starves in-page rAF/timers on idle file:// pages: the
   150 ms search debounce can take seconds and `waitForFunction` (raf polling)
-  freezes; `--disable-background-timer-throttling` does NOT help. Robust spec
-  pattern: poll from Node via `page.evaluate` (each round-trip wakes the
-  renderer). Used by `spec-tradename`/`spec-expiry`.
+  freezes; `--disable-background-timer-throttling` does NOT help, and even
+  Node-side evaluate polling + real key events still flaked under suite load.
+  Settled pattern (helpers `setSearch`): drive the production `oninput`
+  handler with a direct `input` event dispatch and poll via `page.evaluate`
+  — search specs verify search behavior, not keystroke plumbing. Used by
+  `spec-tradename`/`spec-expiry`/`spec-watchlist`; suite then passed 23/23
+  twice consecutively.
 - Search-assertion predicates must prove the table is FILTERED (small row
   count) before matching rows, or the unfiltered 1,000-row table satisfies
   any regex.
