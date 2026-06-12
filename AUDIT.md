@@ -42,6 +42,20 @@ supplied — only the join slots are built now.
   at-risk value, budget totals, inventory value per planner) remain deferred and
   flagged, per the spec's degrade-gracefully rule.
 
+PR-C (Reporting) shipped: the export FAB now builds one structured workbook —
+**Summary sheet first** (KPIs + totals: 1,005 medicines · 63.3M units · 216
+order-now · 300 at-risk batches/9.2M · 158 expired/2.7M · monthly consumption),
+then detail sheets (Reorder, At-Risk, Expired) with localized headers, column
+widths, autofilters, and SAR/thousands number formats; values-only so it opens
+with **zero formula errors**. `spec-report` (red-first) downloads the file and
+asserts sheet order, KPI values, batch-row counts, number formats, autofilter,
+and zero error cells. Suite 25 → 26 specs. **Known limit (dependency decision
+deferred):** the vendored community SheetJS 0.20.3 cannot emit cell fills/fonts
+(probe returned `patternType:"none"`) or freeze panes, so literal red/amber/
+green background conditional-format coding + brand band + bold/frozen headers
+are NOT in this export — they require a styling-capable writer (SheetJS Pro or
+vendoring exceljs ≈ +270 KB). Raised to the owner as a round-2 choice.
+
 PR-B (Features 3+4) shipped: a new **Expiry Watch** tab — a cross-cutting,
 batch-level list with At-Risk (default) and Expired filters, sortable by
 expiry/quantity, subtotaled per planner, value column "—" until prices load.
