@@ -939,6 +939,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       c_lot: "Lot / Batch", c_expdate: "Expiry date",
       ev_empty: "No at-risk or expired batches in this file.",
       dt_expired_batches: "Expired batches (in quarantine)",
+      rp_generated: "Generated",
       th_title: "Custom alert threshold",
       th_ph: "months",
       th_save: "Save",
@@ -1105,6 +1106,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       c_lot: "رقم الدفعة", c_expdate: "تاريخ الصلاحية",
       ev_empty: "لا توجد دفعات مهددة أو منتهية في هذا الملف.",
       dt_expired_batches: "دفعات منتهية الصلاحية (في الحجر)",
+      rp_generated: "أُنشئ في",
       th_title: "حد تنبيه مخصص",
       th_ph: "أشهر",
       th_save: "حفظ",
@@ -3608,49 +3610,99 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   }
 
   // ---------- export ----------
-  /* Expiry Watch export: the active filter's batch list, one row per batch,
-     with the planner and a value column that fills once prices are loaded. */
-  function exportExpiry() {
-    var f = STATE.expiryFilter || "atrisk", rows = expiryBatchRows();
-    var aoa = [[t("c_code"), t("c_desc"), t("c_lot"), t("c_expdate"), t("ev_tte"), t("ev_total_qty"), t("c_planner"), t("c_value")]];
-    var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
-    rows.forEach(function (x) {
-      var d = parseIsoLocal(x.e), mo = d ? Math.round((d - asOf) / 86400000 / DAYS_PER_MONTH * 10) / 10 : "";
-      aoa.push([x.r.code, x.r.desc, x.lot || "", x.e, mo, Math.round(x.q), plannerName(x.r) || t("planner_unassigned"), ""]);
+  /* ---------- report workbook (REPORTING section) ----------
+     One click on the export FAB builds a single structured workbook: a
+     Summary sheet (KPIs + totals) first, then detail sheets (Reorder,
+     At-Risk, Expired). Every sheet gets localized headers, column widths, an
+     autofilter, and SAR/thousands number formats on the numeric columns; the
+     file is values-only so it opens with zero formula errors. Background-color
+     conditional formatting / brand fills require a styling-capable writer
+     (the vendored community SheetJS cannot emit cell fills) — a deliberate
+     dependency decision, deferred. */
+  function applyNumFmt(ws, colFmts) {
+    if (!ws["!ref"]) return;
+    var ref = XLSX.utils.decode_range(ws["!ref"]);
+    for (var Rr = ref.s.r + 1; Rr <= ref.e.r; Rr++) {
+      Object.keys(colFmts).forEach(function (C) {
+        var addr = XLSX.utils.encode_cell({ r: Rr, c: +C });
+        if (ws[addr] && typeof ws[addr].v === "number") ws[addr].z = colFmts[C];
+      });
+    }
+  }
+  function sheetFrom(aoa, widths, numFmts, autofilter) {
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    if (widths) ws["!cols"] = widths.map(function (w) { return { wch: w }; });
+    if (numFmts) applyNumFmt(ws, numFmts);
+    if (autofilter && ws["!ref"]) ws["!autofilter"] = { ref: ws["!ref"] };
+    return ws;
+  }
+  var SAR_FMT = "#,##0.00", INT_FMT = "#,##0", DEC1_FMT = "0.0";
+  function buildReportWorkbook() {
+    var wb = XLSX.utils.book_new();
+    var priced = hasPrices();
+    var s = decisionStats(STATE.rows);
+    var counts = expiryCounts();
+    var atRiskUnits = 0, expiredUnits = 0;
+    STATE.rows.forEach(function (r) { if (r.atRiskBatches) r.atRiskBatches.forEach(function (b) { atRiskUnits += b.q; }); expiredUnits += r.expiredQty || 0; });
+    // --- Summary sheet (KPIs + totals) ---
+    var sumAoa = [
+      [t("app_sub")],
+      [t("rp_generated"), prettyDate(isoDate(new Date()))],
+      [t("period"), prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + ")"],
+      [t("stock_as_of"), prettyDate(STATE.meta.stock_as_of)],
+      [],
+      [t("k_instock"), STATE.rows.length],
+      [t("k_units"), Math.round(s.totalUnits)],
+      [t("k_need_order"), s.orderCount],
+      [t("k_critical"), s.critical],
+      [t("ev_atrisk") + " · " + t("ev_batches"), counts.atrisk],
+      [t("ev_atrisk") + " · " + t("ev_total_qty"), Math.round(atRiskUnits)],
+      [t("ev_expired") + " · " + t("ev_batches"), counts.expired],
+      [t("ev_expired") + " · " + t("ev_total_qty"), Math.round(expiredUnits)],
+      [t("k_monthly_use"), Math.round(s.sumAvg)],
+    ];
+    if (!priced) sumAoa.push([], [t("pr_hint")]);
+    var sumWs = sheetFrom(sumAoa, [34, 30]);
+    applyNumFmt(sumWs, { 1: INT_FMT });
+    XLSX.utils.book_append_sheet(wb, sumWs, "Summary");
+    // --- Reorder sheet (all planning rows, urgency order) ---
+    var planRows = STATE.rows.slice().sort(function (a, b) { var ca = a.cov == null ? Infinity : a.cov, cb = b.cov == null ? Infinity : b.cov; return ca - cb; });
+    var reHead = [t("c_code"), t("c_desc"), t("c_planner"), t("c_uom"), t("c_avg"), t("c_stock"), t("c_cov"), t("dt_stockout"), t("dt_reorder"), t("c_status"), t("c_sug")];
+    if (priced) reHead = reHead.concat([t("pr_unit_price"), t("c_value")]);
+    var reAoa = [reHead];
+    planRows.forEach(function (r) {
+      var row = [r.code, r.desc, plannerName(r) || t("planner_unassigned"), r.uom || "", Math.round(r.avg * 10) / 10, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, r.stockoutIso ? prettyDate(r.stockoutIso) : "", r.reorderIso ? prettyDate(r.reorderIso) : "", (orderNowFlag(r) ? t("order_now_flag") : t("s_" + r.status)), Math.round(r.sug)];
+      if (priced) row = row.concat([r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100, r.stockValue == null ? "" : Math.round(r.stockValue)]);
+      reAoa.push(row);
     });
-    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, f === "expired" ? "Expired" : "AtRisk");
-    var name = "PSMMC_" + (f === "expired" ? "expired" : "at_risk") + "_" + (STATE.meta.stock_as_of || "") + ".xlsx";
-    XLSX.writeFile(wb, name);
-    toast((LANG === "ar" ? "تم تصدير " : "Exported ") + fmtInt(rows.length) + (LANG === "ar" ? " دفعة → " : " batches → ") + name);
+    var reFmt = { 4: DEC1_FMT, 5: INT_FMT, 6: DEC1_FMT, 10: INT_FMT };
+    if (priced) { reFmt[11] = SAR_FMT; reFmt[12] = SAR_FMT; }
+    XLSX.utils.book_append_sheet(wb, sheetFrom(reAoa, [16, 34, 18, 8, 11, 12, 11, 14, 14, 12, 12, 12, 14], reFmt, true), "Reorder");
+    // --- At-Risk + Expired batch sheets ---
+    function batchSheet(kind) {
+      var head = [t("c_code"), t("c_desc"), t("c_lot"), t("c_expdate"), t("ev_tte"), t("ev_total_qty"), t("c_planner"), t("c_value")];
+      var aoa = [head];
+      var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
+      STATE.rows.forEach(function (r) {
+        var list = kind === "expired" ? r.expiredBatches : r.atRiskBatches;
+        if (!list) return;
+        list.forEach(function (b) {
+          var d = parseIsoLocal(b.e), mo = d ? Math.round((d - asOf) / 86400000 / DAYS_PER_MONTH * 10) / 10 : "";
+          aoa.push([r.code, r.desc, b.b || "", prettyDate(b.e), mo, Math.round(b.q), plannerName(r) || t("planner_unassigned"), ""]);
+        });
+      });
+      return sheetFrom(aoa, [16, 34, 16, 14, 11, 13, 18, 14], { 4: DEC1_FMT, 5: INT_FMT, 7: SAR_FMT }, true);
+    }
+    XLSX.utils.book_append_sheet(wb, batchSheet("atrisk"), "At-Risk");
+    XLSX.utils.book_append_sheet(wb, batchSheet("expired"), "Expired");
+    return wb;
   }
   function exportExcel() {
     if (!STATE.rows.length) return;
-    // Expiry Watch exports the flattened batch list of the active filter.
-    if (STATE.view === "expiry") { exportExpiry(); return; }
-    var rows = applyFilter(viewBase()), aoa, name, sheet;
-    var anyTrade = STATE.rows.some(function (r) { return r.trade; }), anyAgent = STATE.rows.some(function (r) { return r.agent; }), anyCls = STATE.rows.some(function (r) { return r.cls; });
-    var mapCols = (MAP || anyTrade ? [t("c_trade")] : []).concat(MAP ? [t("c_hosp"), t("c_msd")] : []).concat(anyAgent ? [t("c_agent")] : []).concat(anyCls ? [t("c_class")] : []);
-    function mapVals(r) { return (MAP || anyTrade ? [r.trade || ""] : []).concat(MAP ? [r.hosp || "", r.msd || ""] : []).concat(anyAgent ? [r.agent || ""] : []).concat(anyCls ? [r.cls || ""] : []); }
-    var priceCols = hasPrices() ? [t("pr_unit_price"), t("c_value")] : [];
-    function priceVals(r) { return hasPrices() ? [r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100, r.stockValue == null ? "" : Math.round(r.stockValue)] : []; }
-    if (STATE.view === "planning") {
-      aoa = [[t("c_code"), t("c_desc")].concat(mapCols, [t("c_uom"), t("c_total"), t("c_avg"), t("c_stock"), t("c_cov"), t("c_status"), t("c_sug")], priceCols)];
-      rows.forEach(function (r) { aoa.push([r.code, r.desc].concat(mapVals(r), [r.uom, Math.round(r.total), Math.round(r.avg * 10) / 10, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.sug)], priceVals(r))); });
-      name = "PSMMC_reorder_" + STATE.filter + "_" + (STATE.meta.period_end || "") + ".xlsx"; sheet = "Reorder";
-    } else if (STATE.view === "averages") {
-      aoa = [[t("c_code"), t("c_desc")].concat(mapCols, [t("c_avg"), t("c_delta"), t("c_stock"), t("c_status")])];
-      rows.forEach(function (r) { aoa.push([r.code, r.desc].concat(mapVals(r), [Math.round(r.avg * 10) / 10, r.trendPct == null ? "" : Math.round(r.trendPct * 1000) / 10 + "%", Math.round(r.stock), t("s_" + r.status)])); });
-      name = "PSMMC_averages_" + (STATE.meta.period_end || "") + ".xlsx"; sheet = "Averages";
-    } else {
-      aoa = [[t("c_code"), t("c_desc")].concat(mapCols, [t("c_uom"), t("c_avail"), t("c_cov"), t("c_status"), t("c_use")], priceCols)];
-      rows.forEach(function (r) { aoa.push([r.code, r.desc].concat(mapVals(r), [r.uom, Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), Math.round(r.avg * 10) / 10], priceVals(r))); });
-      name = "PSMMC_stock_" + STATE.filter + "_" + (STATE.meta.stock_as_of || "") + ".xlsx"; sheet = "Stock";
-    }
-    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheet);
+    var wb = buildReportWorkbook();
+    var name = "PSMMC_report_" + (STATE.meta.stock_as_of || isoDate(new Date())) + ".xlsx";
     XLSX.writeFile(wb, name);
-    toast((LANG === "ar" ? "تم تصدير " : "Exported ") + fmtInt(rows.length) + (LANG === "ar" ? " صف → " : " rows → ") + name);
+    toast((LANG === "ar" ? "تم تصدير التقرير → " : "Exported report → ") + name);
   }
   /* Order-sheet export: every order candidate (order_now + moving items that
      are not in stock), urgency-sorted, with prices when available. */
