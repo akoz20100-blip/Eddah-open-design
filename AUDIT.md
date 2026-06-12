@@ -5,6 +5,19 @@ build pipeline, sample data, publish workflow). The surrounding Open Design mono
 fork is out of scope except where it touches the dashboard (`docs/index.html`,
 `.github/workflows/psmmc-pages.yml`).
 
+## Routine v2 — Round 1 (2026-06-12)
+
+Project moved to `projects/psmmc-dashboard/` (Phase 0.2). English is the
+factory-default language with a persisted Arabic RTL toggle (Phase 0.1).
+Vendored subset type system landed (Inter + IBM Plex Sans Arabic, inlined at
+build, tabular numerals); sample-data now carries raw facts only and the demo
+derives every figure through production formulas. Suite 16 → 18 specs
+(spec-lang with enforced en/ar parity, spec-typography). Built standalone
+1602 → 1696 KB (fonts +179 KB / data −85 KB); load→interactive 733 → 785 ms
+at 4x throttle. Blocked, needs owner: real-data files for mandatory
+validation; repo rename to `all-dashboard` (no rename capability in session
+scope). Path references in this file predate the `projects/` move.
+
 ## Snapshot
 
 - **Stack**: vanilla ES5 JS (single IIFE, `app.js` ~1.4k lines), hand-rolled CSS,

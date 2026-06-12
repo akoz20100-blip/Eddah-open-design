@@ -1,5 +1,56 @@
 # state.md — Dash project loop state
 
+## Routine v2 — Round 1 (2026-06-12) — Phase 0 + design track
+
+- Baseline HEAD: `27042d1` (merge of PR #8) · suite 16/16 green before changes.
+- Branch: `claude/clever-pascal-flojyt` (single PR with one gated commit wave per
+  Phase 0 item — the session is restricted to one branch, so "each item its own
+  PR" became "each item its own green-gated commit wave"; deviation reported).
+
+### Shipped (waves, suite green after each)
+
+| Wave | Item | Commit | Proof |
+|------|------|--------|-------|
+| 1 | Phase 0.2 — move `psmmc-dashboard/` → `projects/psmmc-dashboard/` (build.py ROOT, spec-pwa, publish workflow, guard allowlist, docs) | `f21f8a3` | suite 16/16, byte-identical rebuild |
+| 2 | Phase 0.1 — English factory default (static shell EN, dict default EN, localized `document.title`, EN copy proofread; Arabic untouched) | `3c1dcb3` | new `spec-lang` (EN default, toggle persistence, en/ar parity 233/233 enforced by a string-aware dict scanner); suite 17/17 |
+| 3 | Design track — vendored type system (subset Inter 400/600 ~17 KB ea; IBM Plex Sans Arabic 400/500/700 ~32 KB ea; tabular numerals everywhere; AR drops Latin negative tracking, line-height 1.65) + sample-data slimming (raw facts only; loadSample derives avg/cov/qty9/sug/status through `statusOf` — demo can never drift from production math) | `b046cba` | new `spec-typography` (faces load from file://, stacks per language, no font url() left in standalone); suite 18/18 |
+
+### Measurements (4x CPU throttle ≈ mid phone, median of 3)
+
+- Built standalone: 1602 → **1696 KB** (+94 KB: fonts +179 KB base64, sample data −85 KB).
+- load→interactive: 733 → 785 ms (+7%, font registration).
+- Sample full render: 674 → 713 ms (loadSample now derives fields). Table re-render (sort): 579 → 558 ms.
+- Conflict noted: the round-1 typography mandate (vendor + inline fonts) and the
+  "lighter every round" budget pull in opposite directions; offsets recovered 85 KB,
+  net +94 KB raw. Next-round levers: lazy sample data, leaner SheetJS build.
+
+### Blocked (need owner action)
+
+1. **Real data files absent** — `projects/psmmc-dashboard/real-data/` does not exist
+   in the repo or the session container (searched all branches + filesystem). The
+   routine's mandatory real-file validation could not run. Owner must attach the
+   three sanitized files (or grant access) so round 2 can validate against them.
+2. **Phase 0.3 repo rename → `all-dashboard`** — the session's GitHub access has no
+   repository-rename capability (scope is pinned to `akoz20100-blip/eddah-open-design`).
+   Owner action: GitHub → Settings → rename to `all-dashboard`; Pages URL becomes
+   `https://akoz20100-blip.github.io/all-dashboard/psmmc/` (old Pages link dies;
+   installed PWAs must be re-installed). Git remotes keep redirecting.
+
+### Part-by-part audit log (found / improved / suggestions)
+
+- **parsers**: found solid tolerant matching (round 2/3 work holds) / improved: none this round / suggest: per-upload data-quality report (pool #5); explicit duplicate-column warning; unit-tests for Arabic header variants.
+- **calculation core**: found sample path bypassing production math / improved: loadSample now derives via `statusOf` + shared formulas / suggest: extract pure calc module for node-level tests; expiry-aware coverage (pool #2); forecasting (pool #3).
+- **three tabs**: found EN copy inconsistencies ("enable"/"activate") / improved: EN proofread + localized title / suggest: management-tab ABC view (pool #1); pinned watchlist (pool #15); per-tab empty-state CTAs.
+- **item sheet**: found OK (round-3 dvh/swipe work holds) / improved: typography (tabular nums, Plex Arabic) / suggest: expiry line per batch (pool #2); PO lead-time stat (pool #14); inline threshold editing affordance.
+- **storage & history**: found quota-safe persistence holding / improved: lang key default flip / suggest: sync bundle/QR export (pool #9); history compaction; storage usage indicator.
+- **export/share/print**: found OK / improved: tabular numerals in printed sheets via shared CSS / suggest: executive monthly report (pool #10); approval workflow stamps (pool #6); Arabic print headers audit.
+- **PWA & publishing**: found workflow paths fixed post-move / improved: spec-pwa root resolution / suggest: complete rename runbook (blocked item 2); cache-size guard spec; install-prompt UX.
+- **tests**: found 16 specs green / improved: +spec-lang +spec-typography (18), Arabic pinning isolated to helper / suggest: real-data specs once files land; perf spec with budget gates; visual-diff harness.
+- **sample data**: found 85 KB of derivable fields / improved: stripped to raw facts / suggest: regenerate from real files when attached; smaller monthlyByCode encoding; seasonal-pattern demo data.
+- **build.py**: found single-purpose inliner / improved: font inlining + repo-root fix / suggest: size budget assertion in build; optional minify pass; build provenance comment in output.
+- **design system**: found strong soft-card identity, weak type discipline / improved: full vendored type system / suggest: spacing-scale tokens; semantic status color audit (AA on tints); motion tokens for enter/exit per UI philosophy.
+
+
 ## Round 3 (2026-06-12) — owner request audit + planner features
 
 - Baseline HEAD: `80e6e63` (merge of PR #7) · suite 5/5 green before changes.
