@@ -238,6 +238,18 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .exp-stats{margin-top:12px}
 #printSheet td.exp-risk{color:#b3261e; font-weight:700}
 
+/* Procurement-orders block in the item card: one flex row per order, open
+   orders tinted blue with a leading accent bar. */
+.ledger-block{margin:6px 0 14px}
+.ledger-row{display:flex; gap:14px; align-items:baseline; flex-wrap:wrap; padding:7px 2px; font-size:12.5px; font-weight:600; border-bottom:1px dashed var(--line)}
+.ledger-row b{min-width:104px; cursor:pointer}
+.ledger-row b:hover,.ledger-row b:focus-visible{color:var(--blue)}
+.ledger-row i{font-style:normal; color:var(--muted)}
+.ledger-row u{text-decoration:none; color:var(--muted-2); margin-inline-start:auto; font-size:11px}
+.ledger-row.is-open{position:relative; padding-inline-start:10px}
+.ledger-row.is-open::before{content:""; position:absolute; inset-inline-start:0; top:8px; bottom:8px; width:3px; border-radius:999px; background:var(--blue)}
+.ledger-row.is-open i{color:var(--blue); font-weight:700}
+
 /* ---- Expiry Watch view (FEATURE 3+4) ---- */
 .expiry-summary{display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; padding:16px 18px}
 .expiry-summary .ev-tot{display:flex; gap:22px}

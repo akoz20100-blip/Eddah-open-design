@@ -346,6 +346,68 @@ export function expectedEffectiveFromRealFiles({ withPlanner = false } = {}) {
   return { months, asOfIso, todayIso, perCode };
 }
 
+/* ---------- orders-ledger mirror (owner spec v3 wave 4) ----------
+   Independently mirrors the framework-agreement orders ledger:
+     - the NUPCO CODE column is composite (`code_tradecode_supplier`); the
+       drug code is the first underscore-delimited part, prefix-5 filtered
+     - rejected/cancelled/returned statuses are EXCLUDED on import (owner:
+       "استثني منها المرفوضه"); delivered + in-progress are kept
+     - each row is identified by Child order + code (dedupe key) so a
+       re-upload of the same file adds nothing
+     - "open order" = not rejected and not delivered
+   Arabic order dates ("Wed Dec 31 13:25:14 AST 2025") are parsed by pulling
+   the month name + day + year out directly (V8 rejects the AST zone). */
+const ORDER_MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+export function isOrderRejected(s) { return /إلغاء|ملغ|رفض|مرفوض|إرجاع|cancel|reject|return/i.test(String(s || "")); }
+export function isOrderDelivered(s) { return /تسليم|سلّم|سُلّم|delivered/i.test(String(s || "")); }
+export function isOrderOpen(s) { return !isOrderRejected(s) && !isOrderDelivered(s); }
+function parseOrderDateMirror(v) {
+  if (v instanceof Date && !Number.isNaN(+v)) return v;
+  const s = String(v == null ? "" : v).trim();
+  const m = s.match(/[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+[\d:]+\s+(?:[A-Z]{2,4}\s+)?(\d{4})/);
+  if (m && ORDER_MONTHS[m[1].toLowerCase()] != null) return new Date(+m[3], ORDER_MONTHS[m[1].toLowerCase()], +m[2]);
+  return parseDateLikeApp(v);
+}
+export function expectedOrdersLedger() {
+  const aoa = aoaOf(REAL_ORDERS);
+  const H = aoa[0];
+  const oi = findCol(H, ["Child order"]);
+  const ci = findCol(H, ["NUPCO CODE"]);
+  const di = findCol(H, ["Order Date"]);
+  const si = findCol(H, ["Status"]);
+  const qi = findCol(H, ["Quantity"]);
+  const tvi = findCol(H, ["Item Total Value"]);
+  const pi = findCol(H, ["PO Number"]);
+  const entries = new Map();
+  let rejected = 0, nonDrug = 0;
+  for (let r = 1; r < aoa.length; r++) {
+    const row = aoa[r];
+    if (!row) continue;
+    const code = normCode(String(row[ci] == null ? "" : row[ci]).split("_")[0]);
+    if (!isDrug(code)) { nonDrug++; continue; }
+    const status = String(row[si] == null ? "" : row[si]).trim();
+    if (isOrderRejected(status)) { rejected++; continue; }
+    const orderNo = String(row[oi] == null ? "" : row[oi]).trim();
+    const d = parseOrderDateMirror(row[di]);
+    entries.set(orderNo + "·" + code, {
+      orderNo, code, status, open: isOrderOpen(status),
+      date: d ? iso(d) : null, qty: num(row[qi]),
+      totalValue: tvi >= 0 ? num(row[tvi]) : 0,
+      poNumber: pi >= 0 ? String(row[pi] == null ? "" : row[pi]).trim() : "",
+    });
+  }
+  const byCode = new Map();
+  let openCount = 0, spend = 0;
+  for (const e of entries.values()) {
+    if (e.open) openCount++;
+    spend += e.totalValue;
+    const list = byCode.get(e.code) || [];
+    list.push(e);
+    byCode.set(e.code, list);
+  }
+  return { entries, byCode, count: entries.size, openCount, rejected, nonDrug, spend };
+}
+
 /* ---------- real per-unit price list ----------
    The owner's price file carries the price PER DISPENSING UNIT directly
    (`Generic Mat Code` + `Net Price/Per unit 1`) — no pack-size division. */
