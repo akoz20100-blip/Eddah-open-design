@@ -70,7 +70,7 @@ try {
   }));
   R.eq(fresh.lang, "en", "fresh visitor gets English");
   R.eq(fresh.dir, "ltr", "fresh visitor gets LTR layout");
-  R.ok(fresh.title.includes("Pharmacy Stock"), `document title is localized English (got "${fresh.title}")`);
+  R.ok(fresh.title.includes("Pharmaceutical Planning Department Dashboard"), `document title is localized English (got "${fresh.title}")`);
   R.eq(fresh.btn, "English", "language button names the active language");
   R.eq(fresh.tab, "Planning Department", "tabs render the English labels");
 

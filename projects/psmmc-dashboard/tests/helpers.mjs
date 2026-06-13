@@ -81,8 +81,11 @@ export async function open(page, { lang = "ar" } = {}) {
   }
   await page.goto(INDEX_URL, { waitUntil: "load" });
   // app.js runs on DOMContentLoaded/immediately; the sample button onclick is
-  // the last thing init() sets, so wait until it's wired.
-  await page.waitForSelector("#btnSample");
+  // the last thing init() sets, so wait until it's wired. The button lives
+  // inside the upload bar, which is collapsed by default (wave 6 A1), so wait
+  // for it to be ATTACHED rather than visible — the wiring gate below is the
+  // real readiness check.
+  await page.waitForSelector("#btnSample", { state: "attached" });
   await page.waitForFunction(() => !!window.PSMMC_SAMPLE, null, { timeout: 5000 });
 }
 

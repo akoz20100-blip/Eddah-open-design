@@ -24,6 +24,7 @@
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
   var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1", LEDGER_KEY = "psmmc_orders_ledger_v1", SHAREK_KEY = "psmmc_sharek_v1";
+  var UPL_KEY = "psmmc_upl_collapsed_v1"; // upload-bar collapse state (wave 6 A1; default collapsed)
   // Order-status semantics for the procurement ledger (Arabic NUPCO statuses
   // + English fallbacks): rejected/cancelled rows are dropped on import, an
   // "open order" is anything not rejected and not yet delivered.
@@ -35,8 +36,11 @@
   // ---------- i18n ----------
   var T = {
     en: {
-      app_title: "Pharmacy Stock & Reorder Analytics",
+      app_title: "Pharmaceutical Planning Department Dashboard",
       app_sub: "Prince Sultan Military Medical City · Medical Services",
+      upl_toggle: "Add or replace data files",
+      upl_toggle_open: "Show the file upload panel",
+      upl_toggle_close: "Hide the file upload panel",
       tab_planning: "Planning Department", tab_management: "Management & Budget",
       file_wd: "Withdrawals file", file_wd_hint: "NUPCO outbound · .xlsx",
       file_st: "Stock-on-hand file", file_st_hint: "NUPCO stock · .xls",
@@ -242,8 +246,11 @@
       langName: "English"
     },
     ar: {
-      app_title: "تحليلات مخزون الصيدلية وإعادة الطلب",
+      app_title: "داشبورد قسم التخطيط الصيدلاني",
       app_sub: "مدينة الأمير سلطان الطبية العسكرية · الخدمات الطبية",
+      upl_toggle: "إضافة أو استبدال ملفات البيانات",
+      upl_toggle_open: "إظهار لوحة رفع الملفات",
+      upl_toggle_close: "إخفاء لوحة رفع الملفات",
       tab_planning: "قسم التخطيط", tab_management: "الإدارة والميزانية",
       file_wd: "ملف السحوبات", file_wd_hint: "صادر نبكو · ‎.xlsx",
       file_st: "ملف المخزون المتاح", file_st_hint: "مخزون نبكو · ‎.xls",
@@ -2628,11 +2635,12 @@
     // stream card below keeps the consumption trend visible.
     var pctWith = s.itemsTotal ? Math.round((s.withStock / s.itemsTotal) * 100) : 0;
     var pctZero = s.itemsTotal ? Math.round((s.zeroStock / s.itemsTotal) * 100) : 0;
+    // Owner wave 6 (A3/A4): the data-quality and "what changed" digest cards
+    // and the Critical KPI card were removed from the Planning view to keep the
+    // first glance clean. The quality/digest computation stays in STATE for
+    // internal use; only their on-screen cards are gone.
     var cards = '<div class="cards">'
-      + qualityCard()
-      + digestCard()
       + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order")
-      + cardDecision(t("k_critical"), fmtInt(s.critical) + ' <small>' + t("items_word") + '</small>', ICON.ban, "tile-coral", t("k_critical_sub"), null, "ex_critical")
       + cardDecision(t("k_items"), fmtInt(s.itemsTotal) + ' <small>' + t("items_word") + '</small>', ICON.grid, "tile-lav", tFmt("k_items_sub", { a: fmtInt(s.withStock), p: pctWith }), null, "ex_items")
       + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }) + (SHAREK ? " · " + tFmt("k_zero_sharek", { n: fmtInt(s.zeroSharek) }) : ""), null, "ex_zero")
       + cardOrderSheet(base)
@@ -3376,6 +3384,17 @@
     if (wd && wd.source === "baseline") return t("baseline_meta") + " · " + t("baseline_to") + " " + prettyDate(wd.period_end);
     return t("file_wd_hint");
   }
+  // Upload-bar collapse (wave 6 A1): toggle the class + sync the +/\u2212 glyph,
+  // aria-expanded and the localized title. Visual state only; persistence and
+  // the click handler live in init().
+  function setUploadCollapsed(collapsed) {
+    var bar = $("uploadbar"), toggle = $("uplToggle"), ic = $("uplToggleIc");
+    if (!bar || !toggle) return;
+    bar.classList.toggle("is-collapsed", collapsed);
+    toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    toggle.setAttribute("title", t(collapsed ? "upl_toggle_open" : "upl_toggle_close"));
+    if (ic) ic.textContent = collapsed ? "+" : "\u2212"; // \u2212 minus
+  }
   function applyStatic() {
     document.title = "PSMMC \u2014 " + t("app_title");
     document.documentElement.lang = LANG;
@@ -3397,6 +3416,10 @@
     if (skn) skn.textContent = SHAREK ? ((SHAREK.name ? SHAREK.name + " · " : "") + fmtInt(SHAREK.count) + " " + t("mp_linked")) : t("file_shk_hint");
     $("langName").textContent = t("langName");
     $("langBtn").classList.toggle("is-en", LANG === "en");
+    // Default collapsed; honor the persisted choice if present.
+    var uplCollapsed = true;
+    try { if (localStorage.getItem(UPL_KEY) === "0") uplCollapsed = false; } catch (e) {}
+    setUploadCollapsed(uplCollapsed);
     if (STATE.meta.period_start) {
       $("metaPeriod").textContent = t("period") + ": " + prettyDate(STATE.meta.period_start) + " → " + prettyDate(STATE.meta.period_end) + " (" + fmt1(STATE.meta.actual_months) + " " + t("mo") + (STATE.meta.months_source === "manual" ? " · " + t("manual_mark") : "") + ")" + (STATE.meta.baseline ? " · " + t("baseline_meta") : "");
       $("metaStock").textContent = t("stock_as_of") + ": " + prettyDate(STATE.meta.stock_as_of);
@@ -3755,6 +3778,16 @@
     }
     applyStatic();
     $("langBtn").onclick = function () { setLang(LANG === "ar" ? "en" : "ar"); };
+    // Upload bar collapse (wave 6 A1): default collapsed for a clean first
+    // view; (+) opens it to add/replace files, (−) hides it again; persisted.
+    var uplToggle = $("uplToggle");
+    if (uplToggle) {
+      uplToggle.onclick = function () {
+        var bar = $("uploadbar");
+        setUploadCollapsed(!bar.classList.contains("is-collapsed"));
+        try { localStorage.setItem(UPL_KEY, $("uploadbar").classList.contains("is-collapsed") ? "1" : "0"); } catch (e) {}
+      };
+    }
     document.querySelectorAll(".tab").forEach(function (tb) { tb.onclick = function () { STATE.view = this.dataset.view; STATE.filter = "all"; STATE.search = ""; STATE.expiryFilter = "atrisk"; STATE.expirySort = "exp"; STATE.sort = defaultSort(); render(); }; });
     $("btnSample").onclick = loadSample;
     $("btnExport").onclick = exportExcel;

@@ -72,13 +72,10 @@ try {
   await uploadFiles(page, "fileStock", REAL_ST);
   await page.waitForSelector("table tbody tr", { timeout: 60000 });
 
-  // The quality card names the outlier-dated row as a warning.
-  const quality = await page.evaluate(() => {
-    const card = document.querySelector(".quality-card, #content details");
-    return card ? card.textContent.replace(/\s+/g, " ") : "";
-  });
-  R.ok(/outside|خارج/i.test(quality) || /outlier/i.test(quality),
-    `quality card flags the outlier-dated row (got: "${quality.slice(0, 220)}…")`);
+  // (wave 6 A3: the outlier WARNING used to surface on the data-quality card,
+  // which was removed from the Planning view. The dense-period invariant — the
+  // actual guard against the outlier stretching the analysis window — is
+  // asserted via the period modal above and the period chip below.)
 
   // The period chip reflects the dense span too.
   const period = await page.$eval("#metaPeriod", (el) => el.textContent);
