@@ -70,6 +70,23 @@ try {
   R.ok(dataRows(wb.Sheets["At-Risk"]) === EV.atRisk.batches, `At-Risk sheet has ${EV.atRisk.batches} batch rows (got ${dataRows(wb.Sheets["At-Risk"])})`);
   R.ok(dataRows(wb.Sheets["Expired"]) === EV.expired.batches, `Expired sheet has ${EV.expired.batches} batch rows (got ${dataRows(wb.Sheets["Expired"])})`);
 
+  // Owner spec v3 wave 5: richer expiry detail («كم الكمية كاملة، كم عليها
+  // خطر، تاريخ الانتهاء، كم يغطي البند، كم الكمية الإضافية») — the At-Risk
+  // sheet adds the item's TOTAL stock, its coverage, and its excess quantity
+  // beyond the 9-month target.
+  const arHead = [];
+  {
+    const sh = wb.Sheets["At-Risk"];
+    const ref = XLSX.utils.decode_range(sh["!ref"]);
+    for (let c = ref.s.c; c <= ref.e.c; c++) {
+      const cell = sh[XLSX.utils.encode_cell({ r: 0, c })];
+      arHead.push(cell ? String(cell.v) : "");
+    }
+  }
+  R.ok(arHead.some((h) => /total stock|إجمالي المخزون/i.test(h)), `At-Risk sheet carries the item's total stock (headers: ${arHead.join(" | ")})`);
+  R.ok(arHead.some((h) => /coverage|تغطية/i.test(h)), "At-Risk sheet carries the item's coverage");
+  R.ok(arHead.some((h) => /excess|زائد/i.test(h)), "At-Risk sheet carries the item's excess quantity");
+
   // ---- number formats + autofilter + zero formula errors --------------------
   let hasNumFmt = false, errorCells = 0;
   for (const nm of names) {

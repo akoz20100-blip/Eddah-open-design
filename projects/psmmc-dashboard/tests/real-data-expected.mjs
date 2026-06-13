@@ -489,9 +489,10 @@ export function expectedExpiryViewsFromRealFiles() {
 
   let expBatches = 0, expQty = 0, arBatches = 0, arQty = 0;
   const arProd = new Set();
+  const expProd = new Set();
   for (const [code, m] of byCode) {
     const dates = [...m.keys()].sort();
-    for (const k of dates) if (k < asOfIso && m.get(k).tot > 0) { expBatches++; expQty += m.get(k).tot; }
+    for (const k of dates) if (k < asOfIso && m.get(k).tot > 0) { expBatches++; expQty += m.get(k).tot; expProd.add(code); }
     const avg = (tot.get(code) || 0) / months;
     if (avg <= 0) continue;
     const grace = handDispensedUom(wdUom.get(code)) ? GRACE_MONTHS : 0;
@@ -508,8 +509,8 @@ export function expectedExpiryViewsFromRealFiles() {
   }
   return {
     asOfIso: iso(asOf), months,
-    expired: { batches: expBatches, qty: expQty },
-    atRisk: { batches: arBatches, qty: arQty, products: arProd.size },
+    expired: { batches: expBatches, qty: expQty, codes: expProd },
+    atRisk: { batches: arBatches, qty: arQty, products: arProd.size, codes: arProd },
   };
 }
 
