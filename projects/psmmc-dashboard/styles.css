@@ -198,6 +198,14 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .fchip.is-active{background:var(--ink); color:#fff}
 .fchip.is-active .fic{color:#fff}
 .fchip.is-active .badge{background:rgba(255,255,255,.2); color:#fff}
+/* Wave 6 D1: quiet Sharek hint chip — muted, dashed, lighter weight than a
+   real filter; reads as guidance, not a control to toggle. */
+.fchip.sharek-hint{background:transparent; box-shadow:none; border:1px dashed var(--muted-2);
+  color:var(--muted); font-weight:700; max-width:min(100%,420px)}
+.fchip.sharek-hint .fic{color:var(--muted-2)}
+.fchip.sharek-hint:hover{color:var(--blue); border-color:var(--blue); transform:none}
+/* Upload slot highlight when the hint sends the planner there. */
+.filebtn.is-hilite{background:#fff; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft)}
 
 /* ---- table ---- */
 .tablecard{overflow:hidden; margin:0 2px; border-radius:var(--r-xl); background:var(--card);

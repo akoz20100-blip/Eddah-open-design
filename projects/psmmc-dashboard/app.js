@@ -108,6 +108,7 @@
       err_shk: "Could not read Sharek file", shk_loaded: "{n} Sharek codes saved",
       f_sharek: "Zero & on Sharek", c_sharek: "Sharek", shk_yes: "On Sharek",
       k_zero_sharek: "{n} of them available on Sharek",
+      shk_hint: "Sharek: upload a Sharek file to flag zero-stock items available on Sharek (adds a column + filter)",
       ex_col_sharek_t: "Sharek availability", ex_col_sharek_b: "Marks ZERO-stock items whose NUPCO code is listed on the Sharek marketplace — the hospital can source them there when the supplier is slow or the budget is short. Joined by NUPCO code from the uploaded Sharek export (saved on this device).",
       ev_export: "Export view",
       rp_total_stock: "Item total stock", rp_excess: "Excess qty (>9 mo)",
@@ -319,6 +320,7 @@
       err_shk: "تعذّرت قراءة ملف شارك", shk_loaded: "تم حفظ {n} كودًا من شارك",
       f_sharek: "صفري ومتاح في شارك", c_sharek: "شارك", shk_yes: "متاح في شارك",
       k_zero_sharek: "منها {n} متاح في منصة شارك",
+      shk_hint: "شارك: ارفع ملف منصة شارك لإظهار الأصناف الصفرية المتاحة على شارك (يضيف عمودًا وفلترًا)",
       ex_col_sharek_t: "التوفر في شارك", ex_col_sharek_b: "تعليم البنود الصفرية التي يظهر كود نبكو الخاص بها في منصة شارك — يستطيع المستشفى طلبها من هناك إذا تأخّر المورّد أو ضاقت الميزانية. الربط بكود نبكو من ملف شارك المرفوع (محفوظ على هذا الجهاز).",
       ev_export: "تصدير العرض",
       rp_total_stock: "إجمالي المخزون للبند", rp_excess: "الكمية الزائدة (>٩ أشهر)",
@@ -2666,7 +2668,13 @@
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
     var coveredChip = c.covered_order > 0 ? fchip("covered_order", t("f_covered_order"), c.covered_order, ICON.truck || ICON.box) : "";
-    var sharekChip = SHAREK ? fchip("sharek_zero", t("f_sharek"), c.sharek_zero, ICON.grid) : "";
+    // Sharek (wave 6 D1): with a file the zero-&-Sharek filter chip shows; with
+    // NO file the planner sees nothing about Sharek, so render a quiet,
+    // explanatory hint chip instead of the void — tapping it opens the upload
+    // bar at the Sharek slot. Sample mode stays clean (nothing to upload there).
+    var sharekChip = SHAREK
+      ? fchip("sharek_zero", t("f_sharek"), c.sharek_zero, ICON.grid)
+      : (STATE.meta.source === "upload" ? '<button type="button" class="fchip sharek-hint" id="sharekHintBtn" title="' + esc(t("shk_hint")) + '"><span class="fic">' + ICON.grid + "</span>" + t("shk_hint") + "</button>" : "");
     var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + sharekChip + copyAllChip() + exportViewChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
@@ -3353,6 +3361,14 @@
     var op = $("osPrint"); if (op) op.onclick = printOrderSheet;
     var ca = $("copyAllCodes"); if (ca) ca.onclick = copyAllCodes;
     var ev = $("exportView"); if (ev) ev.onclick = exportCurrentView;
+    var sh = $("sharekHintBtn");
+    if (sh) sh.onclick = function () {
+      setUploadCollapsed(false);
+      try { localStorage.setItem(UPL_KEY, "0"); } catch (e) {}
+      var bar = $("uploadbar"); if (bar) bar.scrollIntoView({ behavior: "smooth", block: "start" });
+      var slot = $("lblShk"); if (slot) slot.classList.add("is-hilite");
+      setTimeout(function () { if (slot) slot.classList.remove("is-hilite"); }, 2400);
+    };
     var he = $("histExport"); if (he) he.onclick = exportHistory;
     var hi = $("histImport"); if (hi) hi.onclick = importHistory;
     var dg = $("dgDismiss"); if (dg) dg.onclick = function () { STATE.digest = null; render(); };
