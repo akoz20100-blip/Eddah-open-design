@@ -1,5 +1,19 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P0-2 — order-sheet exception roll-up (2026-06-13)
+
+Owner approved the UX track with auto-merge-on-green and picked all four groups
+(P0 single-glance, P1 colour, P1 budget bar, P1 item-card/filters). P1-1 shipped
+& merged (#36). This is the P0 group's first, lowest-risk piece: `cardOrderSheet`
+now shows a `.os-urgency` roll-up under the title — "{below} below 1 month ·
+{out} out of stock now" — counting the full candidate set (out-of-stock-now is a
+subset of below-one-month), coral (`.os-hot`) only when a count > 0. Surfaces
+severity before the planner scans rows (NN/g + Few: lead with the exception).
+Additive (no restyle of existing elements). New i18n key `os_urgency` (T.en + T.ar,
+parity via spec-lang); `data-below`/`data-out` hooks for testability. Red-first
+`spec-orderurgency` (red: no `.os-urgency` → green: present, below>=out, coral iff
+urgency; sample 137 below / 45 out). Suite 44/44. build.py → 1841 KB.
+
 ## Wave 6 UX P1-1 — sentence-case table headers (Arabic-joining fix) (2026-06-13)
 
 First UX-track change after an independent re-verification confirmed all of wave 6

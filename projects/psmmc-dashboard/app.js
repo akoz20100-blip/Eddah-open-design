@@ -134,6 +134,7 @@
       k_total_units: "Total available stock", k_overall_cov: "Covers <b class=\"num\">{m}</b> months at the current rate",
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
+      os_urgency: "{below} below 1 month · {out} out of stock now",
       dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_cov_raw: "raw coverage — before expiry trim", dt_usable: "dispensable stock (units)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
       f_watch: "Watch", f_rising: "Rising +10%", f_falling: "Falling −10%", f_new: "New", c_spark: "Recent months", c_delta: "Trend Δ%",
       f_watchlist: "My watchlist",
@@ -350,6 +351,7 @@
       k_total_units: "إجمالي المخزون المتاح", k_overall_cov: "يغطي <b class=\"num\">{m}</b> شهرًا بمعدل الاستهلاك الحالي",
       k_monthly_use: "الاستهلاك الشهري", vs_prev_month: "{a} مقابل {b}", units_word: "وحدة", items_word: "صنفًا",
       os_title: "ورقة الطلب — الأكثر إلحاحًا", os_view_all: "عرض الكل في الجدول", os_export: "تصدير ورقة الطلب", os_email: "تقرير بالإيميل", os_wa: "واتساب", os_print: "طباعة", os_cov_left: "شهر تغطية", os_suggested: "كمية مقترحة",
+      os_urgency: "{below} تحت شهر واحد · {out} نافد الآن",
       dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_cov_raw: "التغطية الخام — قبل خصم الصلاحية", dt_usable: "المخزون القابل للصرف (وحدة)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية",
       f_watch: "للمتابعة", f_rising: "صاعد +10٪", f_falling: "هابط −10٪", f_new: "جديد", c_spark: "الأشهر الأخيرة", c_delta: "الاتجاه Δ٪",
       f_watchlist: "متابعتي",
@@ -2498,6 +2500,14 @@
   }
   function cardOrderSheet(base) {
     var cand = orderCandidates(base), top = cand.slice(0, 7);
+    // P0-2 exception roll-up: surface SEVERITY (how many are critical) before
+    // the planner scans rows. Out-of-stock-now (covEff 0) is a subset of
+    // below-one-month. Coral only when the count is real.
+    var belowOne = 0, outNow = 0;
+    cand.forEach(function (x) { if (x.covEff < 1) belowOne++; if (!x.r.inStock) outNow++; });
+    function osCount(n) { return '<b class="num' + (n > 0 ? " os-hot" : "") + '">' + fmtInt(n) + '</b>'; }
+    var urgency = '<div class="os-urgency" data-below="' + belowOne + '" data-out="' + outNow + '">'
+      + tFmt("os_urgency", { below: osCount(belowOne), out: osCount(outNow) }) + '</div>';
     var rows = top.map(function (x, i) {
       var r = x.r;
       var expTag = r.expMonths == null ? "" : '<i class="exp-tag' + (expiryRisk(r) ? " is-risk" : "") + '" title="' + esc(expiryRisk(r) ? tFmt("exp_risk_tip", { u: fmtM(r.expWaste), m: fmt1(r.expCov) }) : t("c_expiry")) + '">' + (expiryRisk(r) ? "⚠ " : "") + (r.expApprox ? "≈" : "") + fmt1(r.expMonths) + " " + t("mo") + "</i>";
@@ -2507,6 +2517,7 @@
         + '<span class="os-sug"><b class="num">' + fmtM(r.sug) + '</b><i>' + t("os_suggested") + '</i></span></div>';
     }).join("");
     return '<div class="kcard span12 ordersheet"><div class="ktitle-row"><span class="ktitle">' + t("os_title") + '</span><span class="kbadge num">' + top.length + " / " + fmtInt(cand.length) + '</span></div>'
+      + urgency
       + rows
       + '<div class="os-actions">'
       + '<button type="button" class="btn-soft accent" id="osViewAll">' + ICON.list + t("os_view_all") + '</button>'
