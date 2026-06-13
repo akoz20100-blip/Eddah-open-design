@@ -108,6 +108,7 @@
       err_shk: "Could not read Sharek file", shk_loaded: "{n} Sharek codes saved",
       f_sharek: "Zero & on Sharek", c_sharek: "Sharek", shk_yes: "On Sharek",
       k_zero_sharek: "{n} of them available on Sharek",
+      k_zero_sharek_hint: "upload a Sharek file to flag which can be sourced there",
       ex_col_sharek_t: "Sharek availability", ex_col_sharek_b: "Marks ZERO-stock items whose NUPCO code is listed on the Sharek marketplace — the hospital can source them there when the supplier is slow or the budget is short. Joined by NUPCO code from the uploaded Sharek export (saved on this device).",
       ev_export: "Export view",
       rp_total_stock: "Item total stock", rp_excess: "Excess qty (>9 mo)",
@@ -319,6 +320,7 @@
       err_shk: "تعذّرت قراءة ملف شارك", shk_loaded: "تم حفظ {n} كودًا من شارك",
       f_sharek: "صفري ومتاح في شارك", c_sharek: "شارك", shk_yes: "متاح في شارك",
       k_zero_sharek: "منها {n} متاح في منصة شارك",
+      k_zero_sharek_hint: "ارفع ملف شارك لمعرفة أيٍّ منها يمكن توفيره هناك",
       ex_col_sharek_t: "التوفر في شارك", ex_col_sharek_b: "تعليم البنود الصفرية التي يظهر كود نبكو الخاص بها في منصة شارك — يستطيع المستشفى طلبها من هناك إذا تأخّر المورّد أو ضاقت الميزانية. الربط بكود نبكو من ملف شارك المرفوع (محفوظ على هذا الجهاز).",
       ev_export: "تصدير العرض",
       rp_total_stock: "إجمالي المخزون للبند", rp_excess: "الكمية الزائدة (>٩ أشهر)",
@@ -2657,7 +2659,7 @@
     var cards = '<div class="cards">'
       + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order")
       + cardDecision(t("k_items"), fmtInt(s.itemsTotal) + ' <small>' + t("items_word") + '</small>', ICON.grid, "tile-lav", tFmt("k_items_sub", { a: fmtInt(s.withStock), p: pctWith }), null, "ex_items")
-      + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }) + (SHAREK ? " · " + tFmt("k_zero_sharek", { n: fmtInt(s.zeroSharek) }) : ""), null, "ex_zero")
+      + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }) + (SHAREK ? " · " + tFmt("k_zero_sharek", { n: fmtInt(s.zeroSharek) }) : (s.zeroStock > 0 ? " · " + t("k_zero_sharek_hint") : "")), null, "ex_zero")
       + cardOrderSheet(base)
       // The monthly stream keeps the consumption trend; the MoM badge of the
       // retired consumption card moves into its title so the signal survives.
