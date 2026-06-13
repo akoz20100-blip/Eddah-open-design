@@ -1,5 +1,36 @@
 # state.md — Dash project loop state
 
+## Wave 6 §F — budget at a glance + per-month order cards + exports (2026-06-13)
+
+Owner's flagged priority («إعادة تصميم الميزانية + التصدير ... ناقص حاليًّا وإلزامي»).
+Built on the wave-6 line already merged by a parallel session (A1–A4 #27, B1/B2/C1
+#28, security #29, D1 #30, E1/E2 #31). This session confirmed before building: D1 and
+E1/E2 were already done by the parallel session, so its own duplicate D1 PR (#32) was
+closed and the only-uncovered priority item — §F — was taken.
+
+- **F4 budget at a glance** (`budgetCard` → full-width overview): one look shows
+  budget · spent (delivered orders) · committed (undelivered orders) · remaining
+  (= budget − spent − committed) · monthly consumption value · runway months +
+  run-out date. New `ledgerMoney()` splits ledger value by supply state and uses
+  #31's `orderDelivered()` predicate, so a manually-marked delivery moves money
+  from "committed" to "spent". On the real files: committed 19.44M SAR (= mirror
+  Σ open-order value, exact), monthly 27.6M, runway 18.1 mo.
+- **F1 per-planner amount + F2 clickable month** (`monthlyWorkload` now collects
+  per-item rows + `plannerVal`; `openMonthCard`): clicking any workload month opens
+  a card listing that month's orders (code/name/planner/qty/value) with a
+  per-planner money split (e.g. this month 644 orders / 136.3M; Ghazi 112·87.3M …).
+- **F3 exports** (`exportMonth`, `exportToYearEnd`): each month card exports its own
+  Excel (one row per order); a workload-card button exports every order from now to
+  year-end as Summary + Detail sheets (757 detail rows on the real files). All paths
+  reuse the security-hardened `sheetFrom`/`sanitizeAoa`.
+
+Red-first `spec-budgetview` (red on main: no `.bo-stats`/`.bw-row`/exports → green:
+14 asserts incl. committed == mirror Σ open-order value, remaining arithmetic, month
+card lists exactly the month's N orders, per-month export = N rows, year-end Summary
++ Detail). New i18n keys `bw_export_year`, `bw_view_month`, `bo_title/bo_spent/
+bo_undelivered/bo_remaining/bo_set_hint`, `mc_title/mc_export/mc_qty/mc_planner_split`
+(T.en + T.ar, parity enforced by spec-lang). Suite 41/41. build.py → 1839 KB.
+
 ## Independent audit + Sharek-wave fix (2026-06-13)
 
 Owner asked for a no-trust re-audit. Verified the environment (suite 35/35, `build.py`

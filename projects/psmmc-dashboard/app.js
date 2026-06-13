@@ -102,6 +102,9 @@
       ev_value_sar: "value (SAR)",
       pr_paid_share: "paid share (units)", pr_free_share: "free share ({p}% free)",
       bw_title: "Monthly order workload", bw_month: "Month", bw_orders: "Orders to raise", bw_value: "Value (SAR)", bw_now: "This month (incl. overdue)",
+      bw_export_year: "Export to year-end", bw_view_month: "Click a month to list its orders",
+      bo_title: "Budget at a glance", bo_spent: "Spent (delivered)", bo_undelivered: "Committed (undelivered)", bo_remaining: "Remaining", bo_set_hint: "enter the budget above to see what's left",
+      mc_title: "{m} — orders to raise", mc_export: "Export this month", mc_qty: "Order qty", mc_planner_split: "By planner",
       ex_workload_t: "Monthly order workload", ex_workload_b: "Each item lands in the month its Reorder-By date falls in (reorder-by = the day effective coverage drops to 6 months). Items already past that date count in the current month — they are today's workload. The planner split counts items assigned to each planner from the planner file; SAR value = Σ suggested qty × unit price for priced items.",
       em_urgency: "Expedite order (email)", em_replace: "Request replacement (email)",
       file_shk: "Sharek platform file", file_shk_hint: "optional · NUPCO codes listed on Sharek",
@@ -315,6 +318,9 @@
       ev_value_sar: "القيمة (ريال)",
       pr_paid_share: "الكمية المدفوعة (وحدة)", pr_free_share: "الكمية المجانية ({p}% مجاني)",
       bw_title: "حِمل الطلبات الشهري", bw_month: "الشهر", bw_orders: "طلبات تُرفع", bw_value: "القيمة (ريال)", bw_now: "هذا الشهر (مع المتأخر)",
+      bw_export_year: "تصدير حتى نهاية السنة", bw_view_month: "اضغط على شهر لعرض طلباته",
+      bo_title: "الميزانية بنظرة", bo_spent: "المصروف (مورَّد)", bo_undelivered: "ملتزَم (غير مورَّد)", bo_remaining: "المتبقي", bo_set_hint: "أدخل الميزانية بالأعلى لمعرفة المتبقي",
+      mc_title: "{m} — طلبات للرفع", mc_export: "تصدير هذا الشهر", mc_qty: "كمية الطلب", mc_planner_split: "حسب المخطّط",
       ex_workload_t: "حِمل الطلبات الشهري", ex_workload_b: "كل بند يقع في الشهر الذي يحلّ فيه تاريخ «أعد الطلب قبل» (وهو اليوم الذي تهبط فيه التغطية الفعلية إلى 6 أشهر). البنود التي تجاوزت ذلك التاريخ تُحسب في الشهر الحالي — فهي حِمل اليوم. توزيع المخططين يَعُدّ بنود كل مخطط من ملف المخططين؛ والقيمة بالريال = مجموع الكمية المقترحة × سعر الوحدة للبنود المسعّرة.",
       em_urgency: "استعجال الطلب (إيميل)", em_replace: "طلب استبدال (إيميل)",
       file_shk: "ملف منصة شارك", file_shk_hint: "اختياري · أكواد نبكو المتاحة في شارك",
@@ -2798,29 +2804,60 @@
   /* Budget runway: remaining budget ÷ monthly consumption value (Σ avg×unit
      price over priced items) → months left + projected run-out date. Activates
      only once real prices are loaded. */
+  /* Procurement money committed through the orders ledger, split by supply
+     state: DELIVERED (received → money spent) vs UNDELIVERED (open → committed
+     but still pending). Uses the file's Item Total Value where present, else
+     ordered qty × the item's unit price. Rejected/cancelled rows are ignored. */
+  function ledgerMoney() {
+    if (!LEDGER) return { delivered: 0, undelivered: 0 };
+    var delivered = 0, undelivered = 0, priceBy = {};
+    STATE.rows.forEach(function (r) { if (r.unitPrice) priceBy[r.code] = r.unitPrice; });
+    Object.keys(LEDGER.entries || {}).forEach(function (k) {
+      var e = LEDGER.entries[k];
+      if (isOrderRejected(e.status)) return;
+      var v = e.totalValue || (e.qty && priceBy[e.code] ? e.qty * priceBy[e.code] : 0);
+      if (orderDelivered(e)) delivered += v; else undelivered += v;
+    });
+    return { delivered: delivered, undelivered: undelivered };
+  }
+  /* Budget at a glance (owner wave 6 F4): one full-width overview the planner
+     reads in a single look — the entered budget, money already SPENT (delivered
+     orders), money COMMITTED but not yet supplied (open orders), what's
+     REMAINING, the monthly consumption value, and the runway. The monthly
+     workload table sits directly below for the per-month breakdown. */
   function budgetCard() {
     if (!hasPrices()) {
-      return '<div class="kcard span6 budgetcard"><div class="ktitle-row"><span class="ktitle">' + t("br_title") + '</span></div>'
+      return '<div class="kcard span12 budgetcard"><div class="ktitle-row"><span class="ktitle">' + t("bo_title") + '</span></div>'
         + '<div class="kfoot"><b>—</b><i>' + t("br_hint") + "</i></div></div>";
     }
     var monthlyVal = 0;
     STATE.rows.forEach(function (r) { if (r.unitPrice && r.avg > 0) monthlyVal += r.avg * r.unitPrice; });
     var amount = BUDGET && BUDGET.amount > 0 ? BUDGET.amount : null;
-    var body;
-    if (amount && monthlyVal > 0) {
+    var m = ledgerMoney();
+    var remaining = amount != null ? amount - m.delivered - m.undelivered : null;
+    function stat(k, sar, label, cls) {
+      return '<span class="stat ' + (cls || "") + '" data-k="' + k + '"><b class="num" data-sar="' + Math.round(sar) + '">' + fmtM(sar) + '</b><i>' + label + "</i></span>";
+    }
+    var grid = '<div class="bo-stats statgrid">'
+      + (amount != null ? stat("budget", amount, t("br_title")) : "")
+      + stat("delivered", m.delivered, t("bo_spent"), "good")
+      + stat("undelivered", m.undelivered, t("bo_undelivered"), "warn")
+      + (remaining != null ? stat("remaining", remaining, t("bo_remaining"), remaining < 0 ? "danger" : "") : "")
+      + stat("monthly", monthlyVal, t("br_monthly"))
+      + "</div>";
+    var runway = "";
+    if (amount != null && monthlyVal > 0) {
       var months = amount / monthlyVal;
       var runout = new Date(Date.now() + months * DAYS_PER_MONTH * 86400000);
-      body = '<div class="br-stats statgrid">'
+      runway = '<div class="bo-runway statgrid">'
         + '<span class="stat"><b class="num" id="brMonths">' + fmt1(months) + '</b><i>' + t("br_months") + "</i></span>"
-        + '<span class="stat"><b class="num" id="brRunout">' + prettyDate(isoDate(runout)) + '</b><i>' + t("br_runout") + "</i></span>"
-        + '<span class="stat"><b class="num">' + fmtM(monthlyVal) + '</b><i>' + t("br_monthly") + "</i></span></div>";
-    } else {
-      body = '<div class="kfoot"><b class="num">' + fmtM(monthlyVal) + "</b><i>" + t("br_monthly") + "</i></div>";
+        + '<span class="stat"><b class="num" id="brRunout">' + prettyDate(isoDate(runout)) + '</b><i>' + t("br_runout") + "</i></span></div>";
     }
-    return '<div class="kcard span6 budgetcard"><div class="ktitle-row"><span class="ktitle">' + t("br_title") + '</span></div>'
+    return '<div class="kcard span12 budgetcard"><div class="ktitle-row"><span class="ktitle">' + t("bo_title") + '</span></div>'
       + '<div class="br-row"><input id="brInput" type="number" min="0" step="1000" inputmode="decimal" class="num" placeholder="' + esc(t("br_ph")) + '" value="' + (amount != null ? amount : "") + '"/>'
-      + '<button type="button" class="btn-soft" id="brSave">' + t("br_save") + "</button></div>"
-      + body + "</div>";
+      + '<button type="button" class="btn-soft" id="brSave">' + t("br_save") + "</button>"
+      + (amount == null ? '<i class="bo-hint">' + t("bo_set_hint") + "</i>" : "") + "</div>"
+      + grid + runway + "</div>";
   }
   /* Monthly order workload (owner spec v3): for each upcoming month, how
      many items hit their reorder-by date — i.e. how many orders the planner
@@ -2834,11 +2871,14 @@
     rows.forEach(function (r) {
       if (!r.reorderIso || r.avg <= 0) return;
       var ym = r.reorderIso <= todayIso ? nowYm : ymOf(r.reorderIso);
-      var b = buckets[ym] || (buckets[ym] = { count: 0, val: 0, planners: {} });
+      var b = buckets[ym] || (buckets[ym] = { count: 0, val: 0, planners: {}, plannerVal: {}, items: [] });
       b.count++;
-      if (r.unitPrice && r.sug > 0) b.val += r.sug * r.unitPrice;
       var pn = plannerName(r) || t("planner_unassigned");
+      var val = (r.unitPrice && r.sug > 0) ? r.sug * r.unitPrice : 0;
+      if (val) b.val += val;
       b.planners[pn] = (b.planners[pn] || 0) + 1;
+      b.plannerVal[pn] = (b.plannerVal[pn] || 0) + val;
+      b.items.push({ code: r.code, desc: r.desc, planner: pn, qty: Math.round(r.sug), value: val, uom: r.uom || "", unitPrice: r.unitPrice || null });
     });
     return { nowYm: nowYm, buckets: buckets };
   }
@@ -2852,15 +2892,90 @@
       var planners = Object.keys(b.planners).sort(function (a, bb) { return b.planners[bb] - b.planners[a]; });
       var chips = planners.slice(0, 4).map(function (pn) { return esc(pn) + ' <b class="num">' + fmtInt(b.planners[pn]) + "</b>"; }).join(" · ")
         + (planners.length > 4 ? " +" + (planners.length - 4) : "");
-      return '<tr><td class="num">' + (ym === w.nowYm ? t("bw_now") : (ymLabel(ym + "-01") || ym)) + "</td>"
+      return '<tr class="bw-row" data-ym="' + ym + '" data-count="' + b.count + '" role="button" tabindex="0" title="' + esc(t("bw_view_month")) + '"><td class="num">' + (ym === w.nowYm ? t("bw_now") : (ymLabel(ym + "-01") || ym)) + "</td>"
         + '<td class="right num">' + fmtInt(b.count) + "</td>"
         + '<td class="bw-planners">' + chips + "</td>"
         + (priced ? '<td class="right num">' + (b.val > 0 ? fmtM(b.val) : "—") + "</td>" : "") + "</tr>";
     }).join("");
     return '<div class="kcard span12 workloadcard"><div class="ktitle-row"><span class="ktitle">' + t("bw_title")
-      + '</span><span class="thinfo" data-explain="ex_workload" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '">ⓘ</span></div>'
+      + '</span><span class="thinfo" data-explain="ex_workload" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '">ⓘ</span>'
+      + '<button type="button" class="btn-soft bw-export" id="bwExportYear">' + ICON.download + " " + t("bw_export_year") + "</button></div>"
       + '<div class="tablewrap"><table><thead><tr><th>' + t("bw_month") + '</th><th class="right">' + t("bw_orders") + "</th><th>" + t("c_planner") + "</th>" + (priced ? '<th class="right">' + t("bw_value") + "</th>" : "") + "</tr></thead>"
       + "<tbody>" + rows + "</tbody></table></div></div>";
+  }
+  /* Click a workload month → a detail card listing every order to raise that
+     month (code, name, planner, qty, value), a per-planner money split (F1),
+     and a one-month export (F3). */
+  function openMonthCard(ym) {
+    var w = monthlyWorkload(STATE.rows);
+    var b = w.buckets[ym];
+    if (!b) return;
+    var priced = hasPrices();
+    var label = ym === w.nowYm ? t("bw_now") : ymLabelLong(ym);
+    var items = b.items.slice().sort(function (a, c) { return c.value - a.value || c.qty - a.qty; });
+    var planners = Object.keys(b.plannerVal).sort(function (a, c) { return b.plannerVal[c] - b.plannerVal[a] || b.planners[c] - b.planners[a]; });
+    var split = planners.map(function (pn) {
+      return '<span class="mc-chip">' + esc(pn) + ' <b class="num">' + fmtInt(b.planners[pn]) + "</b>"
+        + (priced && b.plannerVal[pn] > 0 ? ' · <b class="num">' + fmtM(b.plannerVal[pn]) + "</b>" : "") + "</span>";
+    }).join("");
+    var trs = items.map(function (it, i) {
+      return '<tr data-code="' + esc(it.code) + '"><td class="num">' + (i + 1) + "</td>"
+        + '<td class="code num" data-copy="' + esc(it.code) + '" role="button" tabindex="0" title="' + esc(t("cp_copied")) + '">' + esc(it.code) + "</td>"
+        + '<td class="desc">' + esc(it.desc) + "</td>"
+        + "<td>" + esc(it.planner) + "</td>"
+        + '<td class="right num">' + fmtInt(it.qty) + "</td>"
+        + (priced ? '<td class="right num">' + (it.value > 0 ? fmtM(it.value) : "—") + "</td>" : "") + "</tr>";
+    }).join("");
+    var html = '<div class="dt-head"><span class="ktxt"><div class="dt-title">' + esc(tFmt("mc_title", { m: label }))
+      + ' <span class="num">(' + fmtInt(b.count) + ')</span>' + (priced && b.val > 0 ? ' · <b class="num">' + fmtM(b.val) + "</b>" : "") + "</div>"
+      + '<div class="mc-split"><i>' + t("mc_planner_split") + ":</i> " + split + "</div></span>"
+      + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
+      + '<div class="mc-actions"><button type="button" class="btn-soft accent" id="monthExport">' + ICON.download + " " + t("mc_export") + "</button></div>"
+      + '<div class="tablewrap month-table"><table><thead><tr><th>#</th><th>' + t("c_code") + "</th><th>" + t("c_desc") + "</th><th>" + t("c_planner") + '</th><th class="right">' + t("mc_qty") + "</th>" + (priced ? '<th class="right">' + t("bw_value") + "</th>" : "") + "</tr></thead><tbody>" + trs + "</tbody></table></div>";
+    openModal(html, "modal-sheet");
+    var x = $("dtClose"); if (x) x.onclick = closeModal;
+    wireCopyChips($("modalCard"));
+    var me = $("monthExport"); if (me) me.onclick = function () { exportMonth(ym); };
+  }
+  function exportMonth(ym) {
+    var w = monthlyWorkload(STATE.rows);
+    var b = w.buckets[ym];
+    if (!b || !b.items.length) { toast(t("cp_none")); return; }
+    var priced = hasPrices();
+    var aoa = [[t("c_code"), t("c_desc"), t("c_planner"), t("c_uom"), t("mc_qty")].concat(priced ? [t("pr_unit_price"), t("bw_value")] : [])];
+    b.items.slice().sort(function (a, c) { return c.value - a.value; }).forEach(function (it) {
+      aoa.push([it.code, it.desc, it.planner, it.uom, it.qty].concat(priced ? [it.unitPrice == null ? "" : Math.round(it.unitPrice * 100) / 100, Math.round(it.value)] : []));
+    });
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sheetFrom(aoa, [16, 34, 14, 8, 11, 13, 14], priced ? { 4: INT_FMT, 5: SAR_FMT, 6: INT_FMT } : { 4: INT_FMT }, true), "Orders");
+    var name = "PSMMC_orders_" + ym.replace("-", "") + ".xlsx";
+    XLSX.writeFile(wb, name);
+    toast((LANG === "ar" ? "تم التصدير → " : "Exported → ") + name);
+  }
+  /* Export every order to raise from now to the end of the current calendar
+     year (owner wave 6 F3): a per-month Summary sheet + a full Detail sheet. */
+  function exportToYearEnd() {
+    var w = monthlyWorkload(STATE.rows);
+    var year = new Date().getFullYear(), endYm = year + "-12";
+    var yms = Object.keys(w.buckets).filter(function (ym) { return ym <= endYm; }).sort();
+    if (!yms.length) { toast(t("cp_none")); return; }
+    var priced = hasPrices();
+    var sum = [[t("bw_month"), t("bw_orders")].concat(priced ? [t("bw_value")] : [])];
+    var detail = [[t("bw_month"), t("c_code"), t("c_desc"), t("c_planner"), t("mc_qty")].concat(priced ? [t("bw_value")] : [])];
+    yms.forEach(function (ym) {
+      var b = w.buckets[ym];
+      var label = ym === w.nowYm ? (LANG === "ar" ? "هذا الشهر" : "This month") : ym;
+      sum.push([label, b.count].concat(priced ? [Math.round(b.val)] : []));
+      b.items.slice().sort(function (a, c) { return c.value - a.value; }).forEach(function (it) {
+        detail.push([label, it.code, it.desc, it.planner, it.qty].concat(priced ? [Math.round(it.value)] : []));
+      });
+    });
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sheetFrom(sum, [22, 12, 14], priced ? { 1: INT_FMT, 2: INT_FMT } : { 1: INT_FMT }, true), "Summary");
+    XLSX.utils.book_append_sheet(wb, sheetFrom(detail, [10, 16, 34, 14, 11, 14], priced ? { 4: INT_FMT, 5: INT_FMT } : { 4: INT_FMT }, true), "Detail");
+    var name = "PSMMC_orders_to_year_end_" + year + ".xlsx";
+    XLSX.writeFile(wb, name);
+    toast((LANG === "ar" ? "تم تصدير الطلبات حتى نهاية السنة → " : "Exported orders to year-end → ") + name);
   }
   /* Top-N rankings (owner spec v3): the drugs that consume the most money
      through procurement orders, and the items tying up the most inventory
@@ -3394,6 +3509,11 @@
     var op = $("osPrint"); if (op) op.onclick = printOrderSheet;
     var ca = $("copyAllCodes"); if (ca) ca.onclick = copyAllCodes;
     var ev = $("exportView"); if (ev) ev.onclick = exportCurrentView;
+    var bey = $("bwExportYear"); if (bey) bey.onclick = exportToYearEnd;
+    document.querySelectorAll(".bw-row").forEach(function (tr) {
+      tr.onclick = function () { openMonthCard(tr.getAttribute("data-ym")); };
+      tr.onkeydown = function (ev2) { if (ev2.key === "Enter" || ev2.key === " ") { ev2.preventDefault(); openMonthCard(tr.getAttribute("data-ym")); } };
+    });
     var sh = $("sharekHintBtn");
     if (sh) sh.onclick = function () {
       setUploadCollapsed(false);
