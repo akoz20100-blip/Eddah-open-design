@@ -1,5 +1,22 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P1-2 — colour restraint (2026-06-13)
+
+P1 colour group (P0 group done: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40). Two
+restraint moves so saturated colour is reserved for things needing attention:
+(1) the healthy "ok" status pill was blue (a loud attention colour for a state
+needing NO action) → demoted to the same neutral inset/muted fill as
+"no movement"; (2) the coverage bar re-encoded every status as its own hue
+(ok=blue, warning=amber, excess=violet) on top of the pill — a second rainbow.
+`covCell` now uses `covBarColor()`: coral only at danger (order_now/not_in_stock),
+neutral `--muted-2` grey otherwise, so the bar shows MAGNITUDE (width) and only
+shouts when critically low. Removed the now-dead `STATUS_COLOR` map (was used only
+in covCell). Kept order_now vs not_in_stock PILL colours distinct on purpose
+(out-of-stock != merely low — domain-meaningful, restraint shouldn't erase it).
+Red-first `spec-colorrestraint` (EN+AR): red (ok pill blue, ok bar blue) → green
+(ok pill==no-move neutral, ok bar==muted-2, order bar==coral). Suite 47/47.
+Reference: Stephen Few + Material 3 + NN/g.
+
 ## Wave 6 UX P0-3 — suggested-order column emphasis (2026-06-13)
 
 Finishes the P0 single-glance group (P1-1 #36, P0-2 #38, P0-1 #39). The planning
