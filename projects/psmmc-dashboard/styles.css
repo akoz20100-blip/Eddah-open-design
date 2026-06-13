@@ -712,6 +712,10 @@ th.sortable:focus-visible{
 .seasonal-tag{font-style:normal;font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:999px;padding:2px 7px;vertical-align:middle}
 .di-block,.th-block{margin-top:16px;background:var(--inset);border-radius:var(--r-md);padding:14px 16px}
 .di-title{font-size:12.5px;font-weight:800;color:var(--muted);margin-bottom:6px}
+/* P1-3: detail-sheet zones (Decision / History & price / Reference). Sentence
+   case + no tracking keeps the labels correct in Arabic. */
+.dt-zone + .dt-zone{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.dt-zone-lbl{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px}
 .di-text{margin:0 0 10px;font-size:13.5px;font-weight:700;line-height:1.5}
 .di-links{display:flex;gap:8px;flex-wrap:wrap}
 .di-links a{text-decoration:none}
