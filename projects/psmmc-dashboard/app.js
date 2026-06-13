@@ -104,6 +104,7 @@
       bw_title: "Monthly order workload", bw_month: "Month", bw_orders: "Orders to raise", bw_value: "Value (SAR)", bw_now: "This month (incl. overdue)",
       bw_export_year: "Export to year-end", bw_view_month: "Click a month to list its orders",
       bo_title: "Budget at a glance", bo_spent: "Spent (delivered)", bo_undelivered: "Committed (undelivered)", bo_remaining: "Remaining", bo_set_hint: "enter the budget above to see what's left",
+      bo_bar_aria: "Spent {s} and committed {c} of {b} budget",
       mc_title: "{m} — orders to raise", mc_export: "Export this month", mc_qty: "Order qty", mc_planner_split: "By planner",
       ex_workload_t: "Monthly order workload", ex_workload_b: "Each item lands in the month its Reorder-By date falls in (reorder-by = the day effective coverage drops to 6 months). Items already past that date count in the current month — they are today's workload. The planner split counts items assigned to each planner from the planner file; SAR value = Σ suggested qty × unit price for priced items.",
       em_urgency: "Expedite order (email)", em_replace: "Request replacement (email)",
@@ -321,6 +322,7 @@
       bw_title: "حِمل الطلبات الشهري", bw_month: "الشهر", bw_orders: "طلبات تُرفع", bw_value: "القيمة (ريال)", bw_now: "هذا الشهر (مع المتأخر)",
       bw_export_year: "تصدير حتى نهاية السنة", bw_view_month: "اضغط على شهر لعرض طلباته",
       bo_title: "الميزانية بنظرة", bo_spent: "المصروف (مورَّد)", bo_undelivered: "ملتزَم (غير مورَّد)", bo_remaining: "المتبقي", bo_set_hint: "أدخل الميزانية بالأعلى لمعرفة المتبقي",
+      bo_bar_aria: "مصروف {s} وملتزَم {c} من ميزانية {b}",
       mc_title: "{m} — طلبات للرفع", mc_export: "تصدير هذا الشهر", mc_qty: "كمية الطلب", mc_planner_split: "حسب المخطّط",
       ex_workload_t: "حِمل الطلبات الشهري", ex_workload_b: "كل بند يقع في الشهر الذي يحلّ فيه تاريخ «أعد الطلب قبل» (وهو اليوم الذي تهبط فيه التغطية الفعلية إلى 6 أشهر). البنود التي تجاوزت ذلك التاريخ تُحسب في الشهر الحالي — فهي حِمل اليوم. توزيع المخططين يَعُدّ بنود كل مخطط من ملف المخططين؛ والقيمة بالريال = مجموع الكمية المقترحة × سعر الوحدة للبنود المسعّرة.",
       em_urgency: "استعجال الطلب (إيميل)", em_replace: "طلب استبدال (إيميل)",
@@ -2870,11 +2872,25 @@
         + '<span class="stat"><b class="num" id="brMonths">' + fmt1(months) + '</b><i>' + t("br_months") + "</i></span>"
         + '<span class="stat"><b class="num" id="brRunout">' + prettyDate(isoDate(runout)) + '</b><i>' + t("br_runout") + "</i></span></div>";
     }
+    // P1-4: one progress bar makes "how much is left" a SHAPE — a spent segment
+    // (delivered) + a committed segment (open orders) over the remaining track,
+    // so the planner sees the ratio without reading five numbers. Flex flips
+    // start→end automatically under RTL.
+    var bar = "";
+    if (amount != null && amount > 0) {
+      var spentPct = Math.max(0, Math.min(100, (m.delivered / amount) * 100));
+      var commPct = Math.max(0, Math.min(100 - spentPct, (m.undelivered / amount) * 100));
+      bar = '<div class="bo-bar' + (remaining != null && remaining < 0 ? " is-over" : "") + '" role="img" aria-label="'
+        + esc(tFmt("bo_bar_aria", { s: fmtM(m.delivered), c: fmtM(m.undelivered), b: fmtM(amount) }))
+        + '" data-spent-pct="' + spentPct.toFixed(2) + '" data-committed-pct="' + commPct.toFixed(2) + '">'
+        + '<span class="bo-seg bo-spent" style="width:' + spentPct.toFixed(2) + '%"></span>'
+        + '<span class="bo-seg bo-committed" style="width:' + commPct.toFixed(2) + '%"></span></div>';
+    }
     return '<div class="kcard span12 budgetcard"><div class="ktitle-row"><span class="ktitle">' + t("bo_title") + '</span></div>'
       + '<div class="br-row"><input id="brInput" type="number" min="0" step="1000" inputmode="decimal" class="num" placeholder="' + esc(t("br_ph")) + '" value="' + (amount != null ? amount : "") + '"/>'
       + '<button type="button" class="btn-soft" id="brSave">' + t("br_save") + "</button>"
       + (amount == null ? '<i class="bo-hint">' + t("bo_set_hint") + "</i>" : "") + "</div>"
-      + grid + runway + "</div>";
+      + bar + grid + runway + "</div>";
   }
   /* Monthly order workload (owner spec v3): for each upcoming month, how
      many items hit their reorder-by date — i.e. how many orders the planner
