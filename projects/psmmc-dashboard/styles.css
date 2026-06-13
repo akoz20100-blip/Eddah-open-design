@@ -388,7 +388,9 @@ td.code .subcode .code-id{font-size:10px}
 .pill{display:inline-flex; align-items:center; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:800}
 .pill.order_now{background:var(--coral-soft); color:var(--coral)}
 .pill.warning{background:var(--amber-soft); color:var(--amber)}
-.pill.ok{background:var(--blue-soft); color:var(--blue)}
+/* P1-2: healthy "ok" needs no action — quiet neutral, like "no movement", so
+   saturated colour is reserved for states that need attention. */
+.pill.ok{background:var(--inset); color:var(--muted)}
 .pill.no_movement{background:var(--inset); color:var(--muted)}
 .pill.not_in_stock{background:var(--indigo-soft); color:var(--indigo)}
 /* Effective coverage above 13 months = overstock (owner spec v3). */

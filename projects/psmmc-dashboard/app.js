@@ -2531,8 +2531,12 @@
   }
 
   // ---------- table pieces ----------
-  var STATUS_COLOR = { order_now: "var(--coral)", warning: "var(--amber)", ok: "var(--blue)", excess: "var(--violet)", no_movement: "var(--muted-2)", not_in_stock: "var(--indigo)" };
-  function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + (STATUS_COLOR[r.status] || "var(--blue)") + '"></i></span>'; }
+  // P1-2 colour restraint: the coverage bar encodes MAGNITUDE (its width). Colour
+  // is reserved for danger so the bar stops repeating the status pill as a second
+  // rainbow — coral only when critically low (order now / out of stock), a quiet
+  // neutral otherwise. The status pill still carries the full status semantics.
+  function covBarColor(status) { return (status === "order_now" || status === "not_in_stock") ? "var(--coral)" : "var(--muted-2)"; }
+  function covCell(r) { if (r.status === "no_movement") return '<span class="muted">' + t("s_no_movement") + "</span>"; var pct = r.cov == null ? 0 : Math.min(100, (r.cov / 12) * 100); return '<span class="num">' + (r.cov == null ? "∞" : fmt1(r.cov)) + '</span><span class="covbar"><i style="width:' + pct.toFixed(0) + "%;background:" + covBarColor(r.status) + '"></i></span>'; }
   /* Expiry column: earliest batch expiry in months from the stock date.
      Flagged red when coverage outlives expiry (units would expire unused);
      "≈" marks the withdrawals-file fallback estimate. */
