@@ -77,6 +77,13 @@
       </span>
       <span class="filebtn-txt"><b data-i18n="file_pl">Planner mapping file</b><i id="plName" data-i18n="file_pl_hint">optional · NUPCO code + planner name + email</i></span>
     </label>
+    <label class="filebtn" id="lblShk">
+      <input type="file" id="fileSharek" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_shk">Sharek platform file</b><i id="shkName" data-i18n="file_shk_hint">optional · NUPCO codes listed on Sharek</i></span>
+    </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">Load sample data</button>
     <p class="upl-hint" id="uplHint">Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.</p>
   </section>

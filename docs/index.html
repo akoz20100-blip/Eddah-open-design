@@ -731,6 +731,13 @@ th.sortable:focus-visible{
       </span>
       <span class="filebtn-txt"><b data-i18n="file_pl">Planner mapping file</b><i id="plName" data-i18n="file_pl_hint">optional · NUPCO code + planner name + email</i></span>
     </label>
+    <label class="filebtn" id="lblShk">
+      <input type="file" id="fileSharek" accept=".xlsx,.xls,.csv" hidden />
+      <span class="tile tile-lav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+      </span>
+      <span class="filebtn-txt"><b data-i18n="file_shk">Sharek platform file</b><i id="shkName" data-i18n="file_shk_hint">optional · NUPCO codes listed on Sharek</i></span>
+    </label>
     <button id="btnSample" class="btn-ink" type="button" data-i18n="btn_sample">Load sample data</button>
     <p class="upl-hint" id="uplHint">Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.</p>
   </section>
@@ -856,7 +863,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   var SNAP_KEY = "psmmc_snapshots_v1", LANG_KEY = "psmmc_lang", BASE_KEY = "psmmc_baseline_v1", MAP_KEY = "psmmc_idmap_v1";
   var HIST_KEY = "psmmc_history_v1", HIST_MAX_MONTHS = 24;
   var BUDGET_KEY = "psmmc_budget_v1", PO_KEY = "psmmc_po_v1", ORD_KEY = "psmmc_orders_v1", TH_KEY = "psmmc_threshold_v1";
-  var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1", LEDGER_KEY = "psmmc_orders_ledger_v1";
+  var WATCH_KEY = "psmmc_watch_v1", PLANNER_KEY = "psmmc_planner_v1", LEDGER_KEY = "psmmc_orders_ledger_v1", SHAREK_KEY = "psmmc_sharek_v1";
   // Order-status semantics for the procurement ledger (Arabic NUPCO statuses
   // + English fallbacks): rejected/cancelled rows are dropped on import, an
   // "open order" is anything not rejected and not yet delivered.
@@ -932,6 +939,13 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       bw_title: "Monthly order workload", bw_month: "Month", bw_orders: "Orders to raise", bw_value: "Value (SAR)", bw_now: "This month (incl. overdue)",
       ex_workload_t: "Monthly order workload", ex_workload_b: "Each item lands in the month its Reorder-By date falls in (reorder-by = the day effective coverage drops to 6 months). Items already past that date count in the current month — they are today's workload. The planner split counts items assigned to each planner from the planner file; SAR value = Σ suggested qty × unit price for priced items.",
       em_urgency: "Expedite order (email)", em_replace: "Request replacement (email)",
+      file_shk: "Sharek platform file", file_shk_hint: "optional · NUPCO codes listed on Sharek",
+      err_shk: "Could not read Sharek file", shk_loaded: "{n} Sharek codes saved",
+      f_sharek: "Zero & on Sharek", c_sharek: "Sharek", shk_yes: "On Sharek",
+      k_zero_sharek: "{n} of them available on Sharek",
+      ex_col_sharek_t: "Sharek availability", ex_col_sharek_b: "Marks ZERO-stock items whose NUPCO code is listed on the Sharek marketplace — the hospital can source them there when the supplier is slow or the budget is short. Joined by NUPCO code from the uploaded Sharek export (saved on this device).",
+      ev_export: "Export view",
+      rp_total_stock: "Item total stock", rp_excess: "Excess qty (>9 mo)",
       rk_spend: "Top 50 by order spend", rk_inventory: "Top 50 by inventory value",
       ex_rk_spend_t: "Top 50 by order spend", ex_rk_spend_b: "Drugs ranked by the total SAR value of their procurement orders in the ledger (sum of every order's item total value), with how many orders each has. Independent of the price file.",
       ex_rk_inventory_t: "Top 50 by inventory value", ex_rk_inventory_b: "Items ranked by the SAR value of stock sitting in the warehouse (available units × unit price). Needs the price file. Highlights where capital is tied up.",
@@ -1132,6 +1146,13 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       bw_title: "حِمل الطلبات الشهري", bw_month: "الشهر", bw_orders: "طلبات تُرفع", bw_value: "القيمة (ريال)", bw_now: "هذا الشهر (مع المتأخر)",
       ex_workload_t: "حِمل الطلبات الشهري", ex_workload_b: "كل بند يقع في الشهر الذي يحلّ فيه تاريخ «أعد الطلب قبل» (وهو اليوم الذي تهبط فيه التغطية الفعلية إلى 6 أشهر). البنود التي تجاوزت ذلك التاريخ تُحسب في الشهر الحالي — فهي حِمل اليوم. توزيع المخططين يَعُدّ بنود كل مخطط من ملف المخططين؛ والقيمة بالريال = مجموع الكمية المقترحة × سعر الوحدة للبنود المسعّرة.",
       em_urgency: "استعجال الطلب (إيميل)", em_replace: "طلب استبدال (إيميل)",
+      file_shk: "ملف منصة شارك", file_shk_hint: "اختياري · أكواد نبكو المتاحة في شارك",
+      err_shk: "تعذّرت قراءة ملف شارك", shk_loaded: "تم حفظ {n} كودًا من شارك",
+      f_sharek: "صفري ومتاح في شارك", c_sharek: "شارك", shk_yes: "متاح في شارك",
+      k_zero_sharek: "منها {n} متاح في منصة شارك",
+      ex_col_sharek_t: "التوفر في شارك", ex_col_sharek_b: "تعليم البنود الصفرية التي يظهر كود نبكو الخاص بها في منصة شارك — يستطيع المستشفى طلبها من هناك إذا تأخّر المورّد أو ضاقت الميزانية. الربط بكود نبكو من ملف شارك المرفوع (محفوظ على هذا الجهاز).",
+      ev_export: "تصدير العرض",
+      rp_total_stock: "إجمالي المخزون للبند", rp_excess: "الكمية الزائدة (>٩ أشهر)",
       rk_spend: "أعلى ٥٠ إنفاقًا (طلبات)", rk_inventory: "أعلى ٥٠ قيمة مخزون",
       ex_rk_spend_t: "أعلى ٥٠ إنفاقًا حسب الطلبات", ex_rk_spend_b: "ترتيب الأدوية حسب إجمالي قيمة طلبات الشراء بالريال في السجل (مجموع قيمة كل طلب)، مع عدد الطلبات لكل دواء. مستقل عن ملف الأسعار.",
       ex_rk_inventory_t: "أعلى ٥٠ قيمة مخزون", ex_rk_inventory_b: "ترتيب البنود حسب قيمة المخزون الراكد في المستودع بالريال (الكمية المتاحة × سعر الوحدة). يحتاج ملف الأسعار. يبيّن أين يتجمّد رأس المال.",
@@ -2351,7 +2372,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   }
 
   /* ---------- budget runway / PO ledger / on-order flags / thresholds ---------- */
-  var BUDGET = null, PO = null, ORDERS = null, THRESH = null, LEDGER = null;
+  var BUDGET = null, PO = null, ORDERS = null, THRESH = null, LEDGER = null, SHAREK = null;
   function loadJson(key, check) { try { var v = JSON.parse(localStorage.getItem(key)); return v && check(v) ? v : null; } catch (e) { return null; } }
   /* ---------- watchlist (ROADMAP step 3) ----------
      The planner stars critical items; pins persist on this device like the
@@ -2553,6 +2574,28 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     return null;
   }
   function loadLedger() { return loadJson(LEDGER_KEY, function (v) { return v.entries; }); }
+  /* ---------- Sharek platform mapping (owner spec v3 wave 5) ----------
+     The Sharek marketplace lists items other hospitals can supply. The owner
+     uploads its export once (NUPCO-code join, persisted); the dashboard then
+     marks which ZERO-stock items the hospital could source through Sharek
+     when the supplier is slow or the budget is short. */
+  function parseSharek(aoa) {
+    if (!aoa || !aoa.length) throw new Error("empty");
+    var H = aoa[0];
+    var ci = findCol(H, ["NUPCO Code", "NUPCO Material", "NUPCO", "Generic Mat Code", "Generic Item Number", "Material", "Code", "كود نبكو", "رقم نبكو", "نبكو", "الكود"]);
+    if (ci < 0) throw new Error("cols:NUPCO Code");
+    var byCode = {}, n = 0;
+    for (var r = 1; r < aoa.length; r++) {
+      var row = aoa[r]; if (!row) continue;
+      var code = normCode(row[ci]);
+      if (!code || !isDrug(code) || byCode[code]) continue;
+      byCode[code] = 1; n++;
+    }
+    if (!n) throw new Error("empty-sharek");
+    return { byCode: byCode, count: n };
+  }
+  function loadSharek() { return loadJson(SHAREK_KEY, function (v) { return v.byCode; }); }
+  function onSharek(code) { return !!(SHAREK && SHAREK.byCode[code]); }
   /* ---------- previous-orders (PO) file ----------
      Tolerant headers; per code we keep the most recent few orders only —
      enough for "last order" + the in-transit signal without growing storage. */
@@ -2975,7 +3018,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     if (STATE.view === "averages") return STATE.rows.filter(function (r) { return r.moved || monthlySeriesFor(r.code); });
     return STATE.rows;
   }
-  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, excess: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0, covered_order: 0 }; base.forEach(function (r) { if (r.status === "order_now") { c.order_now++; if (openOrderFor(r.code)) c.covered_order++; } else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; else if (r.status === "excess") c.excess++; if (r.stock > 0) c.instock++; else c.outstock++; if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
+  function filterCounts(base) { var c = { all: base.length, order_now: 0, no_movement: 0, not_in_stock: 0, warning: 0, ok: 0, excess: 0, instock: 0, outstock: 0, newitem: 0, watchlist: 0, covered_order: 0, sharek_zero: 0 }; base.forEach(function (r) { if (r.status === "order_now") { c.order_now++; if (openOrderFor(r.code)) c.covered_order++; } else if (r.status === "no_movement") c.no_movement++; else if (r.status === "not_in_stock") c.not_in_stock++; else if (r.status === "warning") c.warning++; else if (r.status === "ok") c.ok++; else if (r.status === "excess") c.excess++; if (r.stock > 0) c.instock++; else { c.outstock++; if (onSharek(r.code)) c.sharek_zero++; } if (r.trend && r.trend.type === "new") c.newitem++; if (isPinned(r.code)) c.watchlist++; }); return c; }
   function applyFilter(base) {
     var f = STATE.filter;
     var rows = base.filter(function (r) {
@@ -2984,6 +3027,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         if (f === "watchlist") return isPinned(r.code);
         // "Tight but covered": would-be order_now items with a live order.
         if (f === "covered_order") return r.status === "order_now" && !!openOrderFor(r.code);
+        // Zero balance here, but listed on the Sharek marketplace.
+        if (f === "sharek_zero") return r.stock <= 0 && onSharek(r.code);
         return r.status === f;
       }
       if (STATE.view === "averages") {
@@ -3204,14 +3249,14 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
   /* The four figures the planner reads before anything else, shared by the
      planning cards, the email/WhatsApp report, and the print sheet. */
   function decisionStats(base) {
-    var s = { orderCount: 0, notStockCount: 0, orderUnits: 0, critical: 0, totalUnits: 0, sumAvg: 0, overallCov: null, momPct: null, momA: null, momB: null, itemsTotal: base.length, withStock: 0, zeroStock: 0 };
+    var s = { orderCount: 0, notStockCount: 0, orderUnits: 0, critical: 0, totalUnits: 0, sumAvg: 0, overallCov: null, momPct: null, momA: null, momB: null, itemsTotal: base.length, withStock: 0, zeroStock: 0, zeroSharek: 0 };
     base.forEach(function (r) {
       if (r.status === "order_now") { s.orderCount++; s.orderUnits += r.sug; }
       else if (r.status === "not_in_stock") { s.notStockCount++; s.orderUnits += r.sug; }
       if (r.moved && r.stock <= 0) s.critical++;
       // Item counts (owner spec v3 KPI cards): an item is "with stock" when
       // any available units exist; everything else is a zero-stock item.
-      if (r.stock > 0) s.withStock++; else s.zeroStock++;
+      if (r.stock > 0) s.withStock++; else { s.zeroStock++; if (onSharek(r.code)) s.zeroSharek++; }
       s.totalUnits += r.stock;
       s.sumAvg += r.avg;
     });
@@ -3388,8 +3433,12 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
         return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + '<td class="sparkcell">' + sparkSVG(ser && ser.vals) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + statusCell(r) + "</td></tr>";
       }).join("");
     } else {
-      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_planner") + "</th><th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true, "ex_col_total") + th("avg", t("c_avg"), true, "ex_col_avg") + thp(t("c_trend"), "ex_col_trend") + th("stock", t("c_stock"), true, "ex_col_stock") + th("cov", t("c_cov"), false, "ex_col_cov") + th("expMonths", t("c_expiry"), false, "ex_col_expiry") + thp(t("c_stockout"), "ex_col_proj") + thp(t("c_status"), "ex_col_status") + th("qty9", t("c_qty9"), true, "ex_col_qty9") + th("sug", t("c_sug"), true, "ex_col_sug") + "</tr></thead>";
-      body = rows.map(function (r) { return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + plannerCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + projCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td></tr>"; }).join("");
+      // The Sharek column (after the suggested order) appears once the
+      // platform file is loaded: ✓ marks a ZERO-stock item the hospital can
+      // source through Sharek instead of waiting on the supplier.
+      var shTh = SHAREK ? thp(t("c_sharek"), "ex_col_sharek") : "";
+      head = "<thead><tr>" + th("code", t("c_code")) + th("desc", t("c_desc")) + "<th>" + t("c_planner") + "</th><th>" + t("c_uom") + "</th>" + th("total", t("c_total"), true, "ex_col_total") + th("avg", t("c_avg"), true, "ex_col_avg") + thp(t("c_trend"), "ex_col_trend") + th("stock", t("c_stock"), true, "ex_col_stock") + th("cov", t("c_cov"), false, "ex_col_cov") + th("expMonths", t("c_expiry"), false, "ex_col_expiry") + thp(t("c_stockout"), "ex_col_proj") + thp(t("c_status"), "ex_col_status") + th("qty9", t("c_qty9"), true, "ex_col_qty9") + th("sug", t("c_sug"), true, "ex_col_sug") + shTh + "</tr></thead>";
+      body = rows.map(function (r) { var shTd = SHAREK ? '<td class="sharekcell">' + (r.stock <= 0 && onSharek(r.code) ? '<span class="pill ok">' + t("shk_yes") + "</span>" : '<span class="muted">—</span>') + "</td>" : ""; return '<tr data-code="' + esc(r.code) + '">' + codeCell(r) + descCell(r) + plannerCell(r) + "<td>" + esc(r.uom || "—") + "</td><td class=\"right num\">" + fmtInt(r.total) + "</td><td class=\"right num\">" + fmt1(r.avg) + "</td><td>" + trendCell(r) + "</td><td class=\"right num\">" + fmtInt(r.stock) + "</td><td>" + covCell(r) + "</td>" + expCell(r) + projCell(r) + "<td>" + statusCell(r) + "</td><td class=\"right num\">" + fmtInt(r.qty9) + "</td><td class=\"right num sug\">" + fmtInt(r.sug) + (r.seasonal ? ' <i class="seasonal-tag" title="' + esc(tFmt("ss_basis", { n: fmtInt(r.seasonal) })) + '">' + t("ss_tag") + "</i>" : "") + "</td>" + shTd + "</tr>"; }).join("");
     }
     var shown = rows.length;
     // Catalog fallback: a search that misses every loaded row also scans the
@@ -3425,7 +3474,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order")
       + cardDecision(t("k_critical"), fmtInt(s.critical) + ' <small>' + t("items_word") + '</small>', ICON.ban, "tile-coral", t("k_critical_sub"), null, "ex_critical")
       + cardDecision(t("k_items"), fmtInt(s.itemsTotal) + ' <small>' + t("items_word") + '</small>', ICON.grid, "tile-lav", tFmt("k_items_sub", { a: fmtInt(s.withStock), p: pctWith }), null, "ex_items")
-      + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }), null, "ex_zero")
+      + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }) + (SHAREK ? " · " + tFmt("k_zero_sharek", { n: fmtInt(s.zeroSharek) }) : ""), null, "ex_zero")
       + cardOrderSheet(base)
       // The monthly stream keeps the consumption trend; the MoM badge of the
       // retired consumption card moves into its title so the signal survives.
@@ -3434,11 +3483,32 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       + '</div>';
     var secline = '<div class="secline"><span class="secbadge">' + t("k_watch") + ' <b class="num">' + fmtInt(c.warning) + '</b></span><span class="secbadge">' + t("k_nomove") + ' <b class="num">' + fmtInt(c.no_movement) + '</b></span><span class="secbadge">' + t("s_ok") + ' <b class="num">' + fmtInt(c.ok) + '</b></span></div>';
     var coveredChip = c.covered_order > 0 ? fchip("covered_order", t("f_covered_order"), c.covered_order, ICON.truck || ICON.box) : "";
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + copyAllChip() + "</div>";
+    var sharekChip = SHAREK ? fchip("sharek_zero", t("f_sharek"), c.sharek_zero, ICON.grid) : "";
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + sharekChip + copyAllChip() + exportViewChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
     return '<button type="button" class="fchip" id="copyAllCodes"><span class="fic">' + ICON.copy + '</span>' + t("cp_copy_all") + '</button>';
+  }
+  /* Per-filter export (owner spec v3 wave 5): one click downloads exactly
+     what the active filter + search show — e.g. the "zero & on Sharek" list
+     a planner forwards as one batch of orders. */
+  function exportViewChip() {
+    return '<button type="button" class="fchip" id="exportView"><span class="fic">' + ICON.download + '</span>' + t("ev_export") + '</button>';
+  }
+  function exportCurrentView() {
+    var rows = applyFilter(viewBase());
+    if (!rows.length) { toast(t("cp_none")); return; }
+    var aoa = [[t("c_code"), t("c_desc"), t("c_planner"), t("c_uom"), t("c_stock"), t("c_cov"), t("c_status"), t("dt_stockout"), t("dt_reorder"), t("c_sug")].concat(SHAREK ? [t("c_sharek")] : [])];
+    rows.forEach(function (r) {
+      aoa.push([r.code, r.desc, plannerName(r) || t("planner_unassigned"), r.uom || "", Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), r.stockoutIso ? prettyDate(r.stockoutIso) : "", r.reorderIso ? prettyDate(r.reorderIso) : "", Math.round(r.sug)].concat(SHAREK ? [onSharek(r.code) ? t("shk_yes") : ""] : []));
+    });
+    var wb = XLSX.utils.book_new();
+    var ws = sheetFrom(aoa, [16, 34, 16, 8, 11, 9, 12, 14, 14, 12, 10], { 4: INT_FMT, 5: DEC1_FMT, 9: INT_FMT }, true);
+    XLSX.utils.book_append_sheet(wb, ws, "View");
+    var name = "PSMMC_view_" + (STATE.filter || "all") + "_" + (isoDate(new Date())) + ".xlsx";
+    XLSX.writeFile(wb, name);
+    toast((LANG === "ar" ? "تم تصدير العرض → " : "Exported view → ") + name);
   }
   /* Per-upload data-quality card (ROADMAP step 2): nothing is excluded
      silently — every upload reports accepted/rejected rows with named
@@ -3721,20 +3791,23 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     // SAR value per batch = qty × the item's unit price; total only counts
     // priced items (unpriced rows keep "—" so the figure stays honest).
     var priced = hasPrices();
+    // Planner chips count ITEMS (distinct products), not units — the owner
+    // plans workload by how many line items each planner must chase.
     var totalQty = 0, totalVal = 0, byPlanner = {};
     rows.forEach(function (x) {
       totalQty += x.q;
       if (priced && x.r.unitPrice) totalVal += x.q * x.r.unitPrice;
       var pn = plannerName(x.r) || t("planner_unassigned");
-      byPlanner[pn] = (byPlanner[pn] || 0) + x.q;
+      (byPlanner[pn] = byPlanner[pn] || {})[x.r.code] = 1;
     });
+    Object.keys(byPlanner).forEach(function (pn) { byPlanner[pn] = Object.keys(byPlanner[pn]).length; });
     var filters = '<div class="filters">'
       + fchipE("atrisk", t("ev_atrisk"), counts.atrisk, ICON.alert)
       + fchipE("expired", t("ev_expired"), counts.expired, ICON.ban)
       + '<span class="fil-sep"></span>'
       + fsortE("exp", t("ev_sort_exp")) + fsortE("qty", t("ev_sort_qty")) + "</div>";
     var plannerChips = Object.keys(byPlanner).sort(function (a, b) { return byPlanner[b] - byPlanner[a]; }).slice(0, 8)
-      .map(function (pn) { return '<span class="ev-planner">' + esc(pn) + ' <b class="num">' + fmtM(byPlanner[pn]) + "</b></span>"; }).join("");
+      .map(function (pn) { return '<span class="ev-planner">' + esc(pn) + ' <b class="num">' + fmtInt(byPlanner[pn]) + "</b> " + t("items_word") + "</span>"; }).join("");
     var summary = '<div class="kcard span12 expiry-summary"><div class="ev-tot">'
       + '<span class="stat"><b class="num">' + fmtInt(rows.length) + '</b><i>' + t("ev_batches") + "</i></span>"
       + '<span class="stat"><b class="num ev-total-qty">' + fmtM(totalQty) + '</b><i>' + t("ev_total_qty") + "</i></span>"
@@ -4096,6 +4169,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var ow = $("osWa"); if (ow) ow.onclick = waReport;
     var op = $("osPrint"); if (op) op.onclick = printOrderSheet;
     var ca = $("copyAllCodes"); if (ca) ca.onclick = copyAllCodes;
+    var ev = $("exportView"); if (ev) ev.onclick = exportCurrentView;
     var he = $("histExport"); if (he) he.onclick = exportHistory;
     var hi = $("histImport"); if (hi) hi.onclick = importHistory;
     var dg = $("dgDismiss"); if (dg) dg.onclick = function () { STATE.digest = null; render(); };
@@ -4244,18 +4318,23 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     XLSX.utils.book_append_sheet(wb, sheetFrom(reAoa, [16, 34, 18, 8, 11, 12, 11, 14, 14, 12, 12, 12, 14], reFmt, true), "Reorder");
     // --- At-Risk + Expired batch sheets ---
     function batchSheet(kind) {
-      var head = [t("c_code"), t("c_desc"), t("c_lot"), t("c_expdate"), t("ev_tte"), t("ev_total_qty"), t("c_planner"), t("c_value")];
+      // Richer detail per the owner's spec: alongside each batch, the ITEM's
+      // total stock, its effective coverage, and its excess quantity beyond
+      // the 9-month target — so one row answers "how much do we hold, how
+      // long does it last, how much is simply surplus".
+      var head = [t("c_code"), t("c_desc"), t("c_lot"), t("c_expdate"), t("ev_tte"), t("ev_total_qty"), t("rp_total_stock"), t("c_cov"), t("rp_excess"), t("c_planner"), t("c_value")];
       var aoa = [head];
       var asOf = parseIsoLocal(STATE.meta.stock_as_of) || new Date();
       STATE.rows.forEach(function (r) {
         var list = kind === "expired" ? r.expiredBatches : r.atRiskBatches;
         if (!list) return;
+        var excess = Math.max(0, Math.round((r.usable || 0) - (r.qty9 || 0)));
         list.forEach(function (b) {
           var d = parseIsoLocal(b.e), mo = d ? Math.round((d - asOf) / 86400000 / DAYS_PER_MONTH * 10) / 10 : "";
-          aoa.push([r.code, r.desc, b.b || "", prettyDate(b.e), mo, Math.round(b.q), plannerName(r) || t("planner_unassigned"), ""]);
+          aoa.push([r.code, r.desc, b.b || "", prettyDate(b.e), mo, Math.round(b.q), Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, excess, plannerName(r) || t("planner_unassigned"), r.unitPrice ? Math.round(b.q * r.unitPrice) : ""]);
         });
       });
-      return sheetFrom(aoa, [16, 34, 16, 14, 11, 13, 18, 14], { 4: DEC1_FMT, 5: INT_FMT, 7: SAR_FMT }, true);
+      return sheetFrom(aoa, [16, 34, 16, 14, 11, 13, 13, 10, 12, 18, 14], { 4: DEC1_FMT, 5: INT_FMT, 6: INT_FMT, 7: DEC1_FMT, 8: INT_FMT, 10: SAR_FMT }, true);
     }
     XLSX.utils.book_append_sheet(wb, batchSheet("atrisk"), "At-Risk");
     XLSX.utils.book_append_sheet(wb, batchSheet("expired"), "Expired");
@@ -4503,6 +4582,8 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     WATCH = loadWatch();
     PLANNERS = loadPlanners();
     LEDGER = loadLedger();
+    SHAREK = loadSharek();
+    if (SHAREK && $("lblShk")) $("lblShk").classList.add("is-baseline");
     if (PLANNERS && $("lblPl")) $("lblPl").classList.add("is-baseline");
     if ((PO || LEDGER) && $("lblPo")) $("lblPo").classList.add("is-baseline");
     // PWA: register the cache-first service worker (https only — file:// and
@@ -4658,6 +4739,27 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
           if (STATE.rows.length) render();
           toast(tFmt("po_loaded", { n: fmtInt(parsed.count) }));
         } catch (ex) { toast(t("err_po") + colsHint(ex)); }
+      });
+    };
+    var fsk = $("fileSharek");
+    if (fsk) fsk.onchange = function (e) {
+      var f = e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      readWorkbook(f, function (err, aoa) {
+        if (err) { toast(t("err_shk")); return; }
+        try {
+          var parsed = parseSharek(aoa);
+          // Replace (not merge): each Sharek export is the platform's current
+          // catalog snapshot — stale availability must drop out.
+          SHAREK = { byCode: parsed.byCode, count: parsed.count, name: f.name, savedAt: new Date().toISOString() };
+          persist(SHAREK_KEY, SHAREK);
+          $("lblShk").classList.remove("is-baseline");
+          $("lblShk").classList.add("is-loaded");
+          applyStatic();
+          if (STATE.rows.length) render();
+          toast(tFmt("shk_loaded", { n: fmtInt(parsed.count) }));
+        } catch (ex) { toast(t("err_shk") + colsHint(ex)); }
       });
     };
     var fpl = $("filePlanner");

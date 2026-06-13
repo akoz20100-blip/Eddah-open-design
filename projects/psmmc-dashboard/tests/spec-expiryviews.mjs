@@ -79,6 +79,12 @@ try {
     R.ok(arState.qty.includes(fmtM(X.atRisk.qty)), `At-Risk total units ${fmtM(X.atRisk.qty)} shown (got "${arState.qty}")`);
     R.ok(arState.hasAnchor, `at-risk batch for ${AR_CODE} (BISOPROLOL) is listed`);
     R.ok(arState.planner.some((p) => /Unassigned/i.test(p)), `per-planner subtotal shows Unassigned (got ${JSON.stringify(arState.planner)})`);
+    // Owner spec v3 wave 5: planner chips count ITEMS, not units («يهمني كم
+    // عدد البنود عند كل مخطط»). With no planner file everything is
+    // Unassigned, so its chip must equal the distinct at-risk product count.
+    const unassigned = arState.planner.find((p) => /Unassigned/i.test(p));
+    R.ok(unassigned && unassigned.includes(X.atRisk.codes.size.toLocaleString("en-US")),
+      `planner chip counts ${X.atRisk.codes.size} ITEMS, not units (got "${unassigned}")`);
     R.ok(/—|add prices/i.test(arState.value), `value column is pending prices (got "${arState.value.trim()}")`);
   }
 
