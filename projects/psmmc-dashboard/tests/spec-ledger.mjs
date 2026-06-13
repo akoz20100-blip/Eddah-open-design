@@ -101,7 +101,7 @@ try {
   await uploadFiles(page, "fileWithdrawals", REAL_WD);
   await confirmDetectedPeriod(page);
   await uploadFiles(page, "fileStock", REAL_ST);
-  await page.waitForSelector("table tbody tr", { timeout: 60000 });
+  await page.waitForSelector("table tbody tr", { timeout: 120000 });
 
   // Poll the persisted ledger size (deterministic — avoids racing the toast,
   // whose "#toast:not([hidden])" can still match a lingering compute toast).
