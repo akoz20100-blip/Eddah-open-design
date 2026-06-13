@@ -350,8 +350,11 @@ tbody tr:hover td.code, tbody tr:hover td.desc{background:#fafbff}
   .tablewrap td.code .copyic{display:none}
 }
 table{width:100%; border-collapse:collapse; font-size:13px; min-width:860px}
-thead th{background:#fafafc; text-align:start; padding:13px 14px; font-size:11px;
-  font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; cursor:pointer;
+/* Wave 6 UX (P1-1): sentence-case headers — ALL-CAPS slows Latin reading
+   (word-shape loss) and `letter-spacing` breaks Arabic letter-joining since
+   `thead th` is outside the Arabic tracking-reset list. */
+thead th{background:#fafafc; text-align:start; padding:13px 14px; font-size:11.5px;
+  font-weight:800; color:var(--muted); cursor:pointer;
   white-space:nowrap; border-bottom:1px solid var(--line)}
 thead th.sortable:hover{color:var(--ink)}
 thead th .arrow{opacity:.35; font-size:10px}

@@ -1,5 +1,22 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P1-1 — sentence-case table headers (Arabic-joining fix) (2026-06-13)
+
+First UX-track change after an independent re-verification confirmed all of wave 6
+merged and clean (suite 42/42; 4-agent fleet: mobile-QA + desktop-QA both ✅ incl.
+the two reported mobile bugs B1/B2 fixed; security clean — no Critical/High/Medium;
+UX agent returned 11 prioritised recs). `thead th` used `text-transform:uppercase`
++ `letter-spacing:.04em`, and `thead th` is NOT in the Arabic letter-spacing reset
+list (styles.css L51) — so Arabic column headers got .04em tracking that breaks
+letter-joining (a real rendering defect in the owner's primary language), and caps
+slow Latin reading. Fixed to sentence case + normal tracking (font 11→11.5px).
+Red-first `spec-headerlegibility` (red: computed text-transform `uppercase`,
+letter-spacing `0.44px` in EN+AR → green: `none` / `normal`). CSS-only, no DOM-text
+change, no spec regressions. Suite 43/43. build.py → 1840 KB. Owner explicitly keeps
+the `+/-` upload toggle (UX agent's chevron suggestion overridden). Remaining UX recs
+(P0-1 lead card, P0-2 urgency rollup, P0-3 column zoning, P1-2 colour restraint, P1-3
+sheet zoning, P1-4 budget bar, P1-5 hover, P1-6 toolbar) staged for owner prioritisation.
+
 ## Wave 6 §ز — latent fractional-stock bucket guard (2026-06-13)
 
 Defensive fix for the long-noted latent bug (`renderManagement`, the stock
