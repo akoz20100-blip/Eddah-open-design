@@ -2427,7 +2427,7 @@
   function cardTicks(label, icon, valueHtml, counts, hiIdx, tickVal, tickUnit, span) {
     return '<div class="kcard ' + (span == null ? "span3" : span) + '"><div class="khead"><span class="tile tile-gray">' + icon + '</span>'
       + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + valueHtml + '</span></span></div>'
-      + '<div class="inset-ticks">' + ticksSVG(counts, hiIdx) + '<span class="tick-val"><b class="num">' + tickVal + '</b><i>' + tickUnit + '</i></span></div></div>';
+      + '<div class="inset-ticks" data-counts="' + counts.join(",") + '">' + ticksSVG(counts, hiIdx) + '<span class="tick-val"><b class="num">' + tickVal + '</b><i>' + tickUnit + '</i></span></div></div>';
   }
   function cardMini(title, badge, tileCls, icon, bold, sub, span) {
     return '<div class="kcard ' + (span == null ? "span3" : span) + '"><div class="ktitle-row"><span class="ktitle">' + title + '</span><span class="kbadge num">' + badge + '</span></div>'
@@ -3016,7 +3016,12 @@
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
     var avgPerItem = base.length ? totalUnits / base.length : 0;
     var buckets = [0, 0, 0, 0, 0, 0, 0, 0];
-    base.forEach(function (r) { buckets[r.stock <= 0 ? 0 : Math.min(7, Math.floor(Math.log(r.stock) / Math.LN10) + 1)]++; });
+    // Bucket by order of magnitude. Math.max(0, …) guards fractional stock
+    // 0 < q < 1: log10(q) is negative, so floor(log10(q))+1 can be 0 or
+    // NEGATIVE — an out-of-range index would silently drop the item (and write
+    // a NaN onto buckets[-1]). Real available quantities are integers, but
+    // a fractional/synthetic file must still bucket every in-stock item.
+    base.forEach(function (r) { buckets[r.stock <= 0 ? 0 : Math.min(7, Math.max(0, Math.floor(Math.log(r.stock) / Math.LN10) + 1))]++; });
     var hiIdx = 0, hiVal = -1;
     buckets.forEach(function (v, i) { if (v > hiVal) { hiVal = v; hiIdx = i; } });
     var valueCard;
