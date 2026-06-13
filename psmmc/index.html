@@ -328,13 +328,25 @@ html[dir="rtl"] .tablewrap :is(table.t-main td.code, table.t-main thead th:first
 html[dir="rtl"] .tablewrap table.t-main :is(td.code + td.desc, thead th:nth-child(2)){right:158px}
 tbody tr:hover td.code, tbody tr:hover td.desc{background:#fafbff}
 @media (max-width:640px){
-  /* A frozen name column would eat most of a phone screen; keep the code
-     column + the header row frozen and let the name scroll (the desc header
-     keeps its vertical top-pin, only the horizontal pin is released). */
-  .tablewrap table.t-main td.code + td.desc{position:static}
-  html[dir="ltr"] .tablewrap table.t-main thead th:nth-child(2){left:auto}
-  html[dir="rtl"] .tablewrap table.t-main thead th:nth-child(2){right:auto}
-  .tablewrap table.t-main td.code{min-width:118px; max-width:118px}
+  /* Wave 6 B2: KEEP the drug-name column pinned next to the code column on a
+     phone so a horizontal scroll never makes the name disappear (the previous
+     build unpinned it to save width, which is exactly the owner's bug). The
+     code column is narrower here, so the name pins right after it (140px),
+     and the name itself is width-capped so the data columns still scroll. */
+  .tablewrap table.t-main td.code{min-width:150px; max-width:150px; padding-left:6px; padding-right:6px}
+  html[dir="ltr"] .tablewrap table.t-main :is(td.code + td.desc, thead th:nth-child(2)){left:150px}
+  html[dir="rtl"] .tablewrap table.t-main :is(td.code + td.desc, thead th:nth-child(2)){right:150px}
+  .tablewrap table.t-main td.desc{min-width:132px; max-width:160px}
+  /* On the narrow phone column the type tags take their natural width (no
+     fixed column) and the values shrink a touch so the full 13-digit NUPCO
+     code and the 12-digit MSD code both fit without spilling into the name or
+     getting truncated (B1). */
+  .tablewrap td.code .code-lbl{min-width:0}
+  .tablewrap td.code .code-id-main{font-size:11.5px}
+  .tablewrap td.code .code-id-main .code-val{overflow:visible}
+  .tablewrap td.code .subcode .code-id{font-size:9.5px}
+  /* The hover-only copy glyph wastes width on touch; the cell still tap-copies. */
+  .tablewrap td.code .copyic{display:none}
 }
 table{width:100%; border-collapse:collapse; font-size:13px; min-width:860px}
 thead th{background:#fafafc; text-align:start; padding:13px 14px; font-size:11px;
@@ -350,7 +362,19 @@ tbody tr:last-child td{border-bottom:0}
 td.desc{white-space:normal; min-width:230px; max-width:330px; font-weight:600}
 td.desc .tradename{display:block; font-style:normal; font-size:11px; font-weight:700; color:var(--blue); margin-top:1px}
 td.code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; color:var(--muted)}
+/* Wave 6 C1: each identifier on its own line with a short type tag (NUPCO /
+   Hospital / MSD). Tags use the UI font; values keep the monospace + tabular
+   alignment. Stacking keeps codes inside the narrow phone column (B1). */
+td.code.copyable{display:flex; align-items:flex-start; gap:2px}
+td.code .code-stack{display:flex; flex-direction:column; gap:1px; min-width:0}
+td.code .code-id{display:flex; align-items:baseline; gap:5px; line-height:1.45}
+td.code .code-id-main{font-size:12px; color:var(--ink-2); font-weight:600}
+td.code .code-lbl{flex:0 0 auto; min-width:50px; font-family:-apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif;
+  font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--muted-2)}
+html[lang="ar"] td.code .code-lbl{font-family:"IBM Plex Sans Arabic",Tajawal,"Segoe UI",sans-serif; letter-spacing:0}
+td.code .code-val{overflow:hidden; text-overflow:ellipsis}
 td.code .subcode{display:block; font-size:10px; color:var(--muted-2); margin-top:2px}
+td.code .subcode .code-id{font-size:10px}
 .right{text-align:end}
 .pill{display:inline-flex; align-items:center; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:800}
 .pill.order_now{background:var(--coral-soft); color:var(--coral)}
@@ -905,6 +929,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       mp_linked: "items linked",
       mp_no_trade: "No trade-name column was recognized in this file — name search will stay limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
+      lbl_nupco: "NUPCO", lbl_hosp: "Hospital", lbl_msd: "MSD",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
       upl_hint: "Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.",
@@ -1115,6 +1140,7 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
       mp_linked: "صنف مرتبط",
       mp_no_trade: "لم يتم التعرف على عمود الاسم التجاري في هذا الملف — البحث بالاسم سيبقى محدودًا",
       c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD", c_agent: "الوكيل / المورد", c_class: "التصنيف",
+      lbl_nupco: "نبكو", lbl_hosp: "مستشفى", lbl_msd: "MSD",
       dt_agent: "الوكيل / المورد",
       btn_sample: "تحميل بيانات تجريبية",
       upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).",
@@ -3373,15 +3399,21 @@ window.PSMMC_SAMPLE = {"period_start":"2026-01-01","period_end":"2026-06-10","ac
     var on = isPinned(r.code);
     return '<button type="button" class="pin-btn' + (on ? " is-on" : "") + '" data-pin="' + esc(r.code) + '" aria-pressed="' + (on ? "true" : "false") + '" title="' + esc(t(on ? "pin_remove" : "pin_add")) + '">' + (on ? "★" : "☆") + "</button>";
   }
-  /* Hospital + MSD codes render in FULL and copy individually (owner spec
-     v3): each subcode is its own copy target, separate from the NUPCO code
-     the cell itself copies. */
-  function subCodeChip(v) {
-    return v ? '<u class="copy-sub num" data-copy="' + esc(v) + '">' + esc(v) + "</u>" : "";
+  /* Hospital + MSD codes render in FULL, each LABELLED by type (owner wave 6
+     C1) and copyable individually (owner spec v3); the NUPCO code is the
+     headline and copies via the cell itself. Each identifier sits on its own
+     line so the codes never overflow the narrow phone code column (wave 6 B1).
+     The `.subcode` container + `.copy-sub`/`data-copy` contract is preserved. */
+  function subCodeChip(labelKey, v) {
+    return v ? '<span class="code-id"><b class="code-lbl">' + t(labelKey) + '</b><u class="copy-sub num" data-copy="' + esc(v) + '">' + esc(v) + "</u></span>" : "";
   }
   function codeCell(r) {
-    var sub = [subCodeChip(r.hosp), subCodeChip(r.msd)].filter(Boolean).join(" · ");
-    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode">' + sub + "</span>" : "") + "</td>";
+    var sub = [subCodeChip("lbl_hosp", r.hosp), subCodeChip("lbl_msd", r.msd)].filter(Boolean).join("");
+    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r)
+      + '<span class="code-stack">'
+      + '<span class="code-id code-id-main"><b class="code-lbl">' + t("lbl_nupco") + '</b><span class="code-val num">' + esc(r.code) + '</span> <span class="copyic">' + ICON.copy + '</span></span>'
+      + (sub ? '<span class="subcode">' + sub + "</span>" : "")
+      + "</span></td>";
   }
   /* Planner column (FEATURE 1): responsible planner from the join slot, or
      "Unassigned" until a planner-mapping file is provided. */
