@@ -281,6 +281,25 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .email-row .btn-soft{display:inline-flex; align-items:center; gap:6px}
 .email-row .btn-soft svg{width:15px; height:15px}
 
+/* Wave 6 F2: clickable workload month rows + the per-month drill-down. */
+.workloadcard .ktitle-row .ql-actions{display:flex; align-items:center; gap:10px; margin-inline-start:auto}
+.workloadcard tbody tr.bw-row{cursor:pointer; transition:background .14s var(--ease)}
+.workloadcard tbody tr.bw-row:hover,.workloadcard tbody tr.bw-row:focus-visible{background:var(--blue-soft); outline:none}
+.workloadcard td.bw-go{width:18px; text-align:center; color:var(--muted-2); font-size:18px; font-weight:800}
+html[dir="rtl"] .workloadcard td.bw-go{transform:scaleX(-1)}
+.md-sub{color:var(--muted); font-weight:700; font-size:13px; margin:2px 0 12px}
+.md-actions{margin:0 0 12px}
+.t-md{width:100%; border-collapse:collapse; font-size:12.5px}
+.t-md thead th{position:sticky; top:0; background:#fafafc; text-align:start; padding:8px 10px; font-size:10.5px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.03em}
+.t-md tbody td{padding:7px 10px; border-bottom:1px solid var(--line)}
+.modal-card.modal-md{max-width:680px; width:92vw}
+.modal-card.modal-md .tablewrap{max-height:min(56vh,520px); overflow:auto}
+/* Wave 6 F4: budget overview — a one-row money picture. */
+.budgetoverview .bo-grid{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:10px}
+.budgetoverview .stat{display:flex; flex-direction:column; gap:2px; min-width:120px}
+.budgetoverview .stat b{font-size:19px; font-weight:800; letter-spacing:-.01em}
+.budgetoverview .stat i{font-size:11.5px; color:var(--muted); font-weight:700; font-style:normal}
+.budgetoverview .stat.is-neg b{color:var(--coral)}
 /* Top-50 ranking cards: a scrollable mini-table inside a management card. */
 .rankcard .rank-scroll{max-height:300px; overflow:auto; margin-top:8px}
 .rankcard table{width:100%; border-collapse:collapse; font-size:12px}
