@@ -1,5 +1,16 @@
 # state.md — Dash project loop state
 
+## Wave 6 §ز — latent fractional-stock bucket guard (2026-06-13)
+
+Defensive fix for the long-noted latent bug (`renderManagement`, the stock
+order-of-magnitude distribution): `floor(log10(q))+1` goes 0/negative for a
+fractional available quantity 0 < q < 1, so q = 0.05 indexed `buckets[-1]` and
+the item silently vanished from the chart (and wrote NaN). Clamped with
+`Math.max(0, …)`. Real available quantities are integers (never triggered in
+production), so no behaviour change on the real files. Added a `data-counts`
+hook on the tick chart for testability. Red-first `spec-bucket` (synthetic
+fractional stock: red the 8 buckets summed to 3 of 4 in-stock items → green 4).
+
 ## Wave 6 §F — budget at a glance + per-month order cards + exports (2026-06-13)
 
 Owner's flagged priority («إعادة تصميم الميزانية + التصدير ... ناقص حاليًّا وإلزامي»).
