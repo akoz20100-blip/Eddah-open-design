@@ -1,11 +1,12 @@
-// spec-digest — PLANNER FEATURE 9 (round 3): "what changed" digest.
-// After an upload that has a previous snapshot to compare against, a
-// dismissible card on the Planning tab lists items that entered danger,
-// consumption spikes >30%, and new items.
+// spec-digest — wave 6 A3: the "what changed" digest card was removed from
+// the Planning view (owner asked for a cleaner first glance). This spec proves
+// the two-upload snapshot pipeline still works end-to-end (no page errors, the
+// table re-renders after a second upload that would previously have triggered
+// the digest) AND that the digest card no longer appears on screen.
 //
-// Timeline: Q1 upload with the 6-month override (5000001 avg 100 → cov 12 →
-// ok) seeds the snapshot; the Q2 upload (5000001 avg 400 → cov 3 → order now;
-// 5000005 brand new) must produce danger + spike + new entries.
+// Timeline: Q1 upload with the 6-month override seeds the snapshot; the Q2
+// upload (spike + status flip + a brand-new item) would have produced the
+// digest before — it must NOT render now.
 
 import { resolve } from "node:path";
 import {
@@ -32,22 +33,14 @@ try {
   await choosePeriodOverride(page, 6);
   await uploadFiles(page, "fileStock", ST);
   await page.waitForSelector("table tbody tr", { timeout: 5000 });
-  R.ok(!(await page.$(".digest")), "no digest on the first upload (nothing to compare against)");
+  R.ok(!(await page.$(".digest")), "no digest on the first upload");
 
-  // Q2: spike + status flip + a brand-new item.
+  // Q2: a comparison upload that previously produced the digest.
   await uploadFiles(page, "fileWithdrawals", WD_Q2);
   await confirmDetectedPeriod(page);
-  await page.waitForSelector(".digest", { timeout: 5000 });
-  const digest = await page.$eval(".digest", (el) => el.textContent);
-  R.ok(digest.includes("ماذا تغيّر"), "digest card titled 'what changed'");
-  R.ok(digest.includes("دخلت نطاق الخطر") && digest.includes("Paracetamol"), "items that entered danger are listed");
-  R.ok(digest.includes("قفزة استهلاك"), "consumption spikes >30% are listed");
-  R.ok(digest.includes("أصناف جديدة") && digest.includes("Insulin"), "new items are listed");
-
-  // Dismissible.
-  await page.click("#dgDismiss");
-  await page.waitForFunction(() => !document.querySelector(".digest"), null, { timeout: 3000 });
-  R.ok(true, "digest card dismisses");
+  await page.waitForSelector("table tbody tr", { timeout: 5000 });
+  const noDigest = await page.evaluate(() => !document.querySelector(".digest"));
+  R.ok(noDigest, "wave 6 A3: no digest card after the comparison upload");
 
   R.ok(pageErrors.length === 0, `no page errors (saw: ${JSON.stringify(pageErrors)})`);
 } catch (err) {

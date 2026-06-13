@@ -1,8 +1,8 @@
 // spec-sample — the embedded sample data must load cleanly and the Planning
 // decision figures must match the audited expected values.
 //
-// Protects: zero page errors on sample load; the 4 Planning decision cards
-// (needs-ordering 283, critical 72, total units 109.7M, monthly ≈ 9.5M);
+// Protects: zero page errors on sample load; the Planning decision cards
+// (needs-ordering 283; the Critical card is removed in wave 6 A4);
 // order sheet shows 7 rows; Management value card renders NO negative figure
 // (audit A1 — the "−2432M" regression); Averages tab renders.
 
@@ -44,10 +44,9 @@ try {
   R.ok(!!needOrder, "needs-ordering card present");
   if (needOrder) R.ok(leadNum(needOrder.value) === 283, `needs-ordering value is 283 (got "${needOrder.value}")`);
 
-  // critical zero-balance = 72. Arabic "حرج".
+  // Wave 6 A4: the Critical KPI card was removed from the Planning view.
   const critical = findCard("حرج", "Critical");
-  R.ok(!!critical, "critical card present");
-  if (critical) R.ok(leadNum(critical.value) === 72, `critical value is 72 (got "${critical.value}")`);
+  R.ok(!critical, "critical KPI card removed from Planning (wave 6 A4)");
 
   // Item-census cards (owner spec v3): totals/with-stock/zero counted from
   // the SAME sample dataset the page rendered.

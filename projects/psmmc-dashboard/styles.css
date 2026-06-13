@@ -96,6 +96,16 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 
 /* ---- upload card ---- */
 .uploadbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:16px; margin:0 2px 18px}
+/* Wave 6 A1: collapsible upload bar — default collapsed for a clean first view. */
+.upl-toggle{flex-basis:100%; display:flex; align-items:center; gap:10px; padding:6px 4px; border:0; background:none;
+  cursor:pointer; font-size:13px; font-weight:800; color:var(--muted); transition:.18s var(--ease); text-align:start}
+.upl-toggle:hover{color:var(--ink)}
+.upl-toggle-ic{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; flex:0 0 22px;
+  border-radius:7px; background:var(--inset); color:var(--ink); font-size:17px; font-weight:700; line-height:1}
+.upl-toggle:hover .upl-toggle-ic{background:var(--blue); color:#fff}
+.upl-body{display:contents}
+.uploadbar.is-collapsed{padding-top:12px; padding-bottom:12px}
+.uploadbar.is-collapsed .upl-body{display:none}
 .filebtn{flex:1 1 240px; display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--r-md);
   background:var(--inset); cursor:pointer; transition:.18s var(--ease); border:1px solid transparent}
 .filebtn:hover{background:#fff; border-color:var(--line); box-shadow:var(--shadow)}

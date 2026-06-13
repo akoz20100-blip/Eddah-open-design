@@ -104,16 +104,9 @@ try {
   );
   await page.keyboard.press("Escape");
 
-  // ---- digest: coverage-outlives-expiry callout ----------------------------
-  const digest = await page.evaluate(() => {
-    const card = document.querySelector(".digest");
-    return card ? card.textContent.replace(/\s+/g, " ") : null;
-  });
-  R.ok(digest, "the what-changed digest card is shown after a real upload");
-  R.ok(
-    digest && digest.includes(fmtInt(X.riskCount)),
-    `digest counts ${fmtInt(X.riskCount)} items whose coverage outlives expiry (digest: "${digest && digest.slice(0, 200)}")`,
-  );
+  // (wave 6 A3: the "what changed" digest card — which previously carried the
+  // coverage-outlives-expiry callout — was removed from the Planning view; the
+  // expiry intelligence itself is asserted via the table/sheet checks here.)
 
   // ---- order sheet: expiry column on the printable sheet --------------------
   // The card shows only the 7 most urgent candidates (typically zero-stock
