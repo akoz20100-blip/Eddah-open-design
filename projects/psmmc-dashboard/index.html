@@ -2,6 +2,12 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
+  <!-- Security (M2): the page is a no-server static file; the build inlines
+       SheetJS, sample data and app.js into <script> blocks and CSS into a
+       <style> block, so script/style need 'unsafe-inline'. There is no
+       third-party script and no network fetch (analysis runs locally), so the
+       policy stays tight: no remote code, no framing, no form posting. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ebecef" />
   <meta name="description" content="PSMMC pharmacy inventory analytics — coverage, reorder and budget planning, computed locally in your browser. تحليلات مخزون صيدلية مدينة الأمير سلطان الطبية العسكرية — التغطية وإعادة الطلب وتخطيط الميزانية، تُحتسب محليًا في متصفحك." />
