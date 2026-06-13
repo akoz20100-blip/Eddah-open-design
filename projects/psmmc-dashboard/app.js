@@ -136,7 +136,7 @@
       k_monthly_use: "Monthly consumption", vs_prev_month: "{a} vs {b}", units_word: "units", items_word: "items",
       os_title: "Order sheet — most urgent", os_view_all: "View all in table", os_export: "Export order sheet", os_email: "Email report", os_wa: "WhatsApp", os_print: "Print", os_cov_left: "mo cover", os_suggested: "suggested",
       os_urgency: "{below} below 1 month · {out} out of stock now",
-      dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_cov_raw: "raw coverage — before expiry trim", dt_usable: "dispensable stock (units)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level",
+      dt_highest: "Highest month", dt_lowest: "Lowest month", dt_total_hist: "total withdrawn", dt_no_history: "No monthly history yet — it builds up from your uploads", dt_partial_note: "⚠ The last month is partial — shown faded and excluded from the trend comparison.", dt_avg: "monthly avg (units)", dt_vs_prev: "vs previous average", dt_stock: "current stock", dt_cov: "coverage (mo)", dt_cov_raw: "raw coverage — before expiry trim", dt_usable: "dispensable stock (units)", dt_sug: "suggested order (9 mo)", dt_class: "MODHS classification", dt_priority: "priority level", dz_decision: "Decision", dz_history: "History & price", dz_reference: "Reference",
       f_watch: "Watch", f_rising: "Rising +10%", f_falling: "Falling −10%", f_new: "New", c_spark: "Recent months", c_delta: "Trend Δ%",
       f_watchlist: "My watchlist",
       pin_add: "Pin to my watchlist",
@@ -354,7 +354,7 @@
       k_monthly_use: "الاستهلاك الشهري", vs_prev_month: "{a} مقابل {b}", units_word: "وحدة", items_word: "صنفًا",
       os_title: "ورقة الطلب — الأكثر إلحاحًا", os_view_all: "عرض الكل في الجدول", os_export: "تصدير ورقة الطلب", os_email: "تقرير بالإيميل", os_wa: "واتساب", os_print: "طباعة", os_cov_left: "شهر تغطية", os_suggested: "كمية مقترحة",
       os_urgency: "{below} تحت شهر واحد · {out} نافد الآن",
-      dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_cov_raw: "التغطية الخام — قبل خصم الصلاحية", dt_usable: "المخزون القابل للصرف (وحدة)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية",
+      dt_highest: "أعلى شهر", dt_lowest: "أدنى شهر", dt_total_hist: "إجمالي المسحوب", dt_no_history: "لا يوجد سجل شهري بعد — يتراكم تلقائيًا مع كل رفع", dt_partial_note: "⚠ الشهر الأخير جزئي — يظهر باهتًا ولا يدخل في مقارنة الاتجاه.", dt_avg: "متوسط شهري (وحدة)", dt_vs_prev: "مقابل المتوسط السابق", dt_stock: "المخزون الحالي", dt_cov: "تغطية (شهر)", dt_cov_raw: "التغطية الخام — قبل خصم الصلاحية", dt_usable: "المخزون القابل للصرف (وحدة)", dt_sug: "الطلب المقترح (٩ أشهر)", dt_class: "تصنيف الخدمات الصحية", dt_priority: "مستوى الأولوية", dz_decision: "القرار", dz_history: "السجل والسعر", dz_reference: "مرجع",
       f_watch: "للمتابعة", f_rising: "صاعد +10٪", f_falling: "هابط −10٪", f_new: "جديد", c_spark: "الأشهر الأخيرة", c_delta: "الاتجاه Δ٪",
       f_watchlist: "متابعتي",
       pin_add: "تثبيت في قائمة متابعتي",
@@ -3415,7 +3415,13 @@
       + '<div class="dt-codes">' + chips + '</div>' + clsRow + '</span>'
       + '<button type="button" class="pin-btn dt-pin' + (isPinned(r.code) ? " is-on" : "") + '" id="dtPin" aria-pressed="' + (isPinned(r.code) ? "true" : "false") + '" title="' + esc(t(isPinned(r.code) ? "pin_remove" : "pin_add")) + '">' + (isPinned(r.code) ? "★" : "☆") + '</button>'
       + '<button type="button" class="dt-close" id="dtClose">✕</button></div>'
-      + catNote + stats + projStats + emailRow + ooBlock + ledgerBlock + poBlock + expBlock + expiredBlock + priceBlock + chart + callouts + note + diBlock + thBlock;
+      + catNote
+      // P1-3: chunk the sheet into Decision / History & price / Reference zones so
+      // the planner reads the action first and reference last. Blocks are already
+      // in this order — only labelled wrappers are added (no reordering).
+      + '<div class="dt-zone"><div class="dt-zone-lbl">' + t("dz_decision") + '</div>' + stats + projStats + emailRow + ooBlock + ledgerBlock + poBlock + '</div>'
+      + '<div class="dt-zone"><div class="dt-zone-lbl">' + t("dz_history") + '</div>' + expBlock + expiredBlock + priceBlock + chart + callouts + note + '</div>'
+      + '<div class="dt-zone"><div class="dt-zone-lbl">' + t("dz_reference") + '</div>' + diBlock + thBlock + '</div>';
   }
   function openDetail(code) {
     if (!STATE.rows.length) return;

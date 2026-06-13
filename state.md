@@ -1,5 +1,18 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P1-3 — item-sheet zones (2026-06-13) — FINAL UX item
+
+Last of the owner's four UX groups (P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40, P1-2
+#41, P1-4 #42, P1-6 #43 all merged). `renderDetail` concatenated ~13 blocks as a
+flat wall. Wrapped them — with NO reordering (blocks were already in zone order) —
+into 3 labelled `.dt-zone`s: Decision (stats/projStats/email/on-order/ledger/po),
+History & price (batches/expiry/price/chart/callouts), Reference (drug-info/threshold).
+New i18n keys `dz_decision/dz_history/dz_reference` (T.en+T.ar). Labels are sentence
+case + no tracking (Arabic-safe, the P1-1 lesson). Red-first `spec-sheetzones`
+(`.dt-zone` absent in base → green: 3 labelled zones, Decision leads with stats,
+Reference holds di-block, EN+AR). Suite 50/50. Reference: Apple HIG + Refactoring UI.
+**All four UX groups complete.**
+
 ## Wave 6 UX P1-6 — separate filter actions from filters (2026-06-13)
 
 P1 item-card/filters group (done: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40, P1-2 #41,
