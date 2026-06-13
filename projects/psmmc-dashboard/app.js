@@ -2718,17 +2718,20 @@
     var sharekChip = SHAREK
       ? fchip("sharek_zero", t("f_sharek"), c.sharek_zero, ICON.grid)
       : (STATE.meta.source === "upload" ? '<button type="button" class="fchip sharek-hint" id="sharekHintBtn" title="' + esc(t("shk_hint")) + '"><span class="fic">' + ICON.grid + "</span>" + t("shk_hint") + "</button>" : "");
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + sharekChip + copyAllChip() + exportViewChip() + "</div>";
+    // P1-6: status FILTERS stay as chips; ACTIONS (copy-all, export-view) move to
+    // a separate cluster so an action no longer looks like a filter toggle.
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("watchlist", t("f_watchlist"), c.watchlist, ICON.star) + fchip("order_now", t("f_order_now"), c.order_now, ICON.alert) + coveredChip + fchip("warning", t("f_watch"), c.warning, ICON.clock) + fchip("excess", t("f_excess"), c.excess, ICON.box) + fchip("no_movement", t("f_no_movement"), c.no_movement, ICON.pause) + fchip("not_in_stock", t("f_not_in_stock"), c.not_in_stock, ICON.ban) + sharekChip + '</div>'
+      + '<div class="filter-actions">' + copyAllChip() + exportViewChip() + "</div>";
     return cards + secline + toolbar(filters) + buildTableHTML("planning", base);
   }
   function copyAllChip() {
-    return '<button type="button" class="fchip" id="copyAllCodes"><span class="fic">' + ICON.copy + '</span>' + t("cp_copy_all") + '</button>';
+    return '<button type="button" class="fchip fchip-action" id="copyAllCodes"><span class="fic">' + ICON.copy + '</span>' + t("cp_copy_all") + '</button>';
   }
   /* Per-filter export (owner spec v3 wave 5): one click downloads exactly
      what the active filter + search show — e.g. the "zero & on Sharek" list
      a planner forwards as one batch of orders. */
   function exportViewChip() {
-    return '<button type="button" class="fchip" id="exportView"><span class="fic">' + ICON.download + '</span>' + t("ev_export") + '</button>';
+    return '<button type="button" class="fchip fchip-action" id="exportView"><span class="fic">' + ICON.download + '</span>' + t("ev_export") + '</button>';
   }
   function exportCurrentView() {
     var rows = applyFilter(viewBase());
@@ -3084,7 +3087,7 @@
       + rankCard("rk_spend", topSpend(STATE.rows, 50), "ex_rk_spend", "bw_orders", function (x) { return fmtInt(x.n); })
       + rankCard("rk_inventory", topInventory(base, 50), "ex_rk_inventory", "c_stock", function (x) { return fmtInt(x.q); })
       + '</div>';
-    var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + copyAllChip() + "</div>";
+    var filters = '<div class="filters">' + fchip("all", t("f_all_instock"), c.instock + c.outstock, ICON.box) + fchip("instock", t("f_available"), c.instock, ICON.check) + fchip("outstock", t("f_outstock"), c.outstock, ICON.ban) + '</div><div class="filter-actions">' + copyAllChip() + "</div>";
     return cards + toolbar(filters) + buildTableHTML("management", base);
   }
   function medianBuckets(base) {
@@ -3119,7 +3122,7 @@
       + '<span class="secbadge" style="color:var(--blue)">▼ ' + t("av_falling") + ' <b class="num">' + fmtInt(falling) + '</b></span>'
       + '<button type="button" class="btn-soft" id="histExport">' + ICON.download + t("av_export") + '</button>'
       + '<button type="button" class="btn-soft" id="histImport">' + ICON.list + t("av_import") + '</button></div>';
-    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("rising", "▲ " + t("f_rising"), rising) + fchip("falling", "▼ " + t("f_falling"), falling) + fchip("newitem", t("f_new"), c.newitem) + copyAllChip() + "</div>";
+    var filters = '<div class="filters">' + fchip("all", t("f_all"), c.all, ICON.grid) + fchip("rising", "▲ " + t("f_rising"), rising) + fchip("falling", "▼ " + t("f_falling"), falling) + fchip("newitem", t("f_new"), c.newitem) + '</div><div class="filter-actions">' + copyAllChip() + "</div>";
     return secline + toolbar(filters) + buildTableHTML("averages", base) + '<p class="dt-note" style="margin:10px 4px">' + t("av_tap") + '</p>';
   }
 

@@ -1,5 +1,19 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P1-6 — separate filter actions from filters (2026-06-13)
+
+P1 item-card/filters group (done: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40, P1-2 #41,
+P1-4 #42). The planning toolbar packed up to 11 items in one chip row — status
+FILTERS and ACTIONS (copy-all codes, export view) styled identically as `.fchip`,
+so an action looked like a filter toggle. Pulled the two actions into a sibling
+`.filter-actions` cluster (margin-inline-start:auto → inline-end) with a distinct
+`.fchip-action` outline treatment (transparent, bordered, blue on hover). Applied
+across planning + management + averages (all call copyAllChip). Red-first
+`spec-filteractions` (EN+AR): red (actions inside `.filters`, no `.filter-actions`,
+no action class) → green (actions in cluster, distinct class, status filters stay
+plain chips). Visually verified EN+AR. Suite 49/49. Remaining UX rec: P1-3 item-card
+zoning. Reference: Shopify Polaris (separate filters from actions) + NN/g.
+
 ## Wave 6 UX P1-4 — budget progress bar (2026-06-13)
 
 P1 budget group (done so far: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40, P1-2 #41).
