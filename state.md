@@ -1,5 +1,35 @@
 # state.md — Dash project loop state
 
+## Wave 6 — owner backlog A–F + security + latent fix (2026-06-13)
+
+Owner sent a large Arabic wave-6 brief (interface tidy, mobile bugs, codes,
+Sharek, orders, budget redesign, security audit) and asked for max-parallel
+execution with the full per-item chain (red spec → real-file verification in
+Chromium → T.en+T.ar → build → draft PR → merge at green CI → state update).
+Branch-per-item off `main`; suite grew 35 → 42 specs. Independent security
+review run first (no critical issues; XSS paths all `esc`; SheetJS 0.20.3 past
+its CVEs).
+
+| Item | PR | Proof |
+|------|----|-------|
+| A1–A4 interface tidy: collapsible upload bar (default collapsed, persisted), title → "Pharmaceutical Planning Department Dashboard / داشبورد قسم التخطيط الصيدلاني", removed Data-quality + digest + Critical KPI cards | #27 merged | red `spec-cleanup`; re-pointed spec-sample/quality/digest/expiry/period to absence invariants; suite 36/36 |
+| B1·B2·C1 codes: labelled NUPCO/Hospital/MSD codes (نبكو/مستشفى/MSD), each copyable; mobile codes no longer overflow into the name; the drug-name column stays pinned on a phone in RTL+LTR | #28 merged | red `spec-codes` (390px AR+EN), real files; mobile screenshots before/after; suite 37/37 |
+| Security §5: Excel formula-injection neutralized in all exports (`csvSafe`/`sanitizeAoa`), CSP meta on index+standalone, `esc()` escapes `'`, SW caches only its own scope | #29 merged | red `spec-security` (=HYPERLINK export read back literal); suite 38/38 |
+| D1 Sharek hint: quiet dashed hint chip when no Sharek file (taps to open the upload bar); full feature with the file; sample mode clean | #30 merged | red `spec-sharekhint`; suite 39/39 |
+| E1 already done (dedupe + persistence + open-order exclusion, spec-ledger); E2 NEW manual "تم التوريد/Delivered" toggle per order (persists, drops the open-order badge, item orderable again) | #31 merged | red `spec-orderdelivered` (real anchor 5118242800600, reload survival); suite 40/40 |
+| F1–F4 budget redesign: per-month amount, clickable month → medicine list, per-month + year-to-end Excel export, single-glance Budget Overview (budget/spent/remaining/undelivered/delivered) | #34 (open) | red `spec-budgetplan` (real prices+planner+orders, download events + 5 stats); suite 41/41 |
+| §G latent fix: Management stock-distribution histogram no longer collapses fractional stock (0<qty<1) into the zero bucket / a negative index (clamped to bucket ≥1) | #34 (open, bundled) | red `spec-bucket` (3 items @ 0.5 → hot bar bucket 0 on main → bucket 1 fixed); suite 42/42 |
+
+PRs #27–#31 merged at green CI and republished. #34 carries F + §G + this
+state update; its `ci.yml` run was not scheduled by GitHub Actions (fork
+Actions concurrency under the rapid PR cadence — the fork-approval job fired but
+ci.yml never queued, and an empty-commit re-trigger didn't help), so it is left
+for the owner to merge. Local validation is full: `node tests/run.mjs` 42/42,
+`node --check app.js` clean, `build.py` in sync (standalone ≈1839 KB).
+Deferred (continuous, not blocking): the dedicated UX micro-iteration track
+(§4) — wave-6 already applied its principles (clean default, labelled codes,
+ease-out, AA contrast, precise RTL) but a standalone polish-PR series remains.
+
 ## Independent audit + Sharek-wave fix (2026-06-13)
 
 Owner asked for a no-trust re-audit. Verified the environment (suite 35/35, `build.py`

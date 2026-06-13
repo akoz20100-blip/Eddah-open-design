@@ -3017,7 +3017,11 @@
     var orderNow = base.filter(function (r) { return r.status === "order_now"; }).length;
     var avgPerItem = base.length ? totalUnits / base.length : 0;
     var buckets = [0, 0, 0, 0, 0, 0, 0, 0];
-    base.forEach(function (r) { buckets[r.stock <= 0 ? 0 : Math.min(7, Math.floor(Math.log(r.stock) / Math.LN10) + 1)]++; });
+    // Wave 6 §G (latent fix): for 0 < stock < 1, floor(log10)+1 is ≤ 0, which
+    // would drop a fractional-stock item into the zero bucket or a NEGATIVE
+    // index (lost from the distribution / NaN). Clamp any positive stock to the
+    // lowest non-zero bucket so the eight buckets always sum to the item count.
+    base.forEach(function (r) { buckets[r.stock <= 0 ? 0 : Math.max(1, Math.min(7, Math.floor(Math.log(r.stock) / Math.LN10) + 1))]++; });
     var hiIdx = 0, hiVal = -1;
     buckets.forEach(function (v, i) { if (v > hiVal) { hiVal = v; hiIdx = i; } });
     var valueCard;
