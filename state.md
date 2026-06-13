@@ -1,5 +1,18 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P0-1 — lead decision card (2026-06-13)
+
+Completes the at-a-glance hierarchy of the P0 group (after P1-1 #36, P0-2 #38).
+The three planning decision cards (Needs ordering / Items / Zero-stock) were all
+`span3` with an identical 24px value, so visual weight didn't map to decision
+weight. `cardDecision` gains a `lead` flag → "Needs ordering now" renders
+`span6 lead` with a 34px value; the row now reads 6+3+3=12 (fills the grid vs the
+old 9/12). CSS `.kcard.lead .kvalue{font-size:34px}` (specificity 0,3,0 keeps it
+above the responsive `.kvalue` overrides); degrades cleanly — full-width lead on
+mobile, Items/Zero share the row. Visually verified desktop+mobile, EN+AR. Red-first
+`spec-leadcard` (red: no `lead`, both 24px → green: lead span6, 34px>24px). Suite
+45/45. build.py. Reference: Refactoring UI (emphasis by size) + Stephen Few.
+
 ## Wave 6 UX P0-2 — order-sheet exception roll-up (2026-06-13)
 
 Owner approved the UX track with auto-merge-on-green and picked all four groups

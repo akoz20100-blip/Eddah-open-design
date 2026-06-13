@@ -132,6 +132,11 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .kcard:hover{transform:translateY(-2px); box-shadow:var(--shadow-lg)}
 .kcard.span3{grid-column:span 3}
 .kcard.span6{grid-column:span 6}
+/* P0-1: the "needs ordering" decision is the planner's primary glance — give it
+   a larger value so visual weight agrees with the coral urgency tile. Specificity
+   (0,3,0) keeps it above the responsive .kvalue overrides at every breakpoint. */
+.kcard.lead .kvalue{font-size:34px}
+.kcard.lead .klabel{font-size:13.5px}
 
 .khead{display:flex; align-items:center; gap:12px}
 .ktxt{display:flex; flex-direction:column; gap:1px; min-width:0}

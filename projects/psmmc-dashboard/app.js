@@ -2437,11 +2437,13 @@
       + '<div class="kfoot"><b>' + bold + '</b><i>' + sub + '</i></div></div>';
   }
   /* Decision card: one large figure + a one-line supporting fact. */
-  function cardDecision(label, valueHtml, icon, tileCls, subHtml, bodyHtml, explainKey) {
+  function cardDecision(label, valueHtml, icon, tileCls, subHtml, bodyHtml, explainKey, lead) {
     // explainKey makes the whole card a "how is this computed?" affordance
     // (owner spec v3: every figure explains its own formula on tap).
+    // lead (P0-1): the planner's primary decision gets visual weight — wider
+    // span + a larger value (CSS `.kcard.lead`) so size agrees with urgency.
     var explain = explainKey ? ' data-explain="' + explainKey + '" role="button" tabindex="0" aria-label="' + esc(t("ex_open")) + '"' : "";
-    return '<div class="kcard span3' + (explainKey ? " explainable" : "") + '"' + explain + '><div class="khead"><span class="tile ' + tileCls + '">' + icon + '</span>'
+    return '<div class="kcard ' + (lead ? "span6 lead" : "span3") + (explainKey ? " explainable" : "") + '"' + explain + '><div class="khead"><span class="tile ' + tileCls + '">' + icon + '</span>'
       + '<span class="ktxt"><span class="klabel">' + label + '</span><span class="kvalue num">' + valueHtml + '</span></span></div>'
       + (bodyHtml || (subHtml ? '<div class="ksub">' + subHtml + '</div>' : '')) + '</div>';
   }
@@ -2692,7 +2694,7 @@
     // first glance clean. The quality/digest computation stays in STATE for
     // internal use; only their on-screen cards are gone.
     var cards = '<div class="cards">'
-      + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order")
+      + cardDecision(t("k_need_order"), fmtInt(s.orderCount) + ' <small>' + t("items_word") + '</small>', ICON.alert, "tile-coral", tFmt("k_need_order_sub", { u: fmtM(s.orderUnits), n: fmtInt(s.notStockCount) }), null, "ex_need_order", true)
       + cardDecision(t("k_items"), fmtInt(s.itemsTotal) + ' <small>' + t("items_word") + '</small>', ICON.grid, "tile-lav", tFmt("k_items_sub", { a: fmtInt(s.withStock), p: pctWith }), null, "ex_items")
       + cardDecision(t("k_zero"), fmtInt(s.zeroStock) + ' <small>' + t("items_word") + '</small>', ICON.box, "tile-gray", tFmt("k_zero_sub", { p: pctZero }) + (SHAREK ? " · " + tFmt("k_zero_sharek", { n: fmtInt(s.zeroSharek) }) : ""), null, "ex_zero")
       + cardOrderSheet(base)
