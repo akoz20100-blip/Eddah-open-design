@@ -267,6 +267,14 @@ html[lang="ar"] :is(.brand-text strong,.empty h2,.modal-title){line-height:1.45}
 .ledger-row.is-open{position:relative; padding-inline-start:10px}
 .ledger-row.is-open::before{content:""; position:absolute; inset-inline-start:0; top:8px; bottom:8px; width:3px; border-radius:999px; background:var(--blue)}
 .ledger-row.is-open i{color:var(--blue); font-weight:700}
+/* Wave 6 E2: delivered marker + manual toggle. */
+.ledger-row.is-delivered i{color:var(--muted)}
+.pill.ledger-delivered{padding:2px 9px; font-size:10.5px; margin-inline-start:6px}
+.led-deliver{border:1px solid var(--line); background:var(--card); border-radius:999px; padding:4px 11px;
+  font-size:11px; font-weight:800; color:var(--ink-2); cursor:pointer; margin-inline-start:auto; transition:.16s var(--ease)}
+.led-deliver:hover{border-color:var(--blue); color:var(--blue)}
+.led-deliver.is-on{background:var(--inset); color:var(--muted)}
+.ledger-row u + .led-deliver{margin-inline-start:8px}
 
 /* Ready-to-send email actions on the item card. */
 .email-row{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px}
