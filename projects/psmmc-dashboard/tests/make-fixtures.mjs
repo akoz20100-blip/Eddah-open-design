@@ -103,15 +103,24 @@ copyFileSync(resolve(FIX, "withdrawals-basic.xlsx"), resolve(FIX, "withdrawals-d
 // HTML/JS injection payload. A fixed app must render it escaped (no live img,
 // no window.__xss).
 const XSS_CODE = '5<img src=x onerror=window.__xss=1>';
+// Spreadsheet formula-injection probe (security M1): a numeric drug code (so it
+// survives the drug filter) whose DESCRIPTION starts with "=" — when exported
+// to xlsx and reopened it would run as a formula unless the exporter
+// neutralizes it with a leading apostrophe.
+const FORMULA_CODE = "5999999000000";
+const FORMULA_DESC = '=HYPERLINK("http://evil.example","pwn")';
 const wdXss = [
   WD_HEADERS,
   [XSS_CODE, 100, new Date(2026, 0, 1), "DISPATCHED", "TAB", "XSS probe <b>desc</b>"],
   [XSS_CODE, 100, new Date(2026, 2, 31), "DISPATCHED", "TAB", "XSS probe"],
+  [FORMULA_CODE, 100, new Date(2026, 0, 1), "DISPATCHED", "TAB", FORMULA_DESC],
+  [FORMULA_CODE, 100, new Date(2026, 2, 31), "DISPATCHED", "TAB", FORMULA_DESC],
 ];
 writeAoa(resolve(FIX, "withdrawals-xss.xlsx"), wdXss);
 const stXss = [
   ["Generic Item Number", "Total Available Qty", "Generic Item description"],
   [XSS_CODE, 500, "XSS probe"],
+  [FORMULA_CODE, 0, FORMULA_DESC],
 ];
 writeAoa(resolve(FIX, "stock-xss.xlsx"), stXss);
 
@@ -268,6 +277,7 @@ const expected = {
     bug_shifted_prefix: "31 May",
   },
   xss: { code: XSS_CODE, prefix: "5" },
+  formula: { code: FORMULA_CODE, desc: FORMULA_DESC },
 };
 
 writeFileSync(resolve(FIX, "expected.json"), JSON.stringify(expected, null, 2));

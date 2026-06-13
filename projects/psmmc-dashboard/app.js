@@ -658,7 +658,14 @@
   /* Calendar-date addition that agrees with isoDate/parseIsoLocal everywhere
      (local-midnight parts, no UTC drift). Used for stockout/reorder projection. */
   function addDaysIso(baseIso, n) { var d = parseIsoLocal(baseIso); if (!d || !isFinite(n)) return null; return isoDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + Math.round(n))); }
-  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  /* Spreadsheet formula-injection guard (security M1): a cell whose text starts
+     with = + - @ (or a leading tab/CR) is interpreted as a formula when the
+     exported .xlsx is reopened. File-derived strings (drug names, codes, lots,
+     suppliers, planners, filenames) are neutralized with a leading apostrophe
+     so they stay literal text. Numbers pass through untouched. */
+  function csvSafe(v) { return (typeof v === "string" && /^[=+\-@\t\r]/.test(v)) ? "'" + v : v; }
+  function sanitizeAoa(aoa) { return aoa.map(function (row) { return row.map(csvSafe); }); }
 
   // ---------- workbook ----------
   function readWorkbook(file, cb) {
@@ -2738,7 +2745,7 @@
       aoa.push(["", "", ""]);
     });
     if (!aoa.length) return;
-    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(sanitizeAoa(aoa)), wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "DataQuality");
     XLSX.writeFile(wb, "PSMMC_data_quality_" + isoDate(new Date()) + ".xlsx");
   }
@@ -3461,7 +3468,7 @@
     }
   }
   function sheetFrom(aoa, widths, numFmts, autofilter) {
-    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var ws = XLSX.utils.aoa_to_sheet(sanitizeAoa(aoa));
     if (widths) ws["!cols"] = widths.map(function (w) { return { wch: w }; });
     if (numFmts) applyNumFmt(ws, numFmts);
     if (autofilter && ws["!ref"]) ws["!autofilter"] = { ref: ws["!ref"] };
@@ -3554,7 +3561,7 @@
       var expVals = anyExp ? [r.expMonths == null ? "" : Math.round(r.expMonths * 10) / 10, r.expWaste >= 1 ? Math.round(r.expWaste) : ""] : [];
       aoa.push([r.code, r.desc, r.trade || "", r.uom, Math.round(r.avg * 10) / 10, Math.round(r.stock), Math.round((x.covEff === Infinity ? 0 : x.covEff) * 10) / 10, Math.round(r.sug)].concat(expVals, hasPrices() ? [r.unitPrice == null ? "" : Math.round(r.unitPrice * 100) / 100] : []));
     });
-    var ws = XLSX.utils.aoa_to_sheet(aoa), wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(sanitizeAoa(aoa)), wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "OrderSheet");
     var name = "PSMMC_order_sheet_" + (STATE.meta.period_end || "") + ".xlsx";
     XLSX.writeFile(wb, name);

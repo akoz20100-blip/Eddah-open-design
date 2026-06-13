@@ -3,7 +3,7 @@
    and calculation is client-side). The cache name carries a build stamp that
    build.py rewrites on every build; a changed sw.js byte-stream is what makes
    installed clients pick up a new dashboard version. */
-var CACHE = "psmmc-0822d2023f"; /* __PSMMC_BUILD_LINE__ */
+var CACHE = "psmmc-ae7c969a76"; /* __PSMMC_BUILD_LINE__ */
 var SHELL = ["./"];
 
 self.addEventListener("install", function (e) {
@@ -26,7 +26,10 @@ self.addEventListener("fetch", function (e) {
     caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;
       return fetch(e.request).then(function (res) {
-        if (res && res.ok && e.request.url.indexOf(self.location.origin) === 0) {
+        // Security L4: only persist responses from THIS app's own scope
+        // (e.g. /psmmc/…), not any same-origin path — so co-hosted content on
+        // a shared origin can never be cached into the dashboard's offline copy.
+        if (res && res.ok && e.request.url.indexOf(self.registration.scope) === 0) {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
         }
