@@ -1,5 +1,18 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P0-3 — suggested-order column emphasis (2026-06-13)
+
+Finishes the P0 single-glance group (P1-1 #36, P0-2 #38, P0-1 #39). The planning
+table's "Suggested Order" column is the planner's primary output but sat
+undifferentiated among 14 flat columns. Tinted its header + cells `var(--blue-soft)`
+(#e9eefe, the design system's soft blue) with a logical `border-inline-start`
+separating it from the reference Qty(9mo) column, so the eye lands on "the answer".
+CSS-only via existing hooks (`thead th[data-sort="sug"]`, `td.sug`); RTL-correct
+(logical border). Red-first `spec-sugcolumn` (red: sug header == qty9 header, sug
+cell == normal cell → green: tinted distinct, EN+AR). Visually verified the scrolled
+table EN+AR. Suite 46/46. Reference: IBM Carbon (primary-column emphasis) +
+Refactoring UI (zone columns).
+
 ## Wave 6 UX P0-1 — lead decision card (2026-06-13)
 
 Completes the at-a-glance hierarchy of the P0 group (after P1-1 #36, P0-2 #38).
