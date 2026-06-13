@@ -715,6 +715,13 @@ th.sortable:focus-visible{
 .po-transit{background:#fdf3e4;color:#9a6a17}
 .budgetcard .br-row{display:flex;gap:8px;margin:8px 0 12px}
 .budgetcard .br-row input{flex:1;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;font-size:13.5px;font-weight:700;outline-color:var(--blue);min-width:0}
+/* P1-4: spent + committed vs budget as a single shape. Flex flips start→end
+   under RTL automatically; the empty remainder is the inset track. */
+.bo-bar{display:flex;height:14px;border-radius:999px;background:var(--inset);overflow:hidden;margin:2px 0 16px}
+.bo-bar .bo-seg{height:100%;transition:width .3s var(--ease)}
+.bo-bar .bo-spent{background:var(--blue)}
+.bo-bar .bo-committed{background:var(--amber)}
+.bo-bar.is-over .bo-committed{background:var(--coral)}
 .digest .dg-line{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:12.5px;font-weight:700}
 .digest .dg-line:first-of-type{border-top:0}
 .digest .dg-line>b{font-size:16px;min-width:22px;text-align:center}

@@ -1,5 +1,18 @@
 # state.md — Dash project loop state
 
+## Wave 6 UX P1-4 — budget progress bar (2026-06-13)
+
+P1 budget group (done so far: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40, P1-2 #41).
+The §F budget card showed the figures but no visual ratio. `budgetCard` now renders
+a `.bo-bar` between the input and the stats: a spent segment (delivered, blue) + a
+committed segment (open orders, amber) over the inset remaining track, so "how much
+is left" is a SHAPE. `is-over` turns the committed segment coral when remaining < 0.
+Flex flips start→end under RTL automatically. New i18n key `bo_bar_aria` (T.en+T.ar).
+Red-first `spec-budgetbar` (real files + budget 500M): red (no `.bo-bar`) → green
+(spent% = delivered/budget, committed% = undelivered/budget = 3.89%, committed pixel
+width matches its %). Visually verified EN+AR. Suite 48/48. Reference: Stephen Few
+(bullet/budget-vs-actual) + Refactoring UI (visual ratios).
+
 ## Wave 6 UX P1-2 — colour restraint (2026-06-13)
 
 P1 colour group (P0 group done: P1-1 #36, P0-2 #38, P0-1 #39, P0-3 #40). Two
