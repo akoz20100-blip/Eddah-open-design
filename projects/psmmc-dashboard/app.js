@@ -2612,7 +2612,7 @@
           body = catCodes.map(function (code) {
             var m = MAP.byCode[code];
             var name = [m.trade, m.sci].filter(Boolean).join(" · ") || code;
-            return '<tr class="cat-row" data-code="' + esc(code) + '"><td class="code num">' + esc(code) + '</td><td class="desc">' + esc(name) + '</td><td colspan="12" class="cat-note"><span class="pill no_movement">' + t("cat_badge") + "</span> " + esc(t("cat_note")) + "</td></tr>";
+            return '<tr class="cat-row" data-code="' + esc(code) + '"><td class="code num">' + esc(code) + '</td><td class="desc">' + esc(name) + '</td><td colspan="' + (SHAREK ? 13 : 12) + '" class="cat-note"><span class="pill no_movement">' + t("cat_badge") + "</span> " + esc(t("cat_note")) + "</td></tr>";
           }).join("");
           shown = catCodes.length;
         }
@@ -2661,7 +2661,7 @@
     if (!rows.length) { toast(t("cp_none")); return; }
     var aoa = [[t("c_code"), t("c_desc"), t("c_planner"), t("c_uom"), t("c_stock"), t("c_cov"), t("c_status"), t("dt_stockout"), t("dt_reorder"), t("c_sug")].concat(SHAREK ? [t("c_sharek")] : [])];
     rows.forEach(function (r) {
-      aoa.push([r.code, r.desc, plannerName(r) || t("planner_unassigned"), r.uom || "", Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), r.stockoutIso ? prettyDate(r.stockoutIso) : "", r.reorderIso ? prettyDate(r.reorderIso) : "", Math.round(r.sug)].concat(SHAREK ? [onSharek(r.code) ? t("shk_yes") : ""] : []));
+      aoa.push([r.code, r.desc, plannerName(r) || t("planner_unassigned"), r.uom || "", Math.round(r.stock), r.cov == null ? "" : Math.round(r.cov * 10) / 10, t("s_" + r.status), r.stockoutIso ? prettyDate(r.stockoutIso) : "", r.reorderIso ? prettyDate(r.reorderIso) : "", Math.round(r.sug)].concat(SHAREK ? [(r.stock <= 0 && onSharek(r.code)) ? t("shk_yes") : ""] : []));
     });
     var wb = XLSX.utils.book_new();
     var ws = sheetFrom(aoa, [16, 34, 16, 8, 11, 9, 12, 14, 14, 12, 10], { 4: INT_FMT, 5: DEC1_FMT, 9: INT_FMT }, true);
@@ -3393,6 +3393,8 @@
     if (pn) pn.textContent = PO ? ((PO.name ? PO.name + " · " : "") + fmtInt(Object.keys(PO.byCode).length) + " " + t("items_word")) : t("file_po_hint");
     var pln = $("plName");
     if (pln) pln.textContent = PLANNERS ? ((PLANNERS.name ? PLANNERS.name + " · " : "") + fmtInt(PLANNERS.count) + " " + t("mp_linked")) : t("file_pl_hint");
+    var skn = $("shkName");
+    if (skn) skn.textContent = SHAREK ? ((SHAREK.name ? SHAREK.name + " · " : "") + fmtInt(SHAREK.count) + " " + t("mp_linked")) : t("file_shk_hint");
     $("langName").textContent = t("langName");
     $("langBtn").classList.toggle("is-en", LANG === "en");
     if (STATE.meta.period_start) {

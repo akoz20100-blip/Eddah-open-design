@@ -1,5 +1,25 @@
 # state.md — Dash project loop state
 
+## Independent audit + Sharek-wave fix (2026-06-13)
+
+Owner asked for a no-trust re-audit. Verified the environment (suite 35/35, `build.py`
+in sync, PWA cache stamp rotates per build), then all 21 v3 owner items + the 3 reported
+bugs live in headless Chromium against the six real files via 3 agents (EN/AR, mobile
+390px + desktop), plus a FROM-SCRATCH node calc (no project mirrors) for FERINJECT + 15
+drugs. Independent FERINJECT == the live screen exactly: avg **1,589.1**, stock 2,860,
+cov **1.8**, ORDER NOW, suggested 11,442 (period 5.3 mo from delivery dates; the owner's
+old 43.8 needs an outlier-dated row this file lacks). Reported bugs all clear: mobile item
+card no longer clipped, FERINJECT correct, MSD/hospital codes copyable. **No item missing.**
+
+Fixed 3 wave-5 Sharek regressions (red-first `spec-sharekfix`, suite 34→35): (1) the
+catalog-fallback row `colspan` is now `SHAREK ? 13 : 12` so it spans the 15-column header
+when a Sharek file is loaded; (2) `applyStatic` now rehydrates the `#shkName` slot label
+(name + count) like every other slot, on upload AND reload; (3) the per-filter export marks
+the Sharek column only for ZERO-stock codes (`r.stock <= 0`), matching the on-screen table.
+Branch `claude/psmmc-dashboard-audit-verify`. Latent note (not fixed, no real-data trigger):
+the management distribution bucket index mis-buckets fractional stock < 1 (real available
+quantities are integers).
+
 ## Owner spec v3 round (2026-06-12) — comprehensive audit + effective stock
 
 Owner sent a large v3 spec (Arabic) + 3 real files (per-unit prices, planner
