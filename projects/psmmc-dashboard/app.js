@@ -49,6 +49,7 @@
       mp_linked: "items linked",
       mp_no_trade: "No trade-name column was recognized in this file — name search will stay limited",
       c_trade: "Trade Name", c_hosp: "Hospital Code", c_msd: "MSD Code", c_agent: "Agent / Vendor", c_class: "Classification",
+      lbl_nupco: "NUPCO", lbl_hosp: "Hospital", lbl_msd: "MSD",
       dt_agent: "agent / vendor",
       btn_sample: "Load sample data",
       upl_hint: "Drop in both files to compute coverage and reorder quantities. You can select several withdrawals files at once (multiple warehouses); the latest consumption baseline is saved on this device, so next time a new stock file alone is enough. Only medicines (NUPCO codes starting with <b>5</b>) are included.",
@@ -259,6 +260,7 @@
       mp_linked: "صنف مرتبط",
       mp_no_trade: "لم يتم التعرف على عمود الاسم التجاري في هذا الملف — البحث بالاسم سيبقى محدودًا",
       c_trade: "الاسم التجاري", c_hosp: "كود المستشفى", c_msd: "كود MSD", c_agent: "الوكيل / المورد", c_class: "التصنيف",
+      lbl_nupco: "نبكو", lbl_hosp: "مستشفى", lbl_msd: "MSD",
       dt_agent: "الوكيل / المورد",
       btn_sample: "تحميل بيانات تجريبية",
       upl_hint: "أرفق الملفين لحساب التغطية وإعادة الطلب. يمكن اختيار أكثر من ملف سحوبات معًا (عدة مستودعات)، ويُحفظ آخر متوسط استهلاك على هذا الجهاز ليكفي لاحقًا رفع ملف مخزون جديد وحده. تُحتسب الأدوية فقط (كود نبكو يبدأ بـ <b>5</b>).",
@@ -2517,15 +2519,21 @@
     var on = isPinned(r.code);
     return '<button type="button" class="pin-btn' + (on ? " is-on" : "") + '" data-pin="' + esc(r.code) + '" aria-pressed="' + (on ? "true" : "false") + '" title="' + esc(t(on ? "pin_remove" : "pin_add")) + '">' + (on ? "★" : "☆") + "</button>";
   }
-  /* Hospital + MSD codes render in FULL and copy individually (owner spec
-     v3): each subcode is its own copy target, separate from the NUPCO code
-     the cell itself copies. */
-  function subCodeChip(v) {
-    return v ? '<u class="copy-sub num" data-copy="' + esc(v) + '">' + esc(v) + "</u>" : "";
+  /* Hospital + MSD codes render in FULL, each LABELLED by type (owner wave 6
+     C1) and copyable individually (owner spec v3); the NUPCO code is the
+     headline and copies via the cell itself. Each identifier sits on its own
+     line so the codes never overflow the narrow phone code column (wave 6 B1).
+     The `.subcode` container + `.copy-sub`/`data-copy` contract is preserved. */
+  function subCodeChip(labelKey, v) {
+    return v ? '<span class="code-id"><b class="code-lbl">' + t(labelKey) + '</b><u class="copy-sub num" data-copy="' + esc(v) + '">' + esc(v) + "</u></span>" : "";
   }
   function codeCell(r) {
-    var sub = [subCodeChip(r.hosp), subCodeChip(r.msd)].filter(Boolean).join(" · ");
-    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r) + esc(r.code) + ' <span class="copyic">' + ICON.copy + '</span>' + (sub ? '<span class="subcode">' + sub + "</span>" : "") + "</td>";
+    var sub = [subCodeChip("lbl_hosp", r.hosp), subCodeChip("lbl_msd", r.msd)].filter(Boolean).join("");
+    return '<td class="code copyable" data-copy="' + esc(r.code) + '" title="' + t("cp_copied") + '">' + pinBtn(r)
+      + '<span class="code-stack">'
+      + '<span class="code-id code-id-main"><b class="code-lbl">' + t("lbl_nupco") + '</b><span class="code-val num">' + esc(r.code) + '</span> <span class="copyic">' + ICON.copy + '</span></span>'
+      + (sub ? '<span class="subcode">' + sub + "</span>" : "")
+      + "</span></td>";
   }
   /* Planner column (FEATURE 1): responsible planner from the join slot, or
      "Unassigned" until a planner-mapping file is provided. */
