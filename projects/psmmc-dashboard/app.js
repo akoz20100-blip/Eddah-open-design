@@ -176,6 +176,7 @@
       po_orders_title: "Procurement orders",
       po_open_badge: "Order placed",
       po_open_tip: "Open order {no} · placed {d}",
+      po_delivered: "Delivered", po_mark_delivered: "Mark delivered", po_undeliver: "Mark not delivered",
       f_covered_order: "Ordered (under 6 mo)",
       bw_order_no: "Order no.",
       qr_rejected: "rejected/cancelled order — excluded",
@@ -388,6 +389,7 @@
       po_orders_title: "طلبات الشراء",
       po_open_badge: "عليه طلب",
       po_open_tip: "طلب قائم {no} · بتاريخ {d}",
+      po_delivered: "تم التوريد", po_mark_delivered: "تعليم: تم التوريد", po_undeliver: "إلغاء: لم يورَّد",
       f_covered_order: "عليها طلب (تحت ٦ أشهر)",
       bw_order_no: "رقم الطلب",
       qr_rejected: "طلب ملغى/مرفوض — مستبعد",
@@ -1743,12 +1745,28 @@
     return idx;
   }
   function ordersForCode(code) { return ledgerByCode()[code] || null; }
+  /* Delivered tracking (wave 6 E2): an order counts as delivered when the file
+     status says so OR the planner marked it by hand. Manual marks live in
+     LEDGER.delivered keyed by orderNo·code and persist with the ledger. A
+     delivered order is no longer "open", so it drops the "order placed" badge
+     and the item becomes orderable again. */
+  function deliveredKey(o) { return o.orderNo + "·" + o.code; }
+  function orderManuallyDelivered(o) { return !!(LEDGER && LEDGER.delivered && LEDGER.delivered[deliveredKey(o)]); }
+  function orderDelivered(o) { return isOrderDelivered(o.status) || orderManuallyDelivered(o); }
+  function orderIsOpen(o) { return !isOrderRejected(o.status) && !orderDelivered(o); }
+  function setOrderDelivered(orderNo, code, val) {
+    if (!LEDGER) return;
+    if (!LEDGER.delivered) LEDGER.delivered = {};
+    var k = orderNo + "·" + code;
+    if (val) LEDGER.delivered[k] = true; else delete LEDGER.delivered[k];
+    persist(LEDGER_KEY, LEDGER);
+  }
   /* The most recent OPEN order for a code (not rejected, not delivered) — the
      signal that an item under pressure is already being procured. */
   function openOrderFor(code) {
     var list = ordersForCode(code);
     if (!list) return null;
-    for (var i = 0; i < list.length; i++) if (isOrderOpen(list[i].status)) return list[i];
+    for (var i = 0; i < list.length; i++) if (orderIsOpen(list[i])) return list[i];
     return null;
   }
   function loadLedger() { return loadJson(LEDGER_KEY, function (v) { return v.entries; }); }
@@ -3185,13 +3203,19 @@
     var ledList = ordersForCode(r.code);
     if (ledList && ledList.length) {
       var ledRows = ledList.slice(0, 6).map(function (o) {
-        var open = isOrderOpen(o.status);
-        return '<div class="ledger-row' + (open ? " is-open" : "") + '">'
+        var autoDel = isOrderDelivered(o.status), manDel = orderManuallyDelivered(o), del = autoDel || manDel;
+        var open = orderIsOpen(o);
+        var badge = del ? ' <span class="pill ok ledger-delivered">' + t("po_delivered") + "</span>" : "";
+        // The file may already say delivered; otherwise the planner can mark it
+        // by hand (and undo). Auto-delivered rows need no manual control.
+        var btn = autoDel ? "" : '<button type="button" class="led-deliver' + (manDel ? " is-on" : "") + '" data-ono="' + esc(o.orderNo) + '" data-code="' + esc(o.code) + '">' + (manDel ? t("po_undeliver") : t("po_mark_delivered")) + "</button>";
+        return '<div class="ledger-row' + (open ? " is-open" : "") + (del ? " is-delivered" : "") + '">'
           + '<b class="num" data-copy="' + esc(o.orderNo) + '" role="button" tabindex="0" title="' + esc(t("cp_copied")) + '">' + esc(o.orderNo) + "</b>"
           + '<span class="num">' + prettyDate(o.date) + "</span>"
           + '<span class="num">' + fmtInt(o.qty) + " " + t("units_word") + "</span>"
-          + '<i>' + esc(o.status || "—") + "</i>"
+          + '<i>' + esc(o.status || "—") + badge + "</i>"
           + (o.supplier ? '<u>' + esc(o.supplier) + "</u>" : "")
+          + btn
           + "</div>";
       }).join("");
       ledgerBlock = '<div class="ledger-block"><div class="di-title">' + t("po_orders_title")
@@ -3259,6 +3283,15 @@
     };
     var oc = $("ooClear");
     if (oc) oc.onclick = function () { clearOrdered(code); render(); openDetail(code); };
+    // Manual "mark delivered" toggle on each ledger row (wave 6 E2).
+    $("modalCard").querySelectorAll(".led-deliver").forEach(function (b) {
+      b.onclick = function (ev) {
+        ev.stopPropagation();
+        setOrderDelivered(this.getAttribute("data-ono"), this.getAttribute("data-code"), !this.classList.contains("is-on"));
+        render();
+        openDetail(code);
+      };
+    });
     var ts = $("thSave");
     if (ts) ts.onclick = function () {
       var v = parseFloat($("thInput").value);
